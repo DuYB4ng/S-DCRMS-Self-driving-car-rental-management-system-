@@ -1,7 +1,7 @@
 # S-DCRMS-Self-driving-car-rental-management-system-
 The S-DCRMS project helps people rent cars easily
 
-English: Self-driving car rental management system.
+English: Self-driving car rental management system.  
 Vietnamese: Hệ thống quản lý cho thuê xe tự lái.
 Abbreviation: CRA
 Context:
