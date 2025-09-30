@@ -1,20 +1,21 @@
 ﻿namespace SDCRMS.Models
-
-public class Staff : Users
 {
-    private void quanLyTaiKhoanKhachHang()
+    public class Staff : Users
     {
+        private void quanLyTaiKhoanKhachHang()
+        {
 
-    }
-    private void theoDoiHoatDongDatXePhanHoi()
-    {
+        }
+        private void theoDoiHoatDongDatXePhanHoi()
+        {
 
-    }
-    private void guiThongBao()
-    {
+        }
+        private void guiThongBao()
+        {
 
-    }
-    private void baoCaoThongKe()
-    {
+        }
+        private void baoCaoThongKe()
+        {
+        }
     }
 }
