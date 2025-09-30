@@ -1,17 +1,16 @@
 ﻿using System;
 
-public class Class1
+public class Booking
 {
-	public int BookingID { get; set; }
-	public int UserID { get; set; }
-	public int CarID { get; set; }
-	public DateTime StartDate { get; set; }
-	public DateTime EndDate { get; set; }
-	public double TotalPrice { get; set; }
-	public string Status { get; set; }
-	public string Description { get; set; }
-	public string Author { get; set; }
-	public string Title { get; set; }
-	public string Url { get; set; }
-
+    public int BookingID { get; set; }
+    public int UserID { get; set; }
+    public int CarID { get; set; }
+    public DateTime StartDate { get; set; }
+    public DateTime EndDate { get; set; }
+    public double TotalPrice { get; set; }
+    public string Status { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public string Author { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
+    public string Url { get; set; } = string.Empty;
 }
