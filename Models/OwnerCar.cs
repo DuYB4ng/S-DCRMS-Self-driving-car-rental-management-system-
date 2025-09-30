@@ -1,7 +1,6 @@
 ﻿namespace SDCRMS.Models
 {
-    public class Staff : Users
+    public class OwnerCar : Users
     {
-
     }
 }
