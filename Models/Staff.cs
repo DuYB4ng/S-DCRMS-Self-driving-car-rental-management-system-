@@ -1,6 +1,20 @@
-﻿using System;
+﻿namespace SDCRMS.Models
 
 public class Staff : Users
 {
-    private 
+    private void quanLyTaiKhoanKhachHang()
+    {
+
+    }
+    private void theoDoiHoatDongDatXePhanHoi()
+    {
+
+    }
+    private void guiThongBao()
+    {
+
+    }
+    private void baoCao&ThongKe()
+    {
+    }
 }
