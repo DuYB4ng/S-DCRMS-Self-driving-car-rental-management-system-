@@ -14,7 +14,7 @@ public class Staff : Users
     {
 
     }
-    private void baoCao&ThongKe()
+    private void baoCaoThongKe()
     {
     }
 }
