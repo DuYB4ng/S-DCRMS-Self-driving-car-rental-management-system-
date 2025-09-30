@@ -1,17 +1,12 @@
 ﻿using System;
 
-public class Class1
+public class Booking
 {
 	public int BookingID { get; set; }
-	public int UserID { get; set; }
+	public int CustomerID { get; set; }
 	public int CarID { get; set; }
 	public DateTime StartDate { get; set; }
 	public DateTime EndDate { get; set; }
-	public double TotalPrice { get; set; }
-	public string Status { get; set; }
-	public string Description { get; set; }
-	public string Author { get; set; }
-	public string Title { get; set; }
-	public string Url { get; set; }
-
+	public bool CheckIn { get; set; }
+	public bool CheckOut { get; set; }
 }
