@@ -16,4 +16,7 @@ public class AppDbContext : DbContext
     public DbSet<OwnerCar> OwnerCars { get; set; }
     public DbSet<Payment> Paytments { get; set; }
     public DbSet<Review> Reviews { get; set; }
+    public DbSet<Admin> Admins { get; set; }
+    public DbSet<Notification> Notifications { get; set; }
+    public DbSet<Maintenance> Maintenances { get; set; }
 }
