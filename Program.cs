@@ -10,8 +10,10 @@ builder.Services.AddSwaggerGen();
 
 // Đăng ký DbContext với connection string
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
+{
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+});
+    
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
