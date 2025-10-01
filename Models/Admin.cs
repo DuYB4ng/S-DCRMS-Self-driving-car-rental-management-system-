@@ -1,24 +1,15 @@
 ﻿namespace SDCRMS.Models
 {
-    public class Admin:Users
+    public class Admin : Users
     {
-        private void giamSatHeThongVaPhanQuyen()
-        {
-        }
-        private void theoDoiGiaoDichTaiChinhVaTuanThu()
-        {
-        }
-        private void baoCaoThongKe()
-        {
+        private void giamSatHeThongVaPhanQuyen() { }
 
-        }
-        private void yeuCauPhiChucNang()
-        {
+        private void theoDoiGiaoDichTaiChinhVaTuanThu() { }
 
-        }
-        private void datXe()
-        {
+        private void baoCaoThongKe() { }
 
- 
+        private void yeuCauPhiChucNang() { }
+
+        private void datXe() { }
     }
 }

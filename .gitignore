@@ -10,3 +10,4 @@ obj/
 # Others
 *.log
 *.tmp
+.config
