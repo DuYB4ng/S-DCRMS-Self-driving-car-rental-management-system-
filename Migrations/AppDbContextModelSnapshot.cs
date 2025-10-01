@@ -21,6 +21,51 @@ namespace SDCRMS.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("SDCRMS.Models.Admin", b =>
+                {
+                    b.Property<int>("ID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ID"));
+
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("Birthday")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("JoinDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("PhoneNumber")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RoleID")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Sex")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("ID");
+
+                    b.ToTable("Admins");
+                });
+
             modelBuilder.Entity("SDCRMS.Models.Booking", b =>
                 {
                     b.Property<int>("BookingID")
@@ -97,6 +142,64 @@ namespace SDCRMS.Migrations
                     b.ToTable("Cars");
                 });
 
+            modelBuilder.Entity("SDCRMS.Models.Customer", b =>
+                {
+                    b.Property<int>("ID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ID"));
+
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("Birthday")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CustomerID")
+                        .HasColumnType("int");
+
+                    b.Property<string>("DrivingLisence")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("JoinDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("LisenceExpiryDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("LisenceIssueDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("PhoneNumber")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RoleID")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Sex")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("ID");
+
+                    b.ToTable("Customers");
+                });
+
             modelBuilder.Entity("SDCRMS.Models.Maintenance", b =>
                 {
                     b.Property<int>("MaintenanceID")
@@ -163,6 +266,51 @@ namespace SDCRMS.Migrations
                     b.ToTable("Notifications");
                 });
 
+            modelBuilder.Entity("SDCRMS.Models.OwnerCar", b =>
+                {
+                    b.Property<int>("ID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ID"));
+
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("Birthday")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("JoinDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("PhoneNumber")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RoleID")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Sex")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("ID");
+
+                    b.ToTable("OwnerCars");
+                });
+
             modelBuilder.Entity("SDCRMS.Models.Payment", b =>
                 {
                     b.Property<int>("PaymentID")
@@ -219,7 +367,7 @@ namespace SDCRMS.Migrations
                     b.ToTable("Reviews");
                 });
 
-            modelBuilder.Entity("SDCRMS.Models.Users", b =>
+            modelBuilder.Entity("SDCRMS.Models.Staff", b =>
                 {
                     b.Property<int>("ID")
                         .ValueGeneratedOnAdd()
@@ -233,11 +381,6 @@ namespace SDCRMS.Migrations
 
                     b.Property<DateTime>("Birthday")
                         .HasColumnType("datetime2");
-
-                    b.Property<string>("Discriminator")
-                        .IsRequired()
-                        .HasMaxLength(8)
-                        .HasColumnType("nvarchar(8)");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -266,52 +409,7 @@ namespace SDCRMS.Migrations
 
                     b.HasKey("ID");
 
-                    b.ToTable("Users");
-
-                    b.HasDiscriminator().HasValue("Users");
-
-                    b.UseTphMappingStrategy();
-                });
-
-            modelBuilder.Entity("SDCRMS.Models.Admin", b =>
-                {
-                    b.HasBaseType("SDCRMS.Models.Users");
-
-                    b.HasDiscriminator().HasValue("Admin");
-                });
-
-            modelBuilder.Entity("SDCRMS.Models.Customer", b =>
-                {
-                    b.HasBaseType("SDCRMS.Models.Users");
-
-                    b.Property<int>("CustomerID")
-                        .HasColumnType("int");
-
-                    b.Property<string>("DrivingLisence")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("LisenceExpiryDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("LisenceIssueDate")
-                        .HasColumnType("datetime2");
-
-                    b.HasDiscriminator().HasValue("Customer");
-                });
-
-            modelBuilder.Entity("SDCRMS.Models.OwnerCar", b =>
-                {
-                    b.HasBaseType("SDCRMS.Models.Users");
-
-                    b.HasDiscriminator().HasValue("OwnerCar");
-                });
-
-            modelBuilder.Entity("SDCRMS.Models.Staff", b =>
-                {
-                    b.HasBaseType("SDCRMS.Models.Users");
-
-                    b.HasDiscriminator().HasValue("Staff");
+                    b.ToTable("Staffs");
                 });
 #pragma warning restore 612, 618
         }

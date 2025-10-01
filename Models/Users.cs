@@ -1,6 +1,6 @@
 ﻿namespace SDCRMS.Models
 {
-    public class Users
+    public abstract class Users
     {
         public int ID { get; set; }
         public int RoleID { get; set; }

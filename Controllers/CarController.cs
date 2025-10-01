@@ -4,7 +4,7 @@ using SDCRMS.Services;
 namespace SDCRMS.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/car")]
     public class CarController : ControllerBase
     {   
         private readonly ICarService _carService;
