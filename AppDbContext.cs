@@ -8,7 +8,6 @@ public class AppDbContext : DbContext
     {
     }
 
-    public DbSet<Users> Users { get; set; }
     public DbSet<Staff> Staffs { get; set; }
     public DbSet<Customer> Customers { get; set; }
     public DbSet<Booking> Bookings { get; set; }
