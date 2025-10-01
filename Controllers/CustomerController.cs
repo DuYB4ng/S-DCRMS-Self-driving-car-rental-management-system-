@@ -11,23 +11,7 @@ namespace SDCRMS.Controllers
     public class CustomerController : ControllerBase
     {
         // Sử dụng CustomerVM để có CustomerID
-        private static List<Customer> customerList = new List<Customer>
-        {
-            new Customer
-            {
-                CustomerID = 1,
-                DrivingLisence = "123456789",
-                LisenceIssueDate = DateTime.Now.AddYears(-2),
-                LisenceExpiryDate = DateTime.Now.AddYears(3),
-            },
-            new Customer
-            {
-                CustomerID = 2,
-                DrivingLisence = "987654321",
-                LisenceIssueDate = DateTime.Now.AddYears(-1),
-                LisenceExpiryDate = DateTime.Now.AddYears(4),
-            },
-        };
+        private static List<Customer> customerList = new List<Customer>();
 
         // GET: api/customer - Lấy tất cả customers
         [HttpGet]
