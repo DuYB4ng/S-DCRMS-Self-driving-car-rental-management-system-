@@ -1,6 +1,8 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore;
-
+using SDCRMS.Models;
+using SDCRMS.Repositories;
+using SDCRMS.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -11,6 +13,10 @@ builder.Services.AddSwaggerGen();
 // Đăng ký DbContext với connection string
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+//Đăng kí Repositores 
+builder.Services.AddScoped<ICarRepository, CarRepository>();
+//Đăng kí Services
+builder.Services.AddScoped<ICarService, CarService>();
 
 var app = builder.Build();
 
