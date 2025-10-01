@@ -1,6 +1,6 @@
 ﻿namespace SDCRMS.Models
 {
-    public class Admin:Users
+    public class Admin : Users
     {
         private void giamSatHeThongVaPhanQuyen()
         {
@@ -19,6 +19,7 @@
         private void datXe()
         {
 
- 
+
+        }
     }
 }

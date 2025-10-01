@@ -1,0 +1,33 @@
+name: .NET 8 CI
+
+on:
+    push:
+        branches:
+            - main
+    pull_request:
+        branches:
+            - main
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+
+        steps:
+            #Checkout the repository
+            - name: Checkout repository
+              uses: actions/checkout@v3
+
+            #Setup .NET
+            - name: Setup .NET 8 SDK
+              uses: actions/setup-dotnet@v3
+              with:
+                  dotnet-version: '8.0.x'
+            
+            #Restore dependencies
+            - name: Restore dependencies
+              run: dotnet restore
+
+            #Build the project
+            - name: Build
+              run: dotnet build --no-restore --configuration Release
+            
