@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace SDCRMS.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251001125805_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20251001142633_UpdateCarTable")]
+    partial class UpdateCarTable
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -193,7 +193,7 @@ namespace SDCRMS.Migrations
 
                     b.HasKey("PaymentID");
 
-                    b.ToTable("Paytments");
+                    b.ToTable("Payments");
                 });
 
             modelBuilder.Entity("SDCRMS.Models.Review", b =>

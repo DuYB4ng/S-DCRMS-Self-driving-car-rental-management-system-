@@ -171,8 +171,8 @@ namespace SDCRMS.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PaymentID"));
 
-                    b.Property<long>("Amount")
-                        .HasColumnType("bigint");
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("BookingID")
                         .HasColumnType("int");
@@ -190,7 +190,7 @@ namespace SDCRMS.Migrations
 
                     b.HasKey("PaymentID");
 
-                    b.ToTable("Paytments");
+                    b.ToTable("Payments");
                 });
 
             modelBuilder.Entity("SDCRMS.Models.Review", b =>
