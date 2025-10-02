@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SDCRMS.Models;
+using System.Reflection.Metadata;
 
 public class AppDbContext : DbContext
 {
@@ -18,4 +19,14 @@ public class AppDbContext : DbContext
     public DbSet<Admin> Admins { get; set; }
     public DbSet<Notification> Notifications { get; set; }
     public DbSet<Maintenance> Maintenances { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<Booking>()
+            .HasOne(e => e.Payment)          // Booking có 1 Payment
+            .WithOne(e => e.Booking)         // Payment có 1 Booking
+            .HasForeignKey<Payment>(e => e.BookingID);  // FK nằm ở bảng Payment
+    }
 }

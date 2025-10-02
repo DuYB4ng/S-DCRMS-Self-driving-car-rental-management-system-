@@ -3,7 +3,6 @@
     public class Maintenance
     {
         public int MaintenanceID { get; set; }
-        public int CarID { get; set; }
         public DateTime MaintenanceDate { get; set; }
         public string Description { get; set; }
         public decimal Cost { get; set; }

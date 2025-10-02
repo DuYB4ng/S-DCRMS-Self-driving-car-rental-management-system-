@@ -10,7 +10,8 @@
         public string Email { get; set; }
         public string Sex { get; set; }
         public DateTime Birthday { get; set; }
-        public DateTime JoinDate { get; set; }
+        public DateTime JoinDate { get; set; } = DateTime.Now;
         public string Address { get; set; }
+        public List<Notification> Notifications { get; set; } = new List<Notification>();
     }
 }

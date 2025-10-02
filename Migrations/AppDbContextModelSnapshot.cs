@@ -74,7 +74,7 @@ namespace SDCRMS.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("BookingID"));
 
-                    b.Property<int>("CarID")
+                    b.Property<int?>("CarID")
                         .HasColumnType("int");
 
                     b.Property<bool>("CheckIn")
@@ -83,7 +83,7 @@ namespace SDCRMS.Migrations
                     b.Property<bool>("CheckOut")
                         .HasColumnType("bit");
 
-                    b.Property<int>("CustomerID")
+                    b.Property<int?>("CustomerID")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("EndDate")
@@ -93,6 +93,10 @@ namespace SDCRMS.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("BookingID");
+
+                    b.HasIndex("CarID");
+
+                    b.HasIndex("CustomerID");
 
                     b.ToTable("Bookings");
                 });
@@ -116,7 +120,7 @@ namespace SDCRMS.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("OwnerID")
+                    b.Property<int?>("OwnerCarID")
                         .HasColumnType("int");
 
                     b.Property<decimal>("Price")
@@ -139,6 +143,8 @@ namespace SDCRMS.Migrations
 
                     b.HasKey("CarID");
 
+                    b.HasIndex("OwnerCarID");
+
                     b.ToTable("Cars");
                 });
 
@@ -156,9 +162,6 @@ namespace SDCRMS.Migrations
 
                     b.Property<DateTime>("Birthday")
                         .HasColumnType("datetime2");
-
-                    b.Property<int>("CustomerID")
-                        .HasColumnType("int");
 
                     b.Property<string>("DrivingLisence")
                         .IsRequired()
@@ -208,7 +211,7 @@ namespace SDCRMS.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("MaintenanceID"));
 
-                    b.Property<int>("CarID")
+                    b.Property<int?>("CarID")
                         .HasColumnType("int");
 
                     b.Property<decimal>("Cost")
@@ -226,6 +229,8 @@ namespace SDCRMS.Migrations
 
                     b.HasKey("MaintenanceID");
 
+                    b.HasIndex("CarID");
+
                     b.ToTable("Maintenances");
                 });
 
@@ -237,31 +242,45 @@ namespace SDCRMS.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("CreateAt")
-                        .HasColumnType("datetime2");
+                    b.Property<int?>("AdminID")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<int?>("CustomerID")
+                        .HasColumnType("int");
 
                     b.Property<string>("Message")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("OwnerCarID")
+                        .HasColumnType("int");
+
                     b.Property<bool>("Read")
                         .HasColumnType("bit");
 
-                    b.Property<int>("UserId")
+                    b.Property<int?>("StaffID")
                         .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("linkURL")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("title")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.HasKey("Id");
+
+                    b.HasIndex("AdminID");
+
+                    b.HasIndex("CustomerID");
+
+                    b.HasIndex("OwnerCarID");
+
+                    b.HasIndex("StaffID");
 
                     b.ToTable("Notifications");
                 });
@@ -338,6 +357,9 @@ namespace SDCRMS.Migrations
 
                     b.HasKey("PaymentID");
 
+                    b.HasIndex("BookingID")
+                        .IsUnique();
+
                     b.ToTable("Payments");
                 });
 
@@ -349,7 +371,7 @@ namespace SDCRMS.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ReviewID"));
 
-                    b.Property<int>("BookingID")
+                    b.Property<int?>("BookingID")
                         .HasColumnType("int");
 
                     b.Property<string>("Comment")
@@ -363,6 +385,8 @@ namespace SDCRMS.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("ReviewID");
+
+                    b.HasIndex("BookingID");
 
                     b.ToTable("Reviews");
                 });
@@ -410,6 +434,106 @@ namespace SDCRMS.Migrations
                     b.HasKey("ID");
 
                     b.ToTable("Staffs");
+                });
+
+            modelBuilder.Entity("SDCRMS.Models.Booking", b =>
+                {
+                    b.HasOne("SDCRMS.Models.Car", null)
+                        .WithMany("Bookings")
+                        .HasForeignKey("CarID");
+
+                    b.HasOne("SDCRMS.Models.Customer", null)
+                        .WithMany("Bookings")
+                        .HasForeignKey("CustomerID");
+                });
+
+            modelBuilder.Entity("SDCRMS.Models.Car", b =>
+                {
+                    b.HasOne("SDCRMS.Models.OwnerCar", null)
+                        .WithMany("Cars")
+                        .HasForeignKey("OwnerCarID");
+                });
+
+            modelBuilder.Entity("SDCRMS.Models.Maintenance", b =>
+                {
+                    b.HasOne("SDCRMS.Models.Car", null)
+                        .WithMany("Maintenances")
+                        .HasForeignKey("CarID");
+                });
+
+            modelBuilder.Entity("SDCRMS.Models.Notification", b =>
+                {
+                    b.HasOne("SDCRMS.Models.Admin", null)
+                        .WithMany("Notifications")
+                        .HasForeignKey("AdminID");
+
+                    b.HasOne("SDCRMS.Models.Customer", null)
+                        .WithMany("Notifications")
+                        .HasForeignKey("CustomerID");
+
+                    b.HasOne("SDCRMS.Models.OwnerCar", null)
+                        .WithMany("Notifications")
+                        .HasForeignKey("OwnerCarID");
+
+                    b.HasOne("SDCRMS.Models.Staff", null)
+                        .WithMany("Notifications")
+                        .HasForeignKey("StaffID");
+                });
+
+            modelBuilder.Entity("SDCRMS.Models.Payment", b =>
+                {
+                    b.HasOne("SDCRMS.Models.Booking", "Booking")
+                        .WithOne("Payment")
+                        .HasForeignKey("SDCRMS.Models.Payment", "BookingID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Booking");
+                });
+
+            modelBuilder.Entity("SDCRMS.Models.Review", b =>
+                {
+                    b.HasOne("SDCRMS.Models.Booking", null)
+                        .WithMany("Reviews")
+                        .HasForeignKey("BookingID");
+                });
+
+            modelBuilder.Entity("SDCRMS.Models.Admin", b =>
+                {
+                    b.Navigation("Notifications");
+                });
+
+            modelBuilder.Entity("SDCRMS.Models.Booking", b =>
+                {
+                    b.Navigation("Payment");
+
+                    b.Navigation("Reviews");
+                });
+
+            modelBuilder.Entity("SDCRMS.Models.Car", b =>
+                {
+                    b.Navigation("Bookings");
+
+                    b.Navigation("Maintenances");
+                });
+
+            modelBuilder.Entity("SDCRMS.Models.Customer", b =>
+                {
+                    b.Navigation("Bookings");
+
+                    b.Navigation("Notifications");
+                });
+
+            modelBuilder.Entity("SDCRMS.Models.OwnerCar", b =>
+                {
+                    b.Navigation("Cars");
+
+                    b.Navigation("Notifications");
+                });
+
+            modelBuilder.Entity("SDCRMS.Models.Staff", b =>
+                {
+                    b.Navigation("Notifications");
                 });
 #pragma warning restore 612, 618
         }
