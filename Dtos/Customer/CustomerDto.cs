@@ -12,7 +12,7 @@ namespace SDCRMS.Dtos.Customer
         public int PhoneNumber { get; set; }
         public string Address { get; set; }
         public string DrivingLicense { get; set; }
-        public DateTime LisenceExpiryDate { get; set; }
+        public DateTime LicenseExpiryDate { get; set; }
         public DateTime JoinDate { get; set; }
     }
 }

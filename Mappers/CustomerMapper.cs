@@ -1,4 +1,5 @@
-﻿using SDCRMS.Dtos.Customer;
+﻿using Microsoft.AspNetCore.Localization;
+using SDCRMS.Dtos.Customer;
 using SDCRMS.Models;
 
 namespace SDCRMS.Mappers
@@ -17,8 +18,24 @@ namespace SDCRMS.Mappers
                PhoneNumber = customerModel.PhoneNumber,
                Address = customerModel.Address,
                DrivingLicense = customerModel.DrivingLicense,
-               LisenceExpiryDate = customerModel.LicenseExpiryDate,
+               LicenseExpiryDate = customerModel.LicenseExpiryDate,
                JoinDate = customerModel.JoinDate
+            };
+        }
+        
+        public static Customer ToCreateCutomerDto(this CreateCustomerDto customerDto)
+        {
+            return new Customer
+            {
+                Username = customerDto.Username,
+                FirstName = customerDto.FirstName,
+                LastName= customerDto.LastName,
+                Email = customerDto.Email,
+                PhoneNumber = customerDto.PhoneNumber,
+                Address = customerDto.Address,
+                DrivingLicense= customerDto.DrivingLicense,
+                LicenseIssueDate = customerDto.LicenseIssueDate,
+                LicenseExpiryDate = customerDto.LicenseExpiryDate
             };
         }
     }
