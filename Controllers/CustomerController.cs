@@ -1,109 +1,35 @@
-﻿/*using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using Microsoft.AspNetCore.Mvc;
-using SDCRMS.Models;
+﻿using Microsoft.AspNetCore.Mvc;
+using SDCRMS.Mappers;
 
 namespace SDCRMS.Controllers
 {
+    [Route("api/customer")]
     [ApiController]
-    [Route("api/[controller]")]
     public class CustomerController : ControllerBase
     {
-        // Sử dụng CustomerVM để có CustomerID
-        private static List<Customer> customerList = new List<Customer>
+        private readonly AppDbContext _context;
+        public CustomerController(AppDbContext context)
         {
-            new Customer
-            {
-                CustomerID = 1,
-                DrivingLisence = "123456789",
-                LisenceIssueDate = DateTime.Now.AddYears(-2),
-                LisenceExpiryDate = DateTime.Now.AddYears(3),
-            },
-            new Customer
-            {
-                CustomerID = 2,
-                DrivingLisence = "987654321",
-                LisenceIssueDate = DateTime.Now.AddYears(-1),
-                LisenceExpiryDate = DateTime.Now.AddYears(4),
-            },
-        };
+            _context = context;
+        }
 
-        // GET: api/customer - Lấy tất cả customers
         [HttpGet]
-        public ActionResult<IEnumerable<Customer>> GetCustomers()
+        public IActionResult Getall() //IActionResult là một interface trong ASP.NET Core MVC, dùng để định nghĩa kiểu dữ liệu trả về của một action (hàm trong Controller).
         {
-            return Ok(customerList);
+            var customers = _context.Customers.ToList().
+                Select(s=>s.ToCustomerDto());
+            return Ok(customers);
         }
 
-        // GET: api/customer/5 - Lấy customer theo ID
         [HttpGet("{id}")]
-        public ActionResult<Customer> GetCustomer(int id)
+        public IActionResult GetById([FromRoute]int id) //[FromRoute] là một attribute trong ASP.NET Core, dùng để chỉ định rằng tham số của action sẽ được lấy từ route (đường dẫn URL) thay vì từ query string, body, hay header.
         {
-            var customer = customerList.FirstOrDefault(c => c.CustomerID == id);
+            var customer = _context.Customers.Find(id);
             if (customer == null)
             {
-                return NotFound($"Customer với ID {id} không tồn tại");
+                return NotFound();
             }
-            return Ok(customer);
-        }
-
-        // POST: api/customer - Tạo customer mới
-        [HttpPost]
-        public ActionResult<Customer> CreateCustomer([FromBody] Customer customer)
-        {
-            if (customer == null)
-            {
-                return BadRequest("Dữ liệu customer không hợp lệ");
-            }
-
-            // Tự động tạo CustomerID mới
-            customer.CustomerID =
-                customerList.Count > 0 ? customerList.Max(c => c.CustomerID) + 1 : 1;
-
-            customerList.Add(customer);
-
-            return CreatedAtAction(nameof(GetCustomer), new { id = customer.CustomerID }, customer);
-        }
-
-        // PUT: api/customer/5 - Cập nhật customer
-        [HttpPut("{id}")]
-        public IActionResult UpdateCustomer(int id, [FromBody] Customer customer)
-        {
-            var existingCustomer = customerList.FirstOrDefault(c => c.CustomerID == id);
-            if (existingCustomer == null)
-            {
-                return NotFound($"Customer với ID {id} không tồn tại");
-            }
-
-            // Cập nhật thông tin customer
-            existingCustomer.DrivingLisence = customer.DrivingLisence;
-            existingCustomer.LisenceIssueDate = customer.LisenceIssueDate;
-            existingCustomer.LisenceExpiryDate = customer.LisenceExpiryDate;
-
-            return Ok(existingCustomer);
-        }
-
-        // DELETE: api/customer/5 - Xóa customer
-        [HttpDelete("{id}")]
-        public IActionResult DeleteCustomer(int id)
-        {
-            try
-            {
-                var deleteCustomer = customerList.SingleOrDefault(c => c.CustomerID == id);
-                if (deleteCustomer == null)
-                {
-                    return NotFound($"Customer với ID {id} không tồn tại");
-                }
-
-                customerList.Remove(deleteCustomer);
-                return Ok();
-            }
-            catch
-            {
-                return BadRequest("Yêu cầu xóa không hợp lệ");
-            }
+            return Ok(customer.ToCustomerDto());
         }
     }
 }
-*/
