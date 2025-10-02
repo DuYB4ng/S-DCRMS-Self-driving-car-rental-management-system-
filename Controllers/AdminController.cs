@@ -8,5 +8,8 @@ namespace SDCRMS.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class Admin : ControllerBase { }
+    public class AdminController : ControllerBase
+    {
+        private static List<Admin> admins = new List<Admin>();
+    }
 }
