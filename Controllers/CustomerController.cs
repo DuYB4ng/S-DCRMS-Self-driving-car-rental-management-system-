@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SDCRMS.Mappers;
+using SDCRMS.Dtos.Customer;
 
 namespace SDCRMS.Controllers
 {
@@ -30,6 +31,15 @@ namespace SDCRMS.Controllers
                 return NotFound();
             }
             return Ok(customer.ToCustomerDto());
+        }
+
+        [HttpPost]
+        public IActionResult Create([FromBody]CreateCustomerDto customerDto)
+        {
+            var customerModel = customerDto.ToCreateCutomerDto();
+            _context.Customers.Add(customerModel);
+            _context.SaveChanges();
+            return CreatedAtAction(nameof(GetById), new { id = customerModel.ID }, customerModel.ToCustomerDto());
         }
     }
 }
