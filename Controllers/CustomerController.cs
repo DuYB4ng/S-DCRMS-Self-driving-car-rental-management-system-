@@ -41,5 +41,41 @@ namespace SDCRMS.Controllers
             _context.SaveChanges();
             return CreatedAtAction(nameof(GetById), new { id = customerModel.ID }, customerModel.ToCustomerDto());
         }
+
+        [HttpPut]
+        [Route("{id}")]
+        public IActionResult Update([FromRoute]int id, [FromBody] UpdateCustomerDto customerDto)
+        {
+            var existingCustomer = _context.Customers.Find(id); //var customerModel = _context.Customers.FirstOrDefault(c => c.ID == id);
+            if (existingCustomer == null)
+            {
+                return NotFound();
+            }
+            // Cập nhật các thuộc tính của existingCustomer từ customerDto
+            existingCustomer.FirstName = customerDto.FirstName;
+            existingCustomer.LastName = customerDto.LastName;
+            existingCustomer.Email = customerDto.Email;
+            existingCustomer.PhoneNumber = customerDto.PhoneNumber;
+            existingCustomer.Address = customerDto.Address;
+            existingCustomer.DrivingLicense = customerDto.DrivingLicense;
+            existingCustomer.LicenseIssueDate = customerDto.LicenseIssueDate;
+            existingCustomer.LicenseExpiryDate = customerDto.LicenseExpiryDate;
+            _context.SaveChanges();
+            return Ok(existingCustomer.ToCustomerDto());
+        }
+
+        [HttpDelete]
+        [Route("{id}")]
+        public IActionResult Delete([FromRoute]int id)
+        {
+            var existingCustomer = _context.Customers.Find(id);
+            if (existingCustomer == null)
+            {
+                return NotFound();
+            }
+            _context.Customers.Remove(existingCustomer);
+            _context.SaveChanges();
+            return NoContent();
+        }
     }
 }
