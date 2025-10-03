@@ -1,5 +1,8 @@
 ﻿
 using Microsoft.AspNetCore.Mvc;
+using SDCRMS.Dtos.Staff;
+using SDCRMS.Mappers.Staff;
+using SDCRMS.Models;
 namespace SDCRMS.Controllers
 {
     [Route("api/staff")]
@@ -12,7 +15,7 @@ namespace SDCRMS.Controllers
             _context = context;
         }
         [HttpGet]
-
+        //Lay danh sach
         public IActionResult GetAll()
         {
             var customers = _context.Customers.ToList();
@@ -29,6 +32,17 @@ namespace SDCRMS.Controllers
             }
             return Ok(customer);
         }
+
+        //Gữi thông báo 
+        [HttpPost]
+        public IActionResult taoThongBao([FromBody] CreateNotificationsFromStaffDto notiDto)
+        {
+            var NotiModel = notiDto.toNotificationOfStaffFromDto();
+            _context.Notifications.Add(NotiModel);
+            _context.SaveChanges();
+            return Ok(NotiModel);
+        }
+
 
     }
 }
