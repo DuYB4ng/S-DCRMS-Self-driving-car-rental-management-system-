@@ -11,5 +11,17 @@ namespace SDCRMS.Controllers
     public class AdminController : ControllerBase
     {
         private static List<Admin> admins = new List<Admin>();
+
+        // GET: api/admin - giamSatHeThongVaPhanQuyen
+        [HttpGet]
+        public ActionResult<IEnumerable<Admin>> GetAdmins()
+        {
+            if (admins.Count == 0)
+            {
+                return NotFound("Không tìm thấy quản trị viên nào.");
+            }
+
+            return admins;
+        }
     }
 }
