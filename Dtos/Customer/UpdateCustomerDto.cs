@@ -1,9 +1,7 @@
 ﻿namespace SDCRMS.Dtos.Customer
 {
-    public class CreateCustomerDto
+    public class UpdateCustomerDto
     {
-        public string Username { get; set; }
-        public string Password { get; set; } // chỉ dùng khi register
         public string FirstName { get; set; }
         public string LastName { get; set; }
         public string Email { get; set; }

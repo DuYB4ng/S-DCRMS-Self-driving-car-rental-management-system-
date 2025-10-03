@@ -6,7 +6,7 @@ namespace SDCRMS.Mappers
 {
     public static class CustomerMapper
     {
-        public static CustomerDto ToCustomerDto(this Customer customerModel)
+        public static CustomerDto ToCustomerDto(this Customer customerModel) //this được hiểu là mở rộng extension method cho lớp Customer
         {
             return new CustomerDto
             {
@@ -15,6 +15,7 @@ namespace SDCRMS.Mappers
                FirstName = customerModel.FirstName,
                LastName = customerModel.LastName,
                Email = customerModel.Email,
+               Sex = customerModel.Sex,
                PhoneNumber = customerModel.PhoneNumber,
                Address = customerModel.Address,
                DrivingLicense = customerModel.DrivingLicense,
@@ -28,8 +29,10 @@ namespace SDCRMS.Mappers
             return new Customer
             {
                 Username = customerDto.Username,
+                Password = customerDto.Password,
                 FirstName = customerDto.FirstName,
                 LastName= customerDto.LastName,
+                Sex = customerDto.Sex,
                 Email = customerDto.Email,
                 PhoneNumber = customerDto.PhoneNumber,
                 Address = customerDto.Address,
