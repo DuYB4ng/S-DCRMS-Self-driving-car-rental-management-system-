@@ -4,17 +4,17 @@ namespace SDCRMS.Mappers
 {
     public static class PaymentMapper
     {
-        public static Payment toPaymentDto(this Payment stockModel)
+        public static Payment toPaymentDto(this Payment PaymentModel)
         {
             return new Payment
             {
-                PaymentID = stockModel.PaymentID,
-                PaymentDate = stockModel.PaymentDate,
-                Amount = stockModel.Amount,
-                Method = stockModel.Method,
-                Status = stockModel.Status,
-                Booking = stockModel.Booking,
-                BookingID = stockModel.BookingID,
+                PaymentID = PaymentModel.PaymentID,
+                PaymentDate = PaymentModel.PaymentDate,
+                Amount = PaymentModel.Amount,
+                Method = PaymentModel.Method,
+                Status = PaymentModel.Status,
+                Booking = PaymentModel.Booking,
+                BookingID = PaymentModel.BookingID,
 
             };
         }

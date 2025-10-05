@@ -35,12 +35,23 @@ namespace SDCRMS.Controllers
 
         //Gữi thông báo 
         [HttpPost]
-        public IActionResult taoThongBao([FromBody] CreateNotificationsFromStaffDto notiDto)
+        public IActionResult taoStaff([FromBody] CreateStaffDto staffDto)
         {
-            var NotiModel = notiDto.toNotificationOfStaffFromDto();
-            _context.Notifications.Add(NotiModel);
+            var StaffModel = staffDto.
+        }
+
+        [HttpDelete]
+        [Route("{id}")]
+        public IActionResult Delete([FromRoute] int id)
+        {
+            var staffModel = _context.Staffs.FirstOrDefault(x=> x.ID == id);
+            if (staffModel != null)
+            {
+                return NotFound();
+            }
+            _context.Staffs.Remove(staffModel);
             _context.SaveChanges();
-            return Ok(NotiModel);
+            return NoContent();
         }
 
 
