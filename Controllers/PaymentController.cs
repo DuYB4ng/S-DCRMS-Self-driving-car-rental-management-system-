@@ -60,11 +60,18 @@ namespace SDCRMS.Controllers
             _context.SaveChanges(); 
             return Ok(PaymentModel.toPaymentDto());
 
-
-
-
         }
 
-        //[HttpDelete]
+        [HttpDelete]
+        [Route("{id}")]
+        public IActionResult Delete([FromRoute] int id) {
+            var paymentModel = _context.Payments.FirstOrDefault(x => x.PaymentID==id);
+            if (paymentModel != null)
+            {
+                return NotFound();
+            }
+            _context.Payments.Remove(paymentModel);
+            _context.SaveChanges();
+            return NoContent();
     }
 }
