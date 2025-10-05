@@ -1,9 +1,6 @@
-﻿using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using SDCRMS.DTOs.Notification;
 using SDCRMS.Mappers;
-using SDCRMS.Models;
 
 namespace SDCRMS.Controllers
 {
