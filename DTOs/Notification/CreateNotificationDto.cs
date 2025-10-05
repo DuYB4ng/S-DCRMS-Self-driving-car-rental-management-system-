@@ -1,5 +1,3 @@
-using SDCRMS.Models;
-
 namespace SDCRMS.DTOs.Notification
 {
     public class CreateNotificationDto
