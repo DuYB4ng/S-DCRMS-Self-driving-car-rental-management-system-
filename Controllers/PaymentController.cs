@@ -35,12 +35,35 @@ namespace SDCRMS.Controllers
         [HttpPost]
         public IActionResult taoPayment([FromBody] CreatePaymentRequestDto payDto)
         {
-            var paymentModel = payDto.toPaymentDto();
+            var paymentModel = payDto.ToPaymentFromCreateDto();
             _context.Payments.Add(paymentModel);
             _context.SaveChanges();
-            return CreatedAtAction(nameof(GetID), new { id = paymentModel.PaymentID }, payDto.toPaymentDto());
+            return CreatedAtAction(nameof(GetID), new { id = paymentModel.PaymentID }, payDto.ToPaymentFromCreateDto());
         }
-        //[HttpPut]
+        [HttpPut]
+        [Route("{id}")]
+        public IActionResult Update([FromRoute] int id , [FromBody] UpdatePaymentRequestDto updateDto)
+        {
+            var PaymentModel = _context.Payments.FirstOrDefault(x => x.PaymentID == id);
+            if (PaymentModel == null)
+            {
+                return NotFound();
+            }
+
+            PaymentModel.PaymentID = updateDto.PaymentID;
+            PaymentModel.PaymentDate = updateDto.PaymentDate;
+            PaymentModel.Amount = updateDto.Amount;
+            PaymentModel.Method = updateDto.Method;
+            PaymentModel.Status= updateDto.Status;
+            PaymentModel.BookingID= updateDto.BookingID;
+            PaymentModel.Booking= updateDto.Booking;
+            _context.SaveChanges(); 
+            return Ok(PaymentModel.toPaymentDto());
+
+
+
+
+        }
 
         //[HttpDelete]
     }
