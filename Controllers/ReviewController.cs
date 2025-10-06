@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SDCRMS.Dtos.Review;
+using SDCRMS.Mappers;
 
 namespace SDCRMS.Controllers
 {
@@ -53,9 +54,7 @@ namespace SDCRMS.Controllers
                     ReviewModel.ReviewID = updateDto.ReviewID;
                     ReviewModel.Rating = updateDto.Rating;
                     ReviewModel.Comment = updateDto.Comment;
-                    ReviewModel.ReviewDate = updateDto.ReviewDate;
-                    ReviewModel.CustomerID = updateDto.CustomerID;
-                    ReviewModel.Customer = updateDto.Customer;
+                   
                     _context.SaveChanges();
                     return NoContent();
                 }

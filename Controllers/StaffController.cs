@@ -1,7 +1,7 @@
 ﻿
 using Microsoft.AspNetCore.Mvc;
 using SDCRMS.Dtos.Staff;
-using SDCRMS.Mappers.Staff;
+using SDCRMS.Mappers;
 using SDCRMS.Models;
 namespace SDCRMS.Controllers
 {
@@ -18,45 +18,46 @@ namespace SDCRMS.Controllers
         //Lay danh sach
         public IActionResult GetAll()
         {
-            var customers = _context.Customers.ToList();
+            var staff = _context.Staffs.ToList();
 
-            return Ok(customers);
+            return Ok(staff);
         }
         [HttpGet("{id}")]
         public IActionResult GetID([FromRoute] int id)
         {
-            var customer = _context.Customers.Find(id);
-            if (customer == null)
+            var staffs = _context.Staffs.Find(id);
+            if (staffs == null)
             {
                 return NotFound();
             }
-            return Ok(customer);
+            return Ok(staffs);
         }
 
         //Gữi thông báo 
         [HttpPost]
         public IActionResult taoStaff([FromBody] CreateStaffDto staffDto)
         {
-            var StaffModel = staffDto.ToStaffModel();
-            _context.Staffs.Add(StaffModel);
+            var staffModel = staffDto.ToStaffFromCreateDto();
+            _context.Staffs.Add(staffModel);
             _context.SaveChanges();
+            return CreatedAtAction(nameof(GetID), new { id = staffModel.ID }, staffModel.ToStaffDto());
 
         }
         [HttpPut]
         [Route("{id}")]
-        public IActionResult Update([FromRoute] int id, [FromBody] UpdateStaffDto updateDto)
+        public IActionResult Update([FromRoute] int id, [FromBody] UpdateStaffRequestDto updateDto)
         {
             var staffModel = _context.Staffs.FirstOrDefault(x => x.ID == id);
             if (staffModel == null)
             {
                 return NotFound();
             }
-            staffModel.ID = updateDto.ID;
-            staffModel.Name = updateDto.Name;
-            staffModel.Position = updateDto.Position;
+            staffModel.FirstName = updateDto.FirstName;
+            staffModel.LastName = updateDto.LastName;
             staffModel.Email = updateDto.Email;
             staffModel.PhoneNumber = updateDto.PhoneNumber;
             staffModel.Address = updateDto.Address;
+
             _context.SaveChanges();
             return NoContent();
         }
