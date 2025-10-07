@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using SDCRMS.Dtos.Car;
 using SDCRMS.Models;
 using SDCRMS.Services;
 namespace SDCRMS.Controllers
@@ -33,20 +34,20 @@ namespace SDCRMS.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateCar([FromBody] Car car)
+        public async Task<IActionResult> CreateCar([FromBody] CreateCarDTO carDto)
         {
-            if (car == null)
+            if (carDto == null)
             {
                 return BadRequest();
             }
-            var createdCar = await _carService.themXeAsync(car);
+            var createdCar = await _carService.themXeAsync(carDto);
             return CreatedAtAction(nameof(GetCarById), new { id = createdCar.CarID }, createdCar);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateCar(int id, [FromBody] Car car)
+        public async Task<IActionResult> UpdateCar(int id, [FromBody] UpdateCarDTO carDto)
         {
-            if (car == null || car.CarID != id)
+            if (carDto == null || carDto.CarID != id)
             {
                 return BadRequest();
             }
@@ -57,7 +58,7 @@ namespace SDCRMS.Controllers
                 return NotFound();
             }
 
-            var updatedCar = await _carService.capNhatXeAsync(car);
+            var updatedCar = await _carService.capNhatXeAsync(carDto);
             return Ok(updatedCar);
         }
 

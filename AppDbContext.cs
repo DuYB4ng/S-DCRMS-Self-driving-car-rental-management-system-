@@ -28,5 +28,11 @@ public class AppDbContext : DbContext
             .HasOne(e => e.Payment)          // Booking có 1 Payment
             .WithOne(e => e.Booking)         // Payment có 1 Booking
             .HasForeignKey<Payment>(e => e.BookingID);  // FK nằm ở bảng Payment
+
+        modelBuilder.Entity<Car>()
+            .HasOne(e => e.OwnerCar)         // Car có 1 OwnerCar
+            .WithMany(e => e.Cars)           // OwnerCar có nhiều Car
+            .HasForeignKey(e => e.OwnerCarID) // FK nằm ở bảng Car
+            .OnDelete(DeleteBehavior.Cascade); // Xóa cascade
     }
 }

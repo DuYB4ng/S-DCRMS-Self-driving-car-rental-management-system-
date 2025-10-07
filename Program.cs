@@ -1,8 +1,11 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore;
+using SDCRMS.Mappers;
 using SDCRMS.Models;
 using SDCRMS.Repositories;
 using SDCRMS.Services;
+using AutoMapper;
+using Microsoft.Extensions.DependencyInjection;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -19,7 +22,11 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<ICarRepository, CarRepository>();
 //Đăng kí Services
 builder.Services.AddScoped<ICarService, CarService>();
-
+//Đăng kí AutoMapper
+builder.Services.AddAutoMapper(cfg =>
+{
+    cfg.AddProfile<CarProfile>();
+});
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
