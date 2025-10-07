@@ -34,16 +34,5 @@ namespace SDCRMS.Controllers
 
             return Ok(admin.ToAdminDto());
         }
-
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete([FromRoute] int id)
-        {
-            var admin = await _context.Admins.FindAsync(id);
-
-            _context.Admins.Remove(admin!);
-            await _context.SaveChangesAsync();
-
-            return Ok(admin!.ToAdminDto());
-        }
     }
 }

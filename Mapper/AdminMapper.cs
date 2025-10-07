@@ -9,15 +9,33 @@ namespace SDCRMS.Mapper
         {
             return new AdminDto
             {
+                RoleId = admin.RoleID,
                 UserId = admin.UserID,
                 FirstName = admin.FirstName,
                 LastName = admin.LastName,
                 Email = admin.Email,
                 Address = admin.Address,
-                JoinedAt = admin.JoinDate,
+                JointDate = admin.JoinDate,
                 PhoneNumber = admin.PhoneNumber,
                 Sex = admin.Sex,
                 Birthday = admin.Birthday,
+            };
+        }
+    }
+
+    public static class CreateAdminDtoMapper
+    {
+        public static Admin ToAdminDto(this CreateAdminDto dto)
+        {
+            return new Admin
+            {
+                FirstName = dto.FirstName,
+                LastName = dto.LastName,
+                Email = dto.Email,
+                Address = dto.Address,
+                PhoneNumber = dto.PhoneNumber,
+                Sex = dto.Sex,
+                Birthday = dto.Birthday,
             };
         }
     }

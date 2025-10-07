@@ -1,6 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using SDCRMS.DTOs.Admin;
+using SDCRMS.DTOs.Notification;
 using SDCRMS.Mappers;
+using SDCRMS.Models;
+using SDCRMS.Services;
 
 namespace SDCRMS.Controllers
 {
@@ -34,6 +38,21 @@ namespace SDCRMS.Controllers
                 return NotFound();
             }
             return Ok(notification.ToNotificationDto());
+        }
+
+        // Post: api/notification
+        [HttpPost]
+        public async Task<IActionResult> PostNotification([FromBody] CreateNotificationDto dto)
+        {
+            var notification = dto.ToNotification();
+            _context.Notifications.Add(notification);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction(
+                nameof(GetNotification),
+                new { id = notification.NotificationID },
+                notification.ToNotificationDto()
+            );
         }
     }
 }
