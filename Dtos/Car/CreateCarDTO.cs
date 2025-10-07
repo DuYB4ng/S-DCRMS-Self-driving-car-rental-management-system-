@@ -1,0 +1,14 @@
+namespace SDCRMS.Dtos.Car
+{
+    public class CreateCarDTO
+    {
+        public string NameCar { get; set; } = string.Empty;
+        public string LicensePlate { get; set; } = string.Empty;
+        public int ModelYear { get; set; }
+        public string State { get; set; } = string.Empty;
+        public int Seat { get; set; }
+        public string TypeCar { get; set; } = string.Empty;
+        public decimal Price { get; set; }
+        public string urlImage { get; set; } = string.Empty;
+    }
+}
