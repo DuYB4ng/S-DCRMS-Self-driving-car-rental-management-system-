@@ -17,4 +17,19 @@ namespace SDCRMS.Mappers
             };
         }
     }
+
+    public static class CreateNotificationDtoMapper
+    {
+        // Map CreateNotificationDto -> Notification entity
+        public static Notification ToNotification(this CreateNotificationDto dto)
+        {
+            return new Notification
+            {
+                Title = dto.Title,
+                Message = dto.Message,
+                CreatedAt = DateTime.UtcNow,
+                Read = false,
+            };
+        }
+    }
 }
