@@ -7,7 +7,7 @@ namespace SDCRMS.Repositories
 {
     public interface IMaintenanceRepository
     {
-        Task<INumerable<Maintenance>> layTatCaMaintenanceAsync();
+        Task<IEnumerable<Maintenance>> layTatCaMaintenanceAsync();
         Task<Maintenance?> layMaintenanceTheoIdAsync(int maintenanceId);
         Task<Maintenance> themMaintenanceAsync(Maintenance maintenance);
         Task<Maintenance?> capNhatMaintenanceAsync(Maintenance maintenance);
@@ -23,7 +23,7 @@ namespace SDCRMS.Repositories
             _context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
-        public async Task<INumerable<Maintenance>> layTatCaMaintenanceAsync()
+        public async Task<IEnumerable<Maintenance>> layTatCaMaintenanceAsync()
         {
             return await _context.Maintenances.Include(m => m.Car).ToListAsync();
         }
