@@ -1,3 +1,5 @@
+using SDCRMS.Dtos.Car;
+
 namespace SDCRMS.Dtos.car
 {
     public class MaintenanceDTO
