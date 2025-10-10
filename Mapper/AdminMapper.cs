@@ -1,5 +1,6 @@
 using SDCRMS.DTOs.Admin;
 using SDCRMS.Models;
+using SDCRMS.Models.Enums;
 
 namespace SDCRMS.Mapper
 {
@@ -9,13 +10,13 @@ namespace SDCRMS.Mapper
         {
             return new AdminDto
             {
-                RoleId = admin.RoleID,
-                UserId = admin.UserID,
+                UserID = admin.UserID,
+                Role = admin.Role.ToString(),
                 FirstName = admin.FirstName,
                 LastName = admin.LastName,
                 Email = admin.Email,
                 Address = admin.Address,
-                JointDate = admin.JoinDate,
+                JoinDate = admin.JoinDate,
                 PhoneNumber = admin.PhoneNumber,
                 Sex = admin.Sex,
                 Birthday = admin.Birthday,
@@ -25,7 +26,7 @@ namespace SDCRMS.Mapper
 
     public static class CreateAdminDtoMapper
     {
-        public static Admin ToAdminDto(this CreateAdminDto dto)
+        public static Admin ToAdmin(this CreateAdminDto dto)
         {
             return new Admin
             {
@@ -36,6 +37,7 @@ namespace SDCRMS.Mapper
                 PhoneNumber = dto.PhoneNumber,
                 Sex = dto.Sex,
                 Birthday = dto.Birthday,
+                // Role sẽ được set ở constructor Admin => UserRole.Admin
             };
         }
     }

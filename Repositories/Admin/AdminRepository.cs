@@ -1,7 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using SDCRMS.Models;
+using SDCRMS.Models.Enums;
 
-namespace SDCRMS.Repositories // Đổi từ SDCRMS.Repositories.Admin thành SDCRMS.Repositories
+namespace SDCRMS.Repositories
 {
     public interface IAdminRepository
     {
@@ -39,6 +40,8 @@ namespace SDCRMS.Repositories // Đổi từ SDCRMS.Repositories.Admin thành SD
 
         public async Task<Admin> TaoAdminAsync(Admin admin)
         {
+            admin.JoinDate = DateTime.UtcNow;
+            admin.Role = UserRole.Admin;
             _context.Admins.Add(admin);
             await _context.SaveChangesAsync();
             return admin;
@@ -50,7 +53,6 @@ namespace SDCRMS.Repositories // Đổi từ SDCRMS.Repositories.Admin thành SD
             if (existingAdmin == null)
                 return null;
 
-            existingAdmin.RoleID = admin.RoleID;
             existingAdmin.LastName = admin.LastName;
             existingAdmin.FirstName = admin.FirstName;
             existingAdmin.Email = admin.Email;
@@ -58,7 +60,7 @@ namespace SDCRMS.Repositories // Đổi từ SDCRMS.Repositories.Admin thành SD
             existingAdmin.Sex = admin.Sex;
             existingAdmin.Birthday = admin.Birthday;
             existingAdmin.Address = admin.Address;
-            existingAdmin.JoinDate = admin.JoinDate;
+
             await _context.SaveChangesAsync();
             return existingAdmin;
         }

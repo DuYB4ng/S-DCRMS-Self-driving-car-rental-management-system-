@@ -2,8 +2,8 @@ namespace SDCRMS.DTOs.Admin
 {
     public class AdminDto
     {
-        public int UserId { get; set; }
-        public int RoleId { get; set; }
+        public int UserID { get; set; }
+        public string Role { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
         public string FirstName { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
@@ -11,6 +11,6 @@ namespace SDCRMS.DTOs.Admin
         public string Sex { get; set; } = string.Empty;
         public DateTime Birthday { get; set; }
         public string Address { get; set; } = string.Empty;
-        public DateTime JointDate { get; set; }
+        public DateTime JoinDate { get; set; }
     }
 }
