@@ -1,15 +1,38 @@
-﻿namespace SDCRMS.Models
+﻿using SDCRMS.Models.Enums;
+
+namespace SDCRMS.Models
 {
     public class Admin : Users
     {
-        private void giamSatHeThongVaPhanQuyen() { }
+        public Admin()
+        {
+            Role = UserRole.Admin; // Tự động set role là Admin
+        }
 
-        private void theoDoiGiaoDichTaiChinhVaTuanThu() { }
+        // Admin-specific methods
+        public void GiamSatHeThongVaPhanQuyen()
+        {
+            // Logic giám sát hệ thống và phân quyền
+        }
 
-        private void baoCaoThongKe() { }
+        public void TheoDoiGiaoDichTaiChinhVaTuanThu()
+        {
+            // Logic theo dõi giao dịch tài chính và tuần thu
+        }
 
-        private void yeuCauPhiChucNang() { }
+        public void BaoCaoThongKe()
+        {
+            // Logic báo cáo thống kê
+        }
 
-        private void datXe() { }
+        public void YeuCauPhiChucNang()
+        {
+            // Logic yêu cầu phí chức năng
+        }
+
+        public void DatXe()
+        {
+            // Logic đặt xe cho admin
+        }
     }
 }
