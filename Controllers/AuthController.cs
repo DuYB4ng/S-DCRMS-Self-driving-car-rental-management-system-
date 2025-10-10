@@ -2,7 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Project.DTOs.Admin;
+using SDCRMS.DTOs.Admin;
 using SDCRMS.DTOs.Auth;
 using SDCRMS.Models.Enums;
 using SDCRMS.Services;
@@ -53,28 +53,27 @@ namespace SDCRMS.Controllers
         }
 
         [HttpPost("register-admin")]
-        public async Task<IActionResult> RegisterAdmin([FromBody] RegisterAdminDto registerDto)
+        public async Task<IActionResult> RegisterAdmin([FromBody] CreateAdminDto createDto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
             // Kiểm tra email đã tồn tại
-            if (await _context.Users.AnyAsync(u => u.Email == registerDto.Email))
+            if (await _context.Users.AnyAsync(u => u.Email == createDto.Email))
                 return BadRequest(new { message = "Email already exists" });
 
             // Tạo admin user mới
             var admin = new Models.Admin
             {
-                Email = registerDto.Email,
-                PasswordHash = HashPassword(registerDto.Password),
-                FirstName = registerDto.FirstName,
-                LastName = registerDto.LastName,
-                PhoneNumber = registerDto.PhoneNumber,
+                Email = createDto.Email,
+                FirstName = createDto.FirstName,
+                LastName = createDto.LastName,
+                PhoneNumber = createDto.PhoneNumber,
                 Role = UserRole.Admin,
                 JoinDate = DateTime.UtcNow,
-                Address = registerDto.Address ?? string.Empty,
-                Sex = registerDto.Sex ?? string.Empty,
-                Birthday = registerDto.Birthday ?? DateTime.MinValue,
+                Address = createDto.Address,
+                Sex = createDto.Sex,
+                Birthday = createDto.Birthday,
             };
 
             _context.Users.Add(admin);
