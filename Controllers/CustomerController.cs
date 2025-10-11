@@ -2,6 +2,7 @@
 using SDCRMS.Mappers;
 using SDCRMS.Dtos.Customer;
 using Microsoft.EntityFrameworkCore;
+using SDCRMS.Interfaces;
 
 namespace SDCRMS.Controllers
 {
@@ -10,15 +11,18 @@ namespace SDCRMS.Controllers
     public class CustomerController : ControllerBase
     {
         private readonly AppDbContext _context;
-        public CustomerController(AppDbContext context)
+        private readonly ICustomerRepository _customerRepo;
+
+        public CustomerController(AppDbContext context, ICustomerRepository customerRepo)
         {
             _context = context;
+            _customerRepo = customerRepo;
         }
 
         [HttpGet]
         public async Task<IActionResult> Getall() //IActionResult là một interface trong ASP.NET Core MVC, dùng để định nghĩa kiểu dữ liệu trả về của một action (hàm trong Controller).
         {
-            var customers = await _context.Customers.ToListAsync();
+            var customers = await _customerRepo.getAllAsync();
             var dtoCustomer = customers.Select(s=>s.ToCustomerDto());
             return Ok(customers);
         }
@@ -26,7 +30,7 @@ namespace SDCRMS.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById([FromRoute]int id) //[FromRoute] là một attribute trong ASP.NET Core, dùng để chỉ định rằng tham số của action sẽ được lấy từ route (đường dẫn URL) thay vì từ query string, body, hay header.
         {
-            var customer = await _context.Customers.FindAsync(id);
+            var customer = await _customerRepo.getByIdAsync(id);
             if (customer == null)
             {
                 return NotFound();
@@ -37,9 +41,7 @@ namespace SDCRMS.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody]CreateCustomerDto customerDto)
         {
-            var customerModel = customerDto.ToCreateCutomerDto();
-            await _context.Customers.AddAsync(customerModel);
-            await _context.SaveChangesAsync();
+            var customerModel = await _customerRepo.createAsync(customerDto);
             return CreatedAtAction(nameof(GetById), new { id = customerModel.ID }, customerModel.ToCustomerDto());
         }
 
@@ -47,21 +49,8 @@ namespace SDCRMS.Controllers
         [Route("{id}")]
         public async Task<IActionResult> Update([FromRoute]int id, [FromBody] UpdateCustomerDto customerDto)
         {
-            var existingCustomer = await _context.Customers.FindAsync(id); //var customerModel = _context.Customers.FirstOrDefault(c => c.ID == id);
-            if (existingCustomer == null)
-            {
-                return NotFound();
-            }
-            // Cập nhật các thuộc tính của existingCustomer từ customerDto
-            existingCustomer.FirstName = customerDto.FirstName;
-            existingCustomer.LastName = customerDto.LastName;
-            existingCustomer.Email = customerDto.Email;
-            existingCustomer.PhoneNumber = customerDto.PhoneNumber;
-            existingCustomer.Address = customerDto.Address;
-            existingCustomer.DrivingLicense = customerDto.DrivingLicense;
-            existingCustomer.LicenseIssueDate = customerDto.LicenseIssueDate;
-            existingCustomer.LicenseExpiryDate = customerDto.LicenseExpiryDate;
-            await _context.SaveChangesAsync();
+            var existingCustomer = await _customerRepo.updateAsync(id, customerDto);
+            if (existingCustomer is null) return NotFound();
             return Ok(existingCustomer.ToCustomerDto());
         }
 
@@ -69,13 +58,8 @@ namespace SDCRMS.Controllers
         [Route("{id}")]
         public async Task<IActionResult> Delete([FromRoute]int id)
         {
-            var existingCustomer = await _context.Customers.FindAsync(id);
-            if (existingCustomer == null)
-            {
-                return NotFound();
-            }
-            _context.Customers.Remove(existingCustomer);
-            await _context.SaveChangesAsync();
+            var existingCustomer = await _customerRepo.deleteAsync(id);
+            if (!existingCustomer) return NotFound();
             return NoContent();
         }
     }

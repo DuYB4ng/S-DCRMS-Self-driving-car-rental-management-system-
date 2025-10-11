@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using SDCRMS.Models;
 using SDCRMS.Repositories;
 using SDCRMS.Services;
+using SDCRMS.Interfaces;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -17,6 +18,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 });
 //Đăng kí Repositores 
 builder.Services.AddScoped<ICarRepository, CarRepository>();
+builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 //Đăng kí Services
 builder.Services.AddScoped<ICarService, CarService>();
 
