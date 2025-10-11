@@ -37,7 +37,6 @@ namespace SDCRMS.Mapper
                 PhoneNumber = dto.PhoneNumber,
                 Sex = dto.Sex,
                 Birthday = dto.Birthday,
-                // Role sẽ được set ở constructor Admin => UserRole.Admin
             };
         }
     }
