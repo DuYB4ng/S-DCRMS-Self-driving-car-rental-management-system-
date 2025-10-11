@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SDCRMS.DTOs.Admin;
@@ -23,6 +24,7 @@ namespace SDCRMS.Controllers
         }
 
         [HttpPost("login")]
+        [AllowAnonymous]
         public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
         {
             if (!ModelState.IsValid)
@@ -34,25 +36,26 @@ namespace SDCRMS.Controllers
                 return Unauthorized(new { message = "Invalid email or password" });
 
             // Kiểm tra mật khẩu
-            if (!VerifyPassword(loginDto.Password, user.PasswordHash))
+            if (user.Password != loginDto.Password)
                 return Unauthorized(new { message = "Invalid email or password" });
 
             // Tạo JWT token
             var token = _jwtService.GenerateToken(user);
 
-            var response = new LoginResponseDto
+            var response = new
             {
-                Token = token,
                 Email = user.Email,
                 Role = user.Role.ToString(),
-                FullName = $"{user.FirstName} {user.LastName}",
-                ExpiresAt = DateTime.UtcNow.AddHours(24),
+                LastName = user.LastName,
+                FirstName = user.FirstName,
+                Token = token,
             };
 
             return Ok(response);
         }
 
         [HttpPost("register-admin")]
+        [AllowAnonymous]
         public async Task<IActionResult> RegisterAdmin([FromBody] CreateAdminDto createDto)
         {
             if (!ModelState.IsValid)
@@ -74,25 +77,13 @@ namespace SDCRMS.Controllers
                 Address = createDto.Address,
                 Sex = createDto.Sex,
                 Birthday = createDto.Birthday,
+                Password = createDto.Password,
             };
 
             _context.Users.Add(admin);
             await _context.SaveChangesAsync();
 
             return Ok(new { message = "Admin registered successfully" });
-        }
-
-        private string HashPassword(string password)
-        {
-            using var sha256 = SHA256.Create();
-            var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password + "SDCRMS_SALT"));
-            return Convert.ToBase64String(hashedBytes);
-        }
-
-        private bool VerifyPassword(string password, string hash)
-        {
-            var computedHash = HashPassword(password);
-            return computedHash == hash;
         }
     }
 }

@@ -9,5 +9,6 @@ namespace SDCRMS.DTOs.Admin
         public string Sex { get; set; } = string.Empty;
         public DateTime Birthday { get; set; }
         public string Address { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
     }
 }
