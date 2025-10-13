@@ -42,7 +42,7 @@ namespace SDCRMS.Controllers
         public async Task<IActionResult> Create([FromBody]CreateCustomerDto customerDto)
         {
             var customerModel = await _customerRepo.createAsync(customerDto);
-            return CreatedAtAction(nameof(GetById), new { id = customerModel.ID }, customerModel.ToCustomerDto());
+            return CreatedAtAction(nameof(GetById), new { id = customerModel.ID }, customerModel);
         }
 
         [HttpPut]

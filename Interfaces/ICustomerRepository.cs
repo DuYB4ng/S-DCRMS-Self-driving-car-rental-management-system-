@@ -11,7 +11,7 @@ namespace SDCRMS.Interfaces
     {
         Task<List<Customer>> getAllAsync();
         Task<Customer?> getByIdAsync(int id);
-        Task<Customer> createAsync(CreateCustomerDto dto);
+        Task<Customer> createAsync(CreateCustomerDto customerDto);
         Task<Customer?> updateAsync(int id, UpdateCustomerDto dto);
         Task<bool> deleteAsync(int id);
     }
