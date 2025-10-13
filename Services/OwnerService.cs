@@ -14,18 +14,22 @@ public interface IOwnerCarService
     Task<IEnumerable<CarDTO>> layTatCaXeTheoOwnerCarIdAsync(int ownerCarId);
     Task<OwnerCarDTO?> themOwnerCarAsync(CreateOwnerCarDTO ownerCarDto);
     Task<CarDTO?> layXeTheoIdAsync(int carId);
+    Task<MaintenanceDTO?> layMaintenanceTheoIdAsync(int maintenanceId);
+    Task<MaintenanceDTO> themMaintenanceChoXeAsync(int carId, CreateMaintenanceDTO maintenanceDto);
 }
 
 public class OwnerCarService : IOwnerCarService
 {
     private readonly IOwnerCarRepository _ownerCarRepository;
     private readonly ICarRepository _carRepository;
+    private readonly IMaintenanceRepository _maintenanceRepository;
     private readonly IMapper _mapper;
 
-    public OwnerCarService(IOwnerCarRepository ownerCarRepository, ICarRepository carRepository, IMapper mapper)
+    public OwnerCarService(IOwnerCarRepository ownerCarRepository, ICarRepository carRepository, IMaintenanceRepository maintenanceRepository, IMapper mapper)
     {
         _ownerCarRepository = ownerCarRepository;
         _carRepository = carRepository;
+        _maintenanceRepository = maintenanceRepository;
         _mapper = mapper;
     }
 
@@ -108,5 +112,27 @@ public class OwnerCarService : IOwnerCarService
     {
         var car = await _carRepository.layXeTheoIdAsync(carId);
         return car == null ? null : _mapper.Map<CarDTO>(car);
+    }
+
+    // Lấy bảo trì theo ID
+    public async Task<MaintenanceDTO?> layMaintenanceTheoIdAsync(int maintenanceId)
+    {
+        var maintenance = await _maintenanceRepository.layMaintenanceTheoIdAsync(maintenanceId);
+        return maintenance == null ? null : _mapper.Map<MaintenanceDTO>(maintenance);
+    }
+    // Thêm bảo trì cho xe
+    public async Task<MaintenanceDTO> themMaintenanceChoXeAsync(int carId, CreateMaintenanceDTO maintenanceDto)
+    {
+        var car = await _carRepository.layXeTheoIdAsync(carId);
+        if (car == null)
+        {
+            throw new Exception("Không tìm thấy xe với ID đã cho.");
+        }
+
+        var maintenance = _mapper.Map<Maintenance>(maintenanceDto);
+        maintenance.CarID = carId;
+
+        var newMaintenance = await _maintenanceRepository.themMaintenanceAsync(maintenance);
+        return _mapper.Map<MaintenanceDTO>(newMaintenance);
     }
 }
