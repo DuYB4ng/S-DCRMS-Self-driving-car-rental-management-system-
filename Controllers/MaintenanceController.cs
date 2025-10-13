@@ -29,16 +29,6 @@ namespace SDCRMS.Controllers
             }
             return Ok(maintenance);
         }
-        [HttpPost]
-        public async Task<IActionResult> CreateMaintenance([FromBody] CreateMaintenanceDTO maintenanceDto)
-        {
-            if (maintenanceDto == null)
-            {
-                return BadRequest();
-            }
-            var createdMaintenance = await _maintenanceService.themMaintenanceAsync(maintenanceDto);
-            return CreatedAtAction(nameof(GetMaintenanceById), new { id = createdMaintenance.MaintenanceID }, createdMaintenance);
-        }
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateMaintenance(int id, [FromBody] UpdateMaintenanceDTO maintenanceDto)
         {

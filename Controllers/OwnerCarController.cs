@@ -101,5 +101,33 @@ namespace SDCRMS.Controllers
                 return NotFound(new { message = ex.Message });
             }
         }
+        [HttpPost("{carId}/maintenances")]
+        public async Task<IActionResult> AddMaintenanceToCar(int carId, [FromBody] CreateMaintenanceDTO maintenanceDto)
+        {
+            if (maintenanceDto == null)
+            {
+                return BadRequest();
+            }
+
+            try
+            {
+                var createdMaintenance = await _ownerCarService.themMaintenanceChoXeAsync(carId, maintenanceDto);
+                return CreatedAtAction(nameof(GetOwnerCarById), new { id = createdMaintenance.MaintenanceID }, createdMaintenance);
+            }
+            catch (Exception ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+        }
+        [HttpGet("{carId}/maintenances/{maintenanceId}")]
+        public async Task<IActionResult> GetMaintenanceById(int carId, int maintenanceId)
+        {
+            var maintenance = await _ownerCarService.layMaintenanceTheoIdAsync(maintenanceId);
+            if (maintenance == null || maintenance.CarID != carId)
+            {
+                return NotFound();
+            }
+            return Ok(maintenance);
+        }
     }
 }
