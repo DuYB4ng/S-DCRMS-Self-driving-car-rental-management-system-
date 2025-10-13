@@ -19,6 +19,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 //Đăng kí Repositores 
 builder.Services.AddScoped<ICarRepository, CarRepository>();
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
+builder.Services.AddScoped<IBookingRepository, BookingRepository>();
 //Đăng kí Services
 builder.Services.AddScoped<ICarService, CarService>();
 

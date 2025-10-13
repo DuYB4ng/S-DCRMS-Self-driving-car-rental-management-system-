@@ -28,28 +28,13 @@ namespace SDCRMS.Repositories
             return _context.Customers.FindAsync(id).AsTask();
         }
 
-        public async Task<Customer> createAsync(CreateCustomerDto dto)
+        public async Task<Customer> createAsync(CreateCustomerDto customerDto)
         {
             // Map DTO -> Entity (điền đúng các field của bạn)
-            var customer = new Customer
-            {
-                Username = dto.Username,
-                Password = dto.Password,
-                FirstName = dto.FirstName,
-                LastName = dto.LastName,
-                Sex = dto.Sex,
-                Email = dto.Email,
-                PhoneNumber = dto.PhoneNumber,
-                Address = dto.Address,
-                DrivingLicense = dto.DrivingLicense,
-                LicenseIssueDate = dto.LicenseIssueDate,
-                LicenseExpiryDate = dto.LicenseExpiryDate
-            };
-
-            await _context.Customers.AddAsync(customer);
+            var customerModel = customerDto.ToCreateCutomerDto();
+            await _context.Customers.AddAsync(customerModel);
             await _context.SaveChangesAsync();
-
-            return customer; 
+            return customerModel; 
         }
 
         public async Task<Customer?> updateAsync(int id, UpdateCustomerDto dto)
