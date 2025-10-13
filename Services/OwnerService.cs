@@ -12,6 +12,8 @@ public interface IOwnerCarService
     Task<IEnumerable<OwnerCarDTO>> layTatCaOwnerCarAsync();
     Task<OwnerCarDTO?> layOwnerCarTheoIdAsync(int ownerCarId);
     Task<IEnumerable<CarDTO>> layTatCaXeTheoOwnerCarIdAsync(int ownerCarId);
+    Task<OwnerCarDTO?> themOwnerCarAsync(CreateOwnerCarDTO ownerCarDto);
+    Task<CarDTO?> layXeTheoIdAsync(int carId);
 }
 
 public class OwnerCarService : IOwnerCarService
@@ -93,5 +95,18 @@ public class OwnerCarService : IOwnerCarService
         }
 
         return ownerCar.Cars.Select(c => _mapper.Map<CarDTO>(c)).ToList();
+    }
+    // Thêm chủ xe
+    public async Task<OwnerCarDTO?> themOwnerCarAsync(CreateOwnerCarDTO ownerCarDto)
+    {
+        var ownerCar = _mapper.Map<OwnerCar>(ownerCarDto);
+        var newOwnerCar = await _ownerCarRepository.themOwnerCarAsync(ownerCar);
+        return _mapper.Map<OwnerCarDTO>(newOwnerCar);
+    }
+    // Lấy xe theo ID
+    public async Task<CarDTO?> layXeTheoIdAsync(int carId)
+    {
+        var car = await _carRepository.layXeTheoIdAsync(carId);
+        return car == null ? null : _mapper.Map<CarDTO>(car);
     }
 }

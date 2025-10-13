@@ -8,9 +8,14 @@ namespace SDCRMS.Mappers
     {
         public CarProfile()
         {
-            CreateMap<Car, CarDTO>();
+            CreateMap<Car, CarDTO>().ReverseMap();
             CreateMap<CreateCarDTO, Car>();
             CreateMap<UpdateCarDTO, Car>();
+            CreateMap<OwnerCar, OwnerCarDTO>().ReverseMap();
+            CreateMap<CreateOwnerCarDTO, OwnerCar>();
+            CreateMap<Maintenance, MaintenanceDTO>().ReverseMap();
+            CreateMap<CreateMaintenanceDTO, Maintenance>();
+            CreateMap<UpdateMaintenanceDTO, Maintenance>();
         }
     }
 }
