@@ -20,8 +20,12 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 });
 //Đăng kí Repositores 
 builder.Services.AddScoped<ICarRepository, CarRepository>();
+builder.Services.AddScoped<IOwnerCarRepository, OwnerCarRepository>();
+builder.Services.AddScoped<IMaintenanceRepository, MaintenanceRepository>();
 //Đăng kí Services
 builder.Services.AddScoped<ICarService, CarService>();
+builder.Services.AddScoped<IOwnerCarService, OwnerCarService>();
+builder.Services.AddScoped<IMaintenanceService, MaintenanceService>();
 //Đăng kí AutoMapper
 builder.Services.AddAutoMapper(cfg =>
 {

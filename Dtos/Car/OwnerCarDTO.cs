@@ -8,6 +8,6 @@ namespace SDCRMS.Dtos.Car
         public string PhoneNumber { get; set; } = string.Empty;
         public string Address { get; set; } = string.Empty;
 
-        public List<CarDTO> Cars { get; set; } = new List<CarDTO>();
+        public List<CarDTO>? Cars { get; set; } = new List<CarDTO>();
     }
 }

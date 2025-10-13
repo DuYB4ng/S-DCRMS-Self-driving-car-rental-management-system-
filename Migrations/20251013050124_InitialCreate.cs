@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace SDCRMS.Migrations
 {
     /// <inheritdoc />
-    public partial class tmp : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -18,6 +18,8 @@ namespace SDCRMS.Migrations
                     ID = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     RoleID = table.Column<int>(type: "int", nullable: false),
+                    Username = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Password = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     PhoneNumber = table.Column<int>(type: "int", nullable: false),
                     LastName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     FirstName = table.Column<string>(type: "nvarchar(max)", nullable: false),
@@ -38,10 +40,12 @@ namespace SDCRMS.Migrations
                 {
                     ID = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    DrivingLisence = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    LisenceIssueDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    LisenceExpiryDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DrivingLicense = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    LicenseIssueDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    LicenseExpiryDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     RoleID = table.Column<int>(type: "int", nullable: false),
+                    Username = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Password = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     PhoneNumber = table.Column<int>(type: "int", nullable: false),
                     LastName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     FirstName = table.Column<string>(type: "nvarchar(max)", nullable: false),
@@ -63,6 +67,8 @@ namespace SDCRMS.Migrations
                     ID = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     RoleID = table.Column<int>(type: "int", nullable: false),
+                    Username = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Password = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     PhoneNumber = table.Column<int>(type: "int", nullable: false),
                     LastName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     FirstName = table.Column<string>(type: "nvarchar(max)", nullable: false),
@@ -84,6 +90,8 @@ namespace SDCRMS.Migrations
                     ID = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     RoleID = table.Column<int>(type: "int", nullable: false),
+                    Username = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Password = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     PhoneNumber = table.Column<int>(type: "int", nullable: false),
                     LastName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     FirstName = table.Column<string>(type: "nvarchar(max)", nullable: false),
@@ -106,13 +114,13 @@ namespace SDCRMS.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     NameCar = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     LicensePlate = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    ModelYear = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ModelYear = table.Column<int>(type: "int", nullable: false),
                     State = table.Column<bool>(type: "bit", nullable: false),
                     Seat = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     TypeCar = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Price = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     urlImage = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    OwnerCarID = table.Column<int>(type: "int", nullable: true)
+                    OwnerCarID = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -121,7 +129,8 @@ namespace SDCRMS.Migrations
                         name: "FK_Cars_OwnerCars_OwnerCarID",
                         column: x => x.OwnerCarID,
                         principalTable: "OwnerCars",
-                        principalColumn: "ID");
+                        principalColumn: "ID",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -203,7 +212,7 @@ namespace SDCRMS.Migrations
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Cost = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     Status = table.Column<bool>(type: "bit", nullable: false),
-                    CarID = table.Column<int>(type: "int", nullable: true)
+                    CarID = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -212,7 +221,8 @@ namespace SDCRMS.Migrations
                         name: "FK_Maintenances_Cars_CarID",
                         column: x => x.CarID,
                         principalTable: "Cars",
-                        principalColumn: "CarID");
+                        principalColumn: "CarID",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(

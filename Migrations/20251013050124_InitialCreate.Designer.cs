@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace SDCRMS.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251007111753_AddOwnerCarIDToCars1")]
-    partial class AddOwnerCarIDToCars1
+    [Migration("20251013050124_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -124,8 +124,8 @@ namespace SDCRMS.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("ModelYear")
-                        .HasColumnType("datetime2");
+                    b.Property<int>("ModelYear")
+                        .HasColumnType("int");
 
                     b.Property<string>("NameCar")
                         .IsRequired()
@@ -230,7 +230,7 @@ namespace SDCRMS.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("MaintenanceID"));
 
-                    b.Property<int?>("CarID")
+                    b.Property<int>("CarID")
                         .HasColumnType("int");
 
                     b.Property<decimal>("Cost")
@@ -495,9 +495,13 @@ namespace SDCRMS.Migrations
 
             modelBuilder.Entity("SDCRMS.Models.Maintenance", b =>
                 {
-                    b.HasOne("SDCRMS.Models.Car", null)
+                    b.HasOne("SDCRMS.Models.Car", "Car")
                         .WithMany("Maintenances")
-                        .HasForeignKey("CarID");
+                        .HasForeignKey("CarID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Car");
                 });
 
             modelBuilder.Entity("SDCRMS.Models.Notification", b =>
