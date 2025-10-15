@@ -54,7 +54,7 @@ namespace SDCRMS.Controllers
                     ReviewModel.ReviewID = updateDto.ReviewID;
                     ReviewModel.Rating = updateDto.Rating;
                     ReviewModel.Comment = updateDto.Comment;
-                   
+
                     _context.SaveChanges();
                     return NoContent();
                 }
@@ -74,4 +74,5 @@ namespace SDCRMS.Controllers
 
             }
         }
+    }
 }

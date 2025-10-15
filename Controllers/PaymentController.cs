@@ -8,10 +8,10 @@ namespace SDCRMS.Controllers
 {
     [Route("api/payment")]
     [ApiController]
-    public class PaymentController:ControllerBase
+    public class PaymentController : ControllerBase
     {
         private readonly AppDbContext _context;
-        public PaymentController(AppDbContext context)  
+        public PaymentController(AppDbContext context)
         {
             _context = context;
         }
@@ -42,7 +42,7 @@ namespace SDCRMS.Controllers
         }
         [HttpPut]
         [Route("{id}")]
-        public IActionResult Update([FromRoute] int id , [FromBody] UpdatePaymentRequestDto updateDto)
+        public IActionResult Update([FromRoute] int id, [FromBody] UpdatePaymentRequestDto updateDto)
         {
             var PaymentModel = _context.Payments.FirstOrDefault(x => x.PaymentID == id);
             if (PaymentModel == null)
@@ -54,18 +54,19 @@ namespace SDCRMS.Controllers
             PaymentModel.PaymentDate = updateDto.PaymentDate;
             PaymentModel.Amount = updateDto.Amount;
             PaymentModel.Method = updateDto.Method;
-            PaymentModel.Status= updateDto.Status;
-            PaymentModel.BookingID= updateDto.BookingID;
-            PaymentModel.Booking= updateDto.Booking;
-            _context.SaveChanges(); 
+            PaymentModel.Status = updateDto.Status;
+            PaymentModel.BookingID = updateDto.BookingID;
+            PaymentModel.Booking = updateDto.Booking;
+            _context.SaveChanges();
             return Ok(PaymentModel.toPaymentDto());
 
         }
 
         [HttpDelete]
         [Route("{id}")]
-        public IActionResult Delete([FromRoute] int id) {
-            var paymentModel = _context.Payments.FirstOrDefault(x => x.PaymentID==id);
+        public IActionResult Delete([FromRoute] int id)
+        {
+            var paymentModel = _context.Payments.FirstOrDefault(x => x.PaymentID == id);
             if (paymentModel != null)
             {
                 return NotFound();
@@ -73,5 +74,6 @@ namespace SDCRMS.Controllers
             _context.Payments.Remove(paymentModel);
             _context.SaveChanges();
             return NoContent();
+        }
     }
 }
