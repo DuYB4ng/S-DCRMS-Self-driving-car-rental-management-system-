@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace SDCRMS.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class Init : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -20,11 +20,7 @@ namespace SDCRMS.Migrations
                     RoleID = table.Column<int>(type: "int", nullable: false),
                     Username = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Password = table.Column<string>(type: "nvarchar(max)", nullable: false),
-<<<<<<<< HEAD:Migrations/20251004040501_tmp.cs
                     PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
-========
-                    PhoneNumber = table.Column<int>(type: "int", nullable: false),
->>>>>>>> test:Migrations/20251013050124_InitialCreate.cs
                     LastName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     FirstName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
@@ -50,11 +46,7 @@ namespace SDCRMS.Migrations
                     RoleID = table.Column<int>(type: "int", nullable: false),
                     Username = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Password = table.Column<string>(type: "nvarchar(max)", nullable: false),
-<<<<<<<< HEAD:Migrations/20251004040501_tmp.cs
                     PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
-========
-                    PhoneNumber = table.Column<int>(type: "int", nullable: false),
->>>>>>>> test:Migrations/20251013050124_InitialCreate.cs
                     LastName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     FirstName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
@@ -77,11 +69,7 @@ namespace SDCRMS.Migrations
                     RoleID = table.Column<int>(type: "int", nullable: false),
                     Username = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Password = table.Column<string>(type: "nvarchar(max)", nullable: false),
-<<<<<<<< HEAD:Migrations/20251004040501_tmp.cs
                     PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
-========
-                    PhoneNumber = table.Column<int>(type: "int", nullable: false),
->>>>>>>> test:Migrations/20251013050124_InitialCreate.cs
                     LastName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     FirstName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
@@ -104,11 +92,7 @@ namespace SDCRMS.Migrations
                     RoleID = table.Column<int>(type: "int", nullable: false),
                     Username = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Password = table.Column<string>(type: "nvarchar(max)", nullable: false),
-<<<<<<<< HEAD:Migrations/20251004040501_tmp.cs
                     PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
-========
-                    PhoneNumber = table.Column<int>(type: "int", nullable: false),
->>>>>>>> test:Migrations/20251013050124_InitialCreate.cs
                     LastName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     FirstName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
