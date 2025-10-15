@@ -14,16 +14,7 @@ namespace SDCRMS.Controllers
         {
             _carService = carService;
         }
-        [HttpPost]
-        public async Task<IActionResult> CreateCar([FromBody] CreateCarDTO carDto)
-        {
-            if (carDto == null)
-            {
-                return BadRequest();
-            }
-            var createdCar = await _carService.themXeAsync(carDto);
-            return CreatedAtAction(nameof(GetCarById), new { id = createdCar.CarID }, createdCar);
-        }
+
         [HttpGet]
         public async Task<IActionResult> GetAllCars()
         {
