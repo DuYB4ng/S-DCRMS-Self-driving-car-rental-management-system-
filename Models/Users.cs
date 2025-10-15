@@ -1,9 +1,11 @@
-﻿namespace SDCRMS.Models
+﻿using SDCRMS.Models.Enums;
+
+namespace SDCRMS.Models
 {
     public abstract class Users
     {
         public int ID { get; set; }
-        public int RoleID { get; set; }
+        public UserRole Role { get; set; }
         public string Username { get; set; }
         public string Password { get; set; }
         public string PhoneNumber { get; set; }

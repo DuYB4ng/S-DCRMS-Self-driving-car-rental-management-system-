@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using SDCRMS.Interfaces;
 using SDCRMS.Models;
 using Microsoft.EntityFrameworkCore;
 using SDCRMS.Dtos.Customer;
@@ -10,6 +9,14 @@ using SDCRMS.Mappers;
 
 namespace SDCRMS.Repositories
 {
+    public interface ICustomerRepository
+    {
+        Task<List<Customer>> getAllAsync();
+        Task<Customer?> getByIdAsync(int id);
+        Task<Customer> createAsync(CreateCustomerDto customerDto);
+        Task<Customer?> updateAsync(int id, UpdateCustomerDto dto);
+        Task<bool> deleteAsync(int id);
+    }
     public class CustomerRepository : ICustomerRepository
     {
         private readonly AppDbContext _context;

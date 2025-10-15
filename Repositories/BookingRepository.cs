@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using SDCRMS.Interfaces;
 using SDCRMS.Models;
 using Microsoft.EntityFrameworkCore;
 using SDCRMS.Dtos.Booking;
@@ -11,6 +10,14 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace SDCRMS.Repositories
 {
+    public interface IBookingRepository
+    {
+        Task<List<Booking>> getAllAsync();
+        Task<Booking?> getByIdAsync(int id);
+        Task<Booking> createAsync(CreateBookingDto dto);
+        Task<Booking?> updateAsync(int id, UpdateBookingDto dto);
+        Task<bool> deleteAsync(int id);
+    }
     public class BookingRepository : IBookingRepository
     {
         private readonly AppDbContext _context;
