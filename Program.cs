@@ -4,7 +4,6 @@ using SDCRMS.Mappers;
 using SDCRMS.Models;
 using SDCRMS.Repositories;
 using SDCRMS.Services;
-using SDCRMS.Interfaces;
 using AutoMapper;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -45,6 +44,7 @@ builder.Services.AddScoped<IOwnerCarRepository, OwnerCarRepository>();
 builder.Services.AddScoped<IMaintenanceRepository, MaintenanceRepository>();
 //Đăng kí Services
 builder.Services.AddScoped<ICarService, CarService>();
+builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<IOwnerCarService, OwnerCarService>();
 builder.Services.AddScoped<IMaintenanceService, MaintenanceService>();
 //Đăng kí AutoMapper

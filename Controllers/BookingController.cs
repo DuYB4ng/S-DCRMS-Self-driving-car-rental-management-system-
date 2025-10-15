@@ -2,8 +2,8 @@
 using SDCRMS.Mappers;
 using SDCRMS.Dtos.Booking;
 using Microsoft.EntityFrameworkCore;
-using SDCRMS.Interfaces;
-
+using SDCRMS.Models;
+using SDCRMS.Repositories;
 namespace SDCRMS.Controllers
 {
     [Route("api/Booking")]
