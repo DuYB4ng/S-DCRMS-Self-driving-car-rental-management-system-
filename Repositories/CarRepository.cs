@@ -23,25 +23,29 @@
                 _context = context ?? throw new ArgumentNullException(nameof(context));
             }
 
-        public Task<Car?> capNhatXeAsync(Car car)
-        {
-            var existingCar = _context.Cars.Find(car.CarID);
-            if (existingCar != null)
+       public async Task<Car?> capNhatXeAsync(Car car)
             {
-                return null;
+                var existingCar = await _context.Cars.FindAsync(car.CarID);
+                if (existingCar == null)
+                {
+                    return null; // Không tìm thấy xe để cập nhật
+                }
+
+                existingCar.NameCar = car.NameCar;
+                existingCar.LicensePlate = car.LicensePlate;
+                existingCar.ModelYear = car.ModelYear;
+                existingCar.State = car.State;
+                existingCar.Seat = car.Seat;
+                existingCar.TypeCar = car.TypeCar;
+                existingCar.Price = car.Price;
+                existingCar.urlImage = car.urlImage;
+
+                _context.Cars.Update(existingCar);
+                await _context.SaveChangesAsync();
+
+                return existingCar;
             }
-            existingCar.NameCar = car.NameCar;
-            existingCar.LicensePlate = car.LicensePlate;
-            existingCar.ModelYear = car.ModelYear;
-            existingCar.State = car.State;
-            existingCar.Seat = car.Seat;
-            existingCar.TypeCar = car.TypeCar;
-            existingCar.Price = car.Price;
-            existingCar.urlImage = car.urlImage;
-            _context.Cars.Update(existingCar);
-            _context.SaveChanges();
-            return Task.FromResult(existingCar);
-        }
+
 
             public async Task<IEnumerable<Car>> layTatCaXeAsync()
             {
