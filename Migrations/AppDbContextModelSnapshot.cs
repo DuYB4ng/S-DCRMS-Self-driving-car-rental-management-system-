@@ -122,14 +122,14 @@ namespace SDCRMS.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("ModelYear")
-                        .HasColumnType("datetime2");
+                    b.Property<int>("ModelYear")
+                        .HasColumnType("int");
 
                     b.Property<string>("NameCar")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("OwnerCarID")
+                    b.Property<int>("OwnerCarID")
                         .HasColumnType("int");
 
                     b.Property<decimal>("Price")
@@ -229,7 +229,7 @@ namespace SDCRMS.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("MaintenanceID"));
 
-                    b.Property<int?>("CarID")
+                    b.Property<int>("CarID")
                         .HasColumnType("int");
 
                     b.Property<decimal>("Cost")
@@ -485,16 +485,24 @@ namespace SDCRMS.Migrations
 
             modelBuilder.Entity("SDCRMS.Models.Car", b =>
                 {
-                    b.HasOne("SDCRMS.Models.OwnerCar", null)
+                    b.HasOne("SDCRMS.Models.OwnerCar", "OwnerCar")
                         .WithMany("Cars")
-                        .HasForeignKey("OwnerCarID");
+                        .HasForeignKey("OwnerCarID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("OwnerCar");
                 });
 
             modelBuilder.Entity("SDCRMS.Models.Maintenance", b =>
                 {
-                    b.HasOne("SDCRMS.Models.Car", null)
+                    b.HasOne("SDCRMS.Models.Car", "Car")
                         .WithMany("Maintenances")
-                        .HasForeignKey("CarID");
+                        .HasForeignKey("CarID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Car");
                 });
 
             modelBuilder.Entity("SDCRMS.Models.Notification", b =>
