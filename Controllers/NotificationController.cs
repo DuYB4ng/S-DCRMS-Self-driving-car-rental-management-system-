@@ -54,5 +54,43 @@ namespace SDCRMS.Controllers
                 notification.ToNotificationDto()
             );
         }
+
+        // Put: api/notification/{id}
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutNotification(
+            int id,
+            [FromBody] CreateNotificationDto dto
+        )
+        {
+            var existingNotification = await _context.Notifications.FindAsync(id);
+            if (existingNotification == null)
+            {
+                return NotFound();
+            }
+
+            existingNotification.Title = dto.Title;
+            existingNotification.Message = dto.Message;
+
+            _context.Notifications.Update(existingNotification);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        // Delete: api/notification/{id}
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteNotification(int id)
+        {
+            var notification = await _context.Notifications.FindAsync(id);
+            if (notification == null)
+            {
+                return NotFound();
+            }
+
+            _context.Notifications.Remove(notification);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
     }
 }
