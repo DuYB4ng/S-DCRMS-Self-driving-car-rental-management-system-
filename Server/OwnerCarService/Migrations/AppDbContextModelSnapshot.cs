@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace CarService.Migrations
+namespace OwnerCarService.Migrations
 {
     [DbContext(typeof(AppDbContext))]
     partial class AppDbContextModelSnapshot : ModelSnapshot
@@ -21,7 +21,7 @@ namespace CarService.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("SDCRMS.Models.Car", b =>
+            modelBuilder.Entity("OwnerCarService.Models.Car", b =>
                 {
                     b.Property<int>("CarID")
                         .ValueGeneratedOnAdd()
@@ -121,7 +121,7 @@ namespace CarService.Migrations
                     b.ToTable("Cars");
                 });
 
-            modelBuilder.Entity("SDCRMS.Models.Maintenance", b =>
+            modelBuilder.Entity("OwnerCarService.Models.Maintenance", b =>
                 {
                     b.Property<int>("MaintenanceID")
                         .ValueGeneratedOnAdd()
@@ -152,7 +152,7 @@ namespace CarService.Migrations
                     b.ToTable("Maintenances");
                 });
 
-            modelBuilder.Entity("SDCRMS.Models.OwnerCar", b =>
+            modelBuilder.Entity("OwnerCarService.Models.OwnerCar", b =>
                 {
                     b.Property<int>("OwnerCarId")
                         .ValueGeneratedOnAdd()
@@ -187,9 +187,9 @@ namespace CarService.Migrations
                     b.ToTable("OwnerCars");
                 });
 
-            modelBuilder.Entity("SDCRMS.Models.Car", b =>
+            modelBuilder.Entity("OwnerCarService.Models.Car", b =>
                 {
-                    b.HasOne("SDCRMS.Models.OwnerCar", "OwnerCar")
+                    b.HasOne("OwnerCarService.Models.OwnerCar", "OwnerCar")
                         .WithMany("Cars")
                         .HasForeignKey("OwnerCarID")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -198,9 +198,9 @@ namespace CarService.Migrations
                     b.Navigation("OwnerCar");
                 });
 
-            modelBuilder.Entity("SDCRMS.Models.Maintenance", b =>
+            modelBuilder.Entity("OwnerCarService.Models.Maintenance", b =>
                 {
-                    b.HasOne("SDCRMS.Models.Car", "Car")
+                    b.HasOne("OwnerCarService.Models.Car", "Car")
                         .WithMany("Maintenances")
                         .HasForeignKey("CarID")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -209,12 +209,12 @@ namespace CarService.Migrations
                     b.Navigation("Car");
                 });
 
-            modelBuilder.Entity("SDCRMS.Models.Car", b =>
+            modelBuilder.Entity("OwnerCarService.Models.Car", b =>
                 {
                     b.Navigation("Maintenances");
                 });
 
-            modelBuilder.Entity("SDCRMS.Models.OwnerCar", b =>
+            modelBuilder.Entity("OwnerCarService.Models.OwnerCar", b =>
                 {
                     b.Navigation("Cars");
                 });

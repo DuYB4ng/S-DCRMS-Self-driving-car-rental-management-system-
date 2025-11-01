@@ -1,8 +1,9 @@
-using SDCRMS.Models;
-using SDCRMS.Repositories;
+using OwnerCarService.Models;
+using OwnerCarService.Repositories;
 using AutoMapper;
-using SDCRMS.Dtos.Car;
-namespace SDCRMS.Services
+using OwnerCarService.Dtos.Car;
+
+namespace OwnerCarService.Services
 {
     public interface IMaintenanceService
     {

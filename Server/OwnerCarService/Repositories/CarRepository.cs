@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
-using SDCRMS.Models;
+using OwnerCarService.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace SDCRMS.Repositories
+namespace OwnerCarService.Repositories
 {
     public interface ICarRepository
     {

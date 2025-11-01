@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
+using OwnerCarService.Mappers;
+using OwnerCarService.Repositories;
+using OwnerCarService.Services;
 using Microsoft.OpenApi.Models;
-using SDCRMS.Mappers;
-using SDCRMS.Repositories;
-using SDCRMS.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -50,8 +50,8 @@ builder.Services.AddScoped<IOwnerCarRepository, OwnerCarRepository>();
 builder.Services.AddScoped<IMaintenanceRepository, MaintenanceRepository>();
 
 // Đăng ký Services
-builder.Services.AddScoped<ICarService, SDCRMS.Services.CarService>();
-builder.Services.AddScoped<IOwnerCarService, OwnerCarService>();
+builder.Services.AddScoped<ICarService, CarService>();
+builder.Services.AddScoped<IOwnerCarService, OwnerCarService.Services.OwnerCarService>();
 builder.Services.AddScoped<IMaintenanceService, MaintenanceService>();
 
 var app = builder.Build();

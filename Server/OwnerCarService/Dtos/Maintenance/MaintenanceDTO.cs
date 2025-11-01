@@ -1,6 +1,6 @@
-using SDCRMS.Dtos.Car;
+using OwnerCarService.Dtos.Car;
 
-namespace SDCRMS.Dtos.Car
+namespace OwnerCarService.Dtos.Car
 {
     public class MaintenanceDTO
     {

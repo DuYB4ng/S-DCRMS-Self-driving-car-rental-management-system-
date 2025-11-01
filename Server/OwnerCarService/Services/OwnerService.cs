@@ -1,156 +1,159 @@
-using SDCRMS.Models;
-using SDCRMS.Repositories;
+using OwnerCarService.Models;
+using OwnerCarService.Repositories;
 using Microsoft.EntityFrameworkCore;
-using SDCRMS.Dtos.Car;
+using OwnerCarService.Dtos.Car;
 using AutoMapper;
-using SDCRMS.Dtos.OwnerCar;
+using OwnerCarService.Dtos.OwnerCar;
 
-public interface IOwnerCarService
+namespace OwnerCarService.Services
 {
-    Task<CarDTO> OwnerCarThemCarAsync(int ownerId, CreateCarDTO carDto);
-    Task<CarDTO?> OwnerCarCapNhatCarAsync(int carId, UpdateCarDTO carDto);
-    Task<bool> DoiStateCarAsync(int carId);
-    Task<bool> XoaCarChoOwnerAsync(int carId);
-    Task<IEnumerable<OwnerCarDTO>> LayTatCaOwnerCarAsync();
-    Task<OwnerCarDTO?> LayOwnerCarTheoIdAsync(int ownerCarId);
-    Task<IEnumerable<CarDTO>> LayTatCaXeCuaOwnerCarIdAsync(int ownerCarId);
-    Task<OwnerCarDTO?> ThemOwnerCarAsync(CreateOwnerCarDTO ownerCarDto);
-    Task<CarDTO?> LayXeTheoIdAsync(int carId);
-    Task<MaintenanceDTO?> LayMaintenanceTheoIdAsync(int maintenanceId);
-    Task<MaintenanceDTO> ThemMaintenanceChoXeAsync(int carId, CreateMaintenanceDTO maintenanceDto);
-    Task<OwnerCarDTO?> CapNhatOwnerCarAsync(int ownerId, UpdateOwnerCarDTO ownerCarDto);
-    Task<bool> XoaOwnerCarAsync(int ownerCarId);
-}
-
-public class OwnerCarService : IOwnerCarService
-{
-    private readonly IOwnerCarRepository _ownerCarRepository;
-    private readonly ICarRepository _carRepository;
-    private readonly IMaintenanceRepository _maintenanceRepository;
-    private readonly IMapper _mapper;
-
-    public OwnerCarService(IOwnerCarRepository ownerCarRepository, ICarRepository carRepository,
-                           IMaintenanceRepository maintenanceRepository, IMapper mapper)
+    public interface IOwnerCarService
     {
-        _ownerCarRepository = ownerCarRepository;
-        _carRepository = carRepository;
-        _maintenanceRepository = maintenanceRepository;
-        _mapper = mapper;
+        Task<CarDTO> OwnerCarThemCarAsync(int ownerId, CreateCarDTO carDto);
+        Task<CarDTO?> OwnerCarCapNhatCarAsync(int carId, UpdateCarDTO carDto);
+        Task<bool> DoiStateCarAsync(int carId);
+        Task<bool> XoaCarChoOwnerAsync(int carId);
+        Task<IEnumerable<OwnerCarDTO>> LayTatCaOwnerCarAsync();
+        Task<OwnerCarDTO?> LayOwnerCarTheoIdAsync(int ownerCarId);
+        Task<IEnumerable<CarDTO>> LayTatCaXeCuaOwnerCarIdAsync(int ownerCarId);
+        Task<OwnerCarDTO?> ThemOwnerCarAsync(CreateOwnerCarDTO ownerCarDto);
+        Task<CarDTO?> LayXeTheoIdAsync(int carId);
+        Task<MaintenanceDTO?> LayMaintenanceTheoIdAsync(int maintenanceId);
+        Task<MaintenanceDTO> ThemMaintenanceChoXeAsync(int carId, CreateMaintenanceDTO maintenanceDto);
+        Task<OwnerCarDTO?> CapNhatOwnerCarAsync(int ownerId, UpdateOwnerCarDTO ownerCarDto);
+        Task<bool> XoaOwnerCarAsync(int ownerCarId);
     }
 
-    public async Task<IEnumerable<OwnerCarDTO>> LayTatCaOwnerCarAsync()
+    public class OwnerCarService : IOwnerCarService
     {
-        var ownerCars = await _ownerCarRepository.LayTatCaOwnerCarAsync();
-        return _mapper.Map<IEnumerable<OwnerCarDTO>>(ownerCars);
-    }
+        private readonly IOwnerCarRepository _ownerCarRepository;
+        private readonly ICarRepository _carRepository;
+        private readonly IMaintenanceRepository _maintenanceRepository;
+        private readonly IMapper _mapper;
 
-
-    public async Task<OwnerCarDTO?> LayOwnerCarTheoIdAsync(int ownerCarId)
-    {
-        var ownerCar = await _ownerCarRepository.LayOwnerCarTheoIdAsync(ownerCarId);
-        return ownerCar == null ? null : _mapper.Map<OwnerCarDTO>(ownerCar);
-    }
-
-    public async Task<CarDTO> OwnerCarThemCarAsync(int ownerId, CreateCarDTO carDto)
-    {
-        var ownerCar = await _ownerCarRepository.LayOwnerCarTheoIdAsync(ownerId)
-                    ?? throw new KeyNotFoundException("Không tìm thấy chủ xe với ID đã cho.");
-
-        var car = _mapper.Map<Car>(carDto);
-        car.OwnerCarID = ownerId;
-
-        var newCar = await _carRepository.ThemXeAsync(car);
-        return _mapper.Map<CarDTO>(newCar);
-    }
-
-
-    public async Task<CarDTO?> OwnerCarCapNhatCarAsync(int carId, UpdateCarDTO carDto)
-    {
-        var car = await _carRepository.LayXeTheoIdAsync(carId)
-                ?? throw new KeyNotFoundException("Không tìm thấy xe cần cập nhật.");
-
-        _mapper.Map(carDto, car);
-        car.UpdatedAt = DateTime.UtcNow;
-
-        var updatedCar = await _carRepository.CapNhatXeAsync(car);
-        return _mapper.Map<CarDTO>(updatedCar);
-    }
-
-    public async Task<bool> XoaCarChoOwnerAsync(int carId)
-    {
-        var car = await _carRepository.LayXeTheoIdAsync(carId)
-                ?? throw new KeyNotFoundException("Không tìm thấy xe cần xóa.");
-
-        return await _carRepository.XoaXeAsync(carId);
-    }
-
-    public async Task<IEnumerable<CarDTO>> LayTatCaXeCuaOwnerCarIdAsync(int ownerCarId)
-    {
-        var ownerCar = await _ownerCarRepository.LayOwnerCarTheoIdAsync(ownerCarId)
-                    ?? throw new KeyNotFoundException("Không tìm thấy chủ xe với ID đã cho.");
-
-        return ownerCar.Cars.Select(c => _mapper.Map<CarDTO>(c)).ToList();
-    }
-
-    public async Task<OwnerCarDTO?> ThemOwnerCarAsync(CreateOwnerCarDTO ownerCarDto)
-    {
-        var ownerCar = _mapper.Map<OwnerCar>(ownerCarDto);
-        var newOwnerCar = await _ownerCarRepository.ThemOwnerCarAsync(ownerCar);
-        return _mapper.Map<OwnerCarDTO>(newOwnerCar);
-    }
-    public async Task<CarDTO?> LayXeTheoIdAsync(int carId)
-    {
-        var car = await _carRepository.LayXeTheoIdAsync(carId);
-        return car == null ? null : _mapper.Map<CarDTO>(car);
-    }
-
-    public async Task<MaintenanceDTO?> LayMaintenanceTheoIdAsync(int maintenanceId)
-    {
-        var maintenance = await _maintenanceRepository.LayMaintenanceTheoIdAsync(maintenanceId);
-        return maintenance == null ? null : _mapper.Map<MaintenanceDTO>(maintenance);
-    }
-
-
-    public async Task<MaintenanceDTO> ThemMaintenanceChoXeAsync(int carId, CreateMaintenanceDTO maintenanceDto)
-    {
-        var car = await _carRepository.LayXeTheoIdAsync(carId)
-                ?? throw new KeyNotFoundException("Không tìm thấy xe với ID đã cho.");
-
-        var maintenance = _mapper.Map<Maintenance>(maintenanceDto);
-        maintenance.CarID = carId;
-
-        var newMaintenance = await _maintenanceRepository.ThemMaintenanceAsync(maintenance);
-        return _mapper.Map<MaintenanceDTO>(newMaintenance);
-    }
-
-    public async Task<bool> DoiStateCarAsync(int carId)
-    {
-        var car = await _carRepository.LayXeTheoIdAsync(carId)
-                ?? throw new KeyNotFoundException("Không tìm thấy xe với ID đã cho.");
-
-        car.IsActive = !car.IsActive;
-        await _carRepository.CapNhatXeAsync(car);
-        return car.IsActive;
-    }
-    public async Task<OwnerCarDTO?> CapNhatOwnerCarAsync(int ownerId, UpdateOwnerCarDTO ownerCarDto)
-    {
-        var existingOwnerCar = await _ownerCarRepository.LayOwnerCarTheoIdAsync(ownerCarDto.OwnerCarId);
-        if (existingOwnerCar == null)
-            return null;
-
-        _mapper.Map(ownerCarDto, existingOwnerCar);
-
-        var updatedOwnerCar = await _ownerCarRepository.CapNhatOwnerCarAsync(existingOwnerCar);
-        return _mapper.Map<OwnerCarDTO>(updatedOwnerCar);
-    }
-    public async Task<bool> XoaOwnerCarAsync(int ownerCarId)
-    {
-        var ownerCar = await _ownerCarRepository.LayOwnerCarTheoIdAsync(ownerCarId);
-        if (ownerCar == null)
+        public OwnerCarService(IOwnerCarRepository ownerCarRepository, ICarRepository carRepository,
+                               IMaintenanceRepository maintenanceRepository, IMapper mapper)
         {
-            return false;
+            _ownerCarRepository = ownerCarRepository;
+            _carRepository = carRepository;
+            _maintenanceRepository = maintenanceRepository;
+            _mapper = mapper;
         }
 
-        return await _ownerCarRepository.XoaOwnerCarAsync(ownerCarId);
+        public async Task<IEnumerable<OwnerCarDTO>> LayTatCaOwnerCarAsync()
+        {
+            var ownerCars = await _ownerCarRepository.LayTatCaOwnerCarAsync();
+            return _mapper.Map<IEnumerable<OwnerCarDTO>>(ownerCars);
+        }
+
+
+        public async Task<OwnerCarDTO?> LayOwnerCarTheoIdAsync(int ownerCarId)
+        {
+            var ownerCar = await _ownerCarRepository.LayOwnerCarTheoIdAsync(ownerCarId);
+            return ownerCar == null ? null : _mapper.Map<OwnerCarDTO>(ownerCar);
+        }
+
+        public async Task<CarDTO> OwnerCarThemCarAsync(int ownerId, CreateCarDTO carDto)
+        {
+            var ownerCar = await _ownerCarRepository.LayOwnerCarTheoIdAsync(ownerId)
+                        ?? throw new KeyNotFoundException("Không tìm thấy chủ xe với ID đã cho.");
+
+            var car = _mapper.Map<Car>(carDto);
+            car.OwnerCarID = ownerId;
+
+            var newCar = await _carRepository.ThemXeAsync(car);
+            return _mapper.Map<CarDTO>(newCar);
+        }
+
+
+        public async Task<CarDTO?> OwnerCarCapNhatCarAsync(int carId, UpdateCarDTO carDto)
+        {
+            var car = await _carRepository.LayXeTheoIdAsync(carId)
+                    ?? throw new KeyNotFoundException("Không tìm thấy xe cần cập nhật.");
+
+            _mapper.Map(carDto, car);
+            car.UpdatedAt = DateTime.UtcNow;
+
+            var updatedCar = await _carRepository.CapNhatXeAsync(car);
+            return _mapper.Map<CarDTO>(updatedCar);
+        }
+
+        public async Task<bool> XoaCarChoOwnerAsync(int carId)
+        {
+            var car = await _carRepository.LayXeTheoIdAsync(carId)
+                    ?? throw new KeyNotFoundException("Không tìm thấy xe cần xóa.");
+
+            return await _carRepository.XoaXeAsync(carId);
+        }
+
+        public async Task<IEnumerable<CarDTO>> LayTatCaXeCuaOwnerCarIdAsync(int ownerCarId)
+        {
+            var ownerCar = await _ownerCarRepository.LayOwnerCarTheoIdAsync(ownerCarId)
+                        ?? throw new KeyNotFoundException("Không tìm thấy chủ xe với ID đã cho.");
+
+            return ownerCar.Cars.Select(c => _mapper.Map<CarDTO>(c)).ToList();
+        }
+
+        public async Task<OwnerCarDTO?> ThemOwnerCarAsync(CreateOwnerCarDTO ownerCarDto)
+        {
+            var ownerCar = _mapper.Map<OwnerCar>(ownerCarDto);
+            var newOwnerCar = await _ownerCarRepository.ThemOwnerCarAsync(ownerCar);
+            return _mapper.Map<OwnerCarDTO>(newOwnerCar);
+        }
+        public async Task<CarDTO?> LayXeTheoIdAsync(int carId)
+        {
+            var car = await _carRepository.LayXeTheoIdAsync(carId);
+            return car == null ? null : _mapper.Map<CarDTO>(car);
+        }
+
+        public async Task<MaintenanceDTO?> LayMaintenanceTheoIdAsync(int maintenanceId)
+        {
+            var maintenance = await _maintenanceRepository.LayMaintenanceTheoIdAsync(maintenanceId);
+            return maintenance == null ? null : _mapper.Map<MaintenanceDTO>(maintenance);
+        }
+
+
+        public async Task<MaintenanceDTO> ThemMaintenanceChoXeAsync(int carId, CreateMaintenanceDTO maintenanceDto)
+        {
+            var car = await _carRepository.LayXeTheoIdAsync(carId)
+                    ?? throw new KeyNotFoundException("Không tìm thấy xe với ID đã cho.");
+
+            var maintenance = _mapper.Map<Maintenance>(maintenanceDto);
+            maintenance.CarID = carId;
+
+            var newMaintenance = await _maintenanceRepository.ThemMaintenanceAsync(maintenance);
+            return _mapper.Map<MaintenanceDTO>(newMaintenance);
+        }
+
+        public async Task<bool> DoiStateCarAsync(int carId)
+        {
+            var car = await _carRepository.LayXeTheoIdAsync(carId)
+                    ?? throw new KeyNotFoundException("Không tìm thấy xe với ID đã cho.");
+
+            car.IsActive = !car.IsActive;
+            await _carRepository.CapNhatXeAsync(car);
+            return car.IsActive;
+        }
+        public async Task<OwnerCarDTO?> CapNhatOwnerCarAsync(int ownerId, UpdateOwnerCarDTO ownerCarDto)
+        {
+            var existingOwnerCar = await _ownerCarRepository.LayOwnerCarTheoIdAsync(ownerCarDto.OwnerCarId);
+            if (existingOwnerCar == null)
+                return null;
+
+            _mapper.Map(ownerCarDto, existingOwnerCar);
+
+            var updatedOwnerCar = await _ownerCarRepository.CapNhatOwnerCarAsync(existingOwnerCar);
+            return _mapper.Map<OwnerCarDTO>(updatedOwnerCar);
+        }
+        public async Task<bool> XoaOwnerCarAsync(int ownerCarId)
+        {
+            var ownerCar = await _ownerCarRepository.LayOwnerCarTheoIdAsync(ownerCarId);
+            if (ownerCar == null)
+            {
+                return false;
+            }
+
+            return await _ownerCarRepository.XoaOwnerCarAsync(ownerCarId);
+        }
     }
 }

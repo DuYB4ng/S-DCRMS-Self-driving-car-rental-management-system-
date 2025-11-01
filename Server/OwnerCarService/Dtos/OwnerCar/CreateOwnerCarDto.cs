@@ -1,4 +1,4 @@
-namespace SDCRMS.Dtos.OwnerCar
+namespace OwnerCarService.Dtos.OwnerCar
 {
     public class CreateOwnerCarDTO
     {

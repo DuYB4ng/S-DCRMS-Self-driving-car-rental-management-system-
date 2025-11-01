@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using SDCRMS.Models;
+using OwnerCarService.Models;
 
 public class AppDbContext : DbContext
 {
