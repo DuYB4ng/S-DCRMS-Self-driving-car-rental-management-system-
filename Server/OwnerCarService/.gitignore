@@ -1,0 +1,26 @@
+# Build files
+bin/
+obj/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Visual Studio
+.vs/
+
+# Logs
+*.log
+
+# Secrets / Environment
+.env
+
+# Dependency caches
+node_modules/
+wwwroot/lib/
+
+# Others
+*.db
+*.DS_Store

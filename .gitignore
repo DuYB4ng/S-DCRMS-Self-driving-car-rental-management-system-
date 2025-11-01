@@ -1,13 +1,57 @@
-# Visual Studio
-.vs/
-*.user
-*.suo
-
-# Build results
-bin/
-obj/
-
-# Others
+# ================================
+# General
+# ================================
+.env
+.env.local
 *.log
 *.tmp
-.config
+*.bak
+.DS_Store
+Thumbs.db
+
+# ================================
+# Node & React
+# ================================
+Client/**/node_modules/
+Client/**/dist/
+Client/**/.vite/
+Client/**/.parcel-cache/
+Client/**/.next/
+Client/**/coverage/
+
+# ================================
+# .NET build output
+# ================================
+Server/**/bin/
+Server/**/obj/
+Server/**/out/
+Server/**/publish/
+Server/**/logs/
+
+# ================================
+# Docker / Compose
+# ================================
+*.pid
+*.tar
+*.log
+docker-data/
+mssql-data/
+
+# ================================
+# Visual Studio / VSCode
+# ================================
+.vscode/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# ================================
+# OS & Misc
+# ================================
+*.swp
+*.swo
+*.orig
+*.bak
+*.tmp

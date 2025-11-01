@@ -70,3 +70,24 @@ Task 2: Develop mobile app for Customers (with booking and check-in features)
 Task 3: Integrate AI features (chatbot, dynamic pricing, smart reports)  
 Task 4: Test and deploy the system  
 Task 5: Prepare documentation (SRS, SAD, Test Plan, User Manual)  
+
+S-DCRMS/
+│
+├── Server/
+│   ├── ApiGateway/              # Ocelot hoặc YARP (1 người)
+│   ├── AuthService/             # Identity + JWT (1 người)
+│   ├── OwnerCarService/         # Chủ xe, xe, bảo trì (1 người)
+│   ├── BookingPaymentService/   # Đặt xe, thanh toán (1 người)
+│   └── NotificationService/     # Email/SMS queue (1 người)
+├── Client/
+|   └──src/
+│       ├── api/                 # Chứa các file gọi API (axios, fetch, v.v.)
+│       ├── assets/              # Ảnh, icon, fonts, CSS tĩnh
+│       ├── components/          # Component tái sử dụng (Button, Navbar, Card,...)
+│       ├── hooks/               # Custom hooks (useAuth, useFetch,...)
+|       ├── layouts/
+│       ├── pages/               # Mỗi màn hình chính trong app
+|       ├── styles/ 
+|       └── utils/
+├── docker-compose.yml           # Kết nối toàn hệ thống
+└── SDCRMS.sln                   # Solution chính
