@@ -1,0 +1,85 @@
+# version: "3.9"
+
+# services:
+#   # ========================
+#   # API Gateway (entry point)
+#   # ========================
+#   apigateway:
+#     build:
+#       context: ./Server/ApiGateway
+#       dockerfile: Dockerfile
+#     container_name: apigateway
+#     ports:
+#       - "8000:8080"
+#     depends_on:
+#       - ownercarservice
+#     environment:
+#       - ASPNETCORE_ENVIRONMENT=Development
+#       - ASPNETCORE_URLS=http://+:8080
+#       - OWNER_CAR_SERVICE_URL=http://ownercarservice:8081
+#     networks:
+#       - sdcrms-network
+
+#   # ==========================
+#   # OwnerCar Microservice
+#   # ==========================
+#   ownercarservice:
+#     build:
+#       context: ./Server/OwnerCarService
+#       dockerfile: Dockerfile
+#     container_name: ownercarservice
+#     ports:
+#       - "8001:8081"
+#     environment:
+#       - ASPNETCORE_ENVIRONMENT=Development
+#       - ASPNETCORE_URLS=http://+:8081
+#       - ConnectionStrings__DefaultConnection=Server=db;Database=OwnerCarDB;User=sa;Password=YourStrong!Passw0rd
+#     depends_on:
+#       - db
+#     networks:
+#       - sdcrms-network
+
+#   # ==========================
+#   # SQL Server Database
+#   # ==========================
+#   db:
+#     image: mcr.microsoft.com/mssql/server:2022-latest
+#     container_name: sdcrms-db
+#     environment:
+#       - ACCEPT_EULA=Y
+#       - SA_PASSWORD=YourStrong!Passw0rd
+#     ports:
+#       - "1433:1433"
+#     volumes:
+#       - mssql-data:/var/opt/mssql
+#     networks:
+#       - sdcrms-network
+
+#   # ==========================
+#   # React Frontend (Vite)
+#   # ==========================
+#   client:
+#     build:
+#       context: ./Client/sdcrms-web
+#       dockerfile: Dockerfile
+#     container_name: sdcrms-client
+#     ports:
+#       - "5173:5173"
+#     stdin_open: true
+#     tty: true
+#     networks:
+#       - sdcrms-network
+#     environment:
+#       - VITE_API_BASE_URL=http://localhost:8000/api
+#     depends_on:
+#       - apigateway
+
+# # ==========================
+# # Shared network & volumes
+# # ==========================
+# networks:
+#   sdcrms-network:
+#     driver: bridge
+
+# volumes:
+#   mssql-data:
