@@ -71,6 +71,7 @@ Task 3: Integrate AI features (chatbot, dynamic pricing, smart reports)
 Task 4: Test and deploy the system  
 Task 5: Prepare documentation (SRS, SAD, Test Plan, User Manual)  
 
+```
 S-DCRMS/
 │
 ├── Server/
@@ -80,14 +81,15 @@ S-DCRMS/
 │   ├── BookingPaymentService/   # Đặt xe, thanh toán (1 người)
 │   └── NotificationService/     # Email/SMS queue (1 người)
 ├── Client/
-|   └──src/
+│   └── src/
 │       ├── api/                 # Chứa các file gọi API (axios, fetch, v.v.)
 │       ├── assets/              # Ảnh, icon, fonts, CSS tĩnh
 │       ├── components/          # Component tái sử dụng (Button, Navbar, Card,...)
 │       ├── hooks/               # Custom hooks (useAuth, useFetch,...)
-|       ├── layouts/
+│       ├── layouts/
 │       ├── pages/               # Mỗi màn hình chính trong app
-|       ├── styles/ 
-|       └── utils/
+│       ├── styles/
+│       └── utils/
 ├── docker-compose.yml           # Kết nối toàn hệ thống
 └── SDCRMS.sln                   # Solution chính
+```
