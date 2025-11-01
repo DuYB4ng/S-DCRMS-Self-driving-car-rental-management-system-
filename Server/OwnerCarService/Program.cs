@@ -31,6 +31,19 @@ builder.Services.AddAutoMapper(cfg =>
     cfg.AddProfile<CarProfile>();
 });
 
+// ----------------- Cấu hình CORS -----------------
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:5173")
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials();
+        });
+});
+
 // Đăng ký Repositories
 builder.Services.AddScoped<ICarRepository, CarRepository>();
 builder.Services.AddScoped<IOwnerCarRepository, OwnerCarRepository>();
@@ -55,6 +68,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseCors("AllowFrontend");
 app.UseAuthorization();
 app.MapControllers();
 

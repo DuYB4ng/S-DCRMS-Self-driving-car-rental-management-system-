@@ -1,17 +1,23 @@
-const API_BASE = "https://localhost:5100/api/ownercar";
+import axios from "axios";
 
-export async function getAllOwnerCars() {
-  const res = await fetch(API_BASE);
-  if (!res.ok) throw new Error("Không thể lấy danh sách chủ xe");
-  return res.json();
-}
+const API_BASE = "http://localhost:5188/api/OwnerCar"; // Đổi theo port thật
 
-export async function createOwnerCar(data) {
-  const res = await fetch(API_BASE, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-  if (!res.ok) throw new Error("Tạo chủ xe thất bại");
-  return res.json();
-}
+export const getAllOwnerCars = async () => {
+  const res = await axios.get(`${API_BASE}`);
+  return res.data;
+};
+
+export const createOwnerCar = async (data) => {
+  const res = await axios.post(`${API_BASE}`, data);
+  return res.data;
+};
+
+export const updateOwnerCar = async (id, data) => {
+  const res = await axios.put(`${API_BASE}/${id}`, data);
+  return res.data;
+};
+
+export const deleteOwnerCar = async (id) => {
+  const res = await axios.delete(`${API_BASE}/${id}`);
+  return res.data;
+};

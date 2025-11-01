@@ -20,7 +20,10 @@ namespace CarService.Migrations
                     UserId = table.Column<int>(type: "int", nullable: false),
                     DrivingLicence = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     LicenceIssueDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    LicenceExpiryDate = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    LicenceExpiryDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -36,11 +39,26 @@ namespace CarService.Migrations
                     NameCar = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     LicensePlate = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ModelYear = table.Column<int>(type: "int", nullable: false),
-                    State = table.Column<bool>(type: "bit", nullable: false),
                     Seat = table.Column<int>(type: "int", nullable: false),
                     TypeCar = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Price = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    urlImage = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Transmission = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    FuelType = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    FuelConsumption = table.Column<double>(type: "float", nullable: false),
+                    Color = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    PricePerDay = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    Deposit = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Location = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    OwnershipDocumentNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    OwnershipType = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    RegistrationDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    RegistrationPlace = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    InsuranceExpiryDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    InspectionExpiryDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    imageUrls = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     OwnerCarID = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
