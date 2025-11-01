@@ -8,7 +8,14 @@
         public DateTime LicenceIssueDate { get; set; }
         public DateTime LicenceExpiryDate { get; set; }
 
+        // Danh sách xe thuộc sở hữu của chủ xe
         public List<Car> Cars { get; set; } = new List<Car>();
-    }
 
+        // Trạng thái hoạt động
+        public bool IsActive { get; set; } = true;
+
+        // Theo dõi thời gian tạo và cập nhật
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime? UpdatedAt { get; set; }
+    }
 }

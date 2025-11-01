@@ -7,12 +7,12 @@ namespace SDCRMS.Repositories
 {
     public interface IMaintenanceRepository
     {
-        Task<IEnumerable<Maintenance>> layTatCaMaintenanceAsync();
-        Task<Maintenance?> layMaintenanceTheoIdAsync(int maintenanceId);
-        Task<Maintenance> themMaintenanceAsync(Maintenance maintenance);
-        Task<Maintenance?> capNhatMaintenanceAsync(Maintenance maintenance);
-        Task<bool> xoaMaintenanceAsync(int maintenanceId);
-        Task<IEnumerable<Maintenance>> layTatCaMaintenanceTheoCarIdAsync(int carId);
+        Task<IEnumerable<Maintenance>> LayTatCaMaintenanceAsync();
+        Task<Maintenance?> LayMaintenanceTheoIdAsync(int maintenanceId);
+        Task<Maintenance> ThemMaintenanceAsync(Maintenance maintenance);
+        Task<Maintenance?> CapNhatMaintenanceAsync(Maintenance maintenance);
+        Task<bool> XoaMaintenanceAsync(int maintenanceId);
+        Task<IEnumerable<Maintenance>> LayTatCaMaintenanceTheoCarIdAsync(int carId);
     }
     public class MaintenanceRepository : IMaintenanceRepository
     {
@@ -23,23 +23,23 @@ namespace SDCRMS.Repositories
             _context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
-        public async Task<IEnumerable<Maintenance>> layTatCaMaintenanceAsync()
+        public async Task<IEnumerable<Maintenance>> LayTatCaMaintenanceAsync()
         {
             return await _context.Maintenances.Include(m => m.Car).ToListAsync();
         }
 
-        public async Task<Maintenance?> layMaintenanceTheoIdAsync(int maintenanceId)
+        public async Task<Maintenance?> LayMaintenanceTheoIdAsync(int maintenanceId)
         {
             return await _context.Maintenances.Include(m => m.Car)
                                               .FirstOrDefaultAsync(m => m.MaintenanceID == maintenanceId);
         }
-        public async Task<Maintenance> themMaintenanceAsync(Maintenance maintenance)
+        public async Task<Maintenance> ThemMaintenanceAsync(Maintenance maintenance)
         {
             _context.Maintenances.Add(maintenance);
             await _context.SaveChangesAsync();
             return maintenance;
         }
-        public async Task<Maintenance?> capNhatMaintenanceAsync(Maintenance maintenance)
+        public async Task<Maintenance?> CapNhatMaintenanceAsync(Maintenance maintenance)
         {
             var existingMaintenance = await _context.Maintenances.FindAsync(maintenance.MaintenanceID);
             if (existingMaintenance == null)
@@ -58,7 +58,7 @@ namespace SDCRMS.Repositories
 
             return existingMaintenance;
         }
-        public async Task<bool> xoaMaintenanceAsync(int maintenanceId)
+        public async Task<bool> XoaMaintenanceAsync(int maintenanceId)
         {
             var maintenance = await _context.Maintenances.FindAsync(maintenanceId);
             if (maintenance == null)
@@ -70,7 +70,7 @@ namespace SDCRMS.Repositories
             await _context.SaveChangesAsync();
             return true;
         }
-        public async Task<IEnumerable<Maintenance>> layTatCaMaintenanceTheoCarIdAsync(int carId)
+        public async Task<IEnumerable<Maintenance>> LayTatCaMaintenanceTheoCarIdAsync(int carId)
         {
             return await _context.Maintenances
                                  .Where(m => m.CarID == carId)

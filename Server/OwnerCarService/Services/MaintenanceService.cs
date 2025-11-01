@@ -28,50 +28,50 @@ namespace SDCRMS.Services
 
         public async Task<IEnumerable<MaintenanceDTO>> layTatCaMaintenanceAsync()
         {
-            var maintenances = await _maintenanceRepository.layTatCaMaintenanceAsync();
+            var maintenances = await _maintenanceRepository.LayTatCaMaintenanceAsync();
             return _mapper.Map<IEnumerable<MaintenanceDTO>>(maintenances);
         }
 
         public async Task<MaintenanceDTO?> layMaintenanceTheoIdAsync(int maintenanceId)
         {
-            var maintenance = await _maintenanceRepository.layMaintenanceTheoIdAsync(maintenanceId);
+            var maintenance = await _maintenanceRepository.LayMaintenanceTheoIdAsync(maintenanceId);
             return maintenance == null ? null : _mapper.Map<MaintenanceDTO>(maintenance);
         }
 
         public async Task<MaintenanceDTO> themMaintenanceAsync(CreateMaintenanceDTO maintenanceDto)
         {
-            var car = await _carRepository.layXeTheoIdAsync(maintenanceDto.CarID);
+            var car = await _carRepository.LayXeTheoIdAsync(maintenanceDto.CarID);
             if (car == null)
             {
                 throw new Exception("Không tìm thấy xe với ID đã cho.");
             }
 
             var maintenance = _mapper.Map<Maintenance>(maintenanceDto);
-            var newMaintenance = await _maintenanceRepository.themMaintenanceAsync(maintenance);
+            var newMaintenance = await _maintenanceRepository.ThemMaintenanceAsync(maintenance);
             return _mapper.Map<MaintenanceDTO>(newMaintenance);
         }
 
         public async Task<MaintenanceDTO?> capNhatMaintenanceAsync(int maintenanceId, UpdateMaintenanceDTO maintenanceDto)
         {
-            var existingMaintenance = await _maintenanceRepository.layMaintenanceTheoIdAsync(maintenanceId);
+            var existingMaintenance = await _maintenanceRepository.LayMaintenanceTheoIdAsync(maintenanceId);
             if (existingMaintenance == null)
             {
                 return null; // Không tìm thấy bảo trì để cập nhật
             }
 
             _mapper.Map(maintenanceDto, existingMaintenance);
-            var updatedMaintenance = await _maintenanceRepository.capNhatMaintenanceAsync(existingMaintenance);
+            var updatedMaintenance = await _maintenanceRepository.CapNhatMaintenanceAsync(existingMaintenance);
             return updatedMaintenance == null ? null : _mapper.Map<MaintenanceDTO>(updatedMaintenance);
         }
 
         public async Task<bool> xoaMaintenanceAsync(int maintenanceId)
         {
-            return await _maintenanceRepository.xoaMaintenanceAsync(maintenanceId);
+            return await _maintenanceRepository.XoaMaintenanceAsync(maintenanceId);
         }
 
         public async Task<IEnumerable<MaintenanceDTO>> layTatCaMaintenanceTheoCarIdAsync(int carId)
         {
-            var maintenances = await _maintenanceRepository.layTatCaMaintenanceTheoCarIdAsync(carId);
+            var maintenances = await _maintenanceRepository.LayTatCaMaintenanceTheoCarIdAsync(carId);
             return _mapper.Map<IEnumerable<MaintenanceDTO>>(maintenances);
         }
     }

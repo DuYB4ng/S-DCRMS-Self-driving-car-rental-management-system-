@@ -1,133 +1,176 @@
 using Microsoft.AspNetCore.Mvc;
 using SDCRMS.Dtos.Car;
+using SDCRMS.Dtos.OwnerCar;
 using SDCRMS.Services;
+
 namespace SDCRMS.Controllers
 {
     [ApiController]
-    [Route("api/ownercar")]
-    public class OwnerCarController: ControllerBase
+    [Route("api/[controller]")]
+    public class OwnerCarController : ControllerBase
     {
         private readonly IOwnerCarService _ownerCarService;
+
         public OwnerCarController(IOwnerCarService ownerCarService)
         {
             _ownerCarService = ownerCarService;
         }
+
+        // 🧩 Lấy tất cả chủ xe
         [HttpGet]
         public async Task<IActionResult> GetAllOwnerCars()
         {
-            var ownerCars = await _ownerCarService.layTatCaOwnerCarAsync();
+            var ownerCars = await _ownerCarService.LayTatCaOwnerCarAsync();
             return Ok(ownerCars);
         }
-        [HttpGet("{id}")]
+
+        // 🔍 Lấy chủ xe theo ID
+        [HttpGet("{id:int}")]
         public async Task<IActionResult> GetOwnerCarById(int id)
         {
-            var ownerCar = await _ownerCarService.layOwnerCarTheoIdAsync(id);
-            if (ownerCar == null)
-            {
-                return NotFound();
-            }
-            return Ok(ownerCar);
+            var ownerCar = await _ownerCarService.LayOwnerCarTheoIdAsync(id);
+            return ownerCar == null ? NotFound() : Ok(ownerCar);
         }
+
+        // ➕ Tạo chủ xe mới
         [HttpPost]
         public async Task<IActionResult> CreateOwnerCar([FromBody] CreateOwnerCarDTO ownerCarDto)
         {
             if (ownerCarDto == null)
-            {
-                return BadRequest();
-            }
-            var createdOwnerCar = await _ownerCarService.themOwnerCarAsync(ownerCarDto);
-            return CreatedAtAction(nameof(GetOwnerCarById), new { id = createdOwnerCar.OwnerCarId }, createdOwnerCar);
+                return BadRequest("Dữ liệu không hợp lệ.");
+
+            var createdOwnerCar = await _ownerCarService.ThemOwnerCarAsync(ownerCarDto);
+            return CreatedAtAction(nameof(GetOwnerCarById),
+                new { id = createdOwnerCar!.OwnerCarId },
+                createdOwnerCar);
         }
-        [HttpPost("{ownerId}/cars")]
+
+        // 🚗 Thêm xe cho chủ xe
+        [HttpPost("{ownerId:int}/cars")]
         public async Task<IActionResult> AddCarToOwner(int ownerId, [FromBody] CreateCarDTO carDto)
         {
             if (carDto == null)
-            {
-                return BadRequest();
-            }
+                return BadRequest("Thông tin xe không hợp lệ.");
 
             try
             {
-                var createdCar = await _ownerCarService.themCarchoOwnerCarAsync(ownerId, carDto);
-                return CreatedAtAction(nameof(GetOwnerCarById), new { id = createdCar.CarID }, createdCar);
+                var createdCar = await _ownerCarService.OwnerCarThemCarAsync(ownerId, carDto);
+                return CreatedAtAction(nameof(GetCarById),
+                    new { carId = createdCar.CarID },
+                    createdCar);
             }
-            catch (Exception ex)
+            catch (KeyNotFoundException ex)
             {
                 return NotFound(new { message = ex.Message });
             }
         }
-        [HttpPut("{carId}/cars")]
+
+        // 🔍 Lấy xe theo ID
+        [HttpGet("cars/{carId:int}")]
+        public async Task<IActionResult> GetCarById(int carId)
+        {
+            var car = await _ownerCarService.LayXeTheoIdAsync(carId);
+            return car == null ? NotFound() : Ok(car);
+        }
+
+        // ✏️ Cập nhật xe của chủ xe
+        [HttpPut("cars/{carId:int}")]
         public async Task<IActionResult> UpdateCarOfOwner(int carId, [FromBody] UpdateCarDTO carDto)
         {
             if (carDto == null || carDto.CarID != carId)
-            {
-                return BadRequest();
-            }
-
-            var existingCar = await _ownerCarService.layXeTheoIdAsync(carId);
-            if (existingCar == null)
-            {
-                return NotFound();
-            }
-
-            var updatedCar = await _ownerCarService.capNhatCarchoOwnerAsync(carId, carDto);
-            if (updatedCar == null)
-            {
-                return NotFound();
-            }
-
-            return Ok(updatedCar);
-        }
-        [HttpDelete("{carId}/cars")]
-        public async Task<IActionResult> DeleteCarOfOwner(int carId)
-        {
-            var existingCar = await _ownerCarService.layXeTheoIdAsync(carId);
-            if (existingCar == null)
-            {
-                return NotFound();
-            }
+                return BadRequest("Dữ liệu cập nhật không hợp lệ.");
 
             try
             {
-                var result = await _ownerCarService.xoaCarchoOwnerAsync(carId);
-                if (!result)
-                {
-                    return StatusCode(500, "Không thể xóa xe.");
-                }
-                return NoContent();
+                var updatedCar = await _ownerCarService.OwnerCarCapNhatCarAsync(carId, carDto);
+                return Ok(updatedCar);
             }
-            catch (Exception ex)
+            catch (KeyNotFoundException ex)
             {
                 return NotFound(new { message = ex.Message });
             }
         }
-        [HttpPost("{carId}/maintenances")]
+
+        // Xóa xe của chủ xe
+        [HttpDelete("cars/{carId:int}")]
+        public async Task<IActionResult> DeleteCarOfOwner(int carId)
+        {
+            try
+            {
+                var result = await _ownerCarService.XoaCarChoOwnerAsync(carId);
+                return result ? NoContent() : StatusCode(500, "Không thể xóa xe.");
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+        }
+
+        // 🔄 Đổi trạng thái hoạt động xe (IsActive)
+        [HttpPatch("cars/{carId:int}/state")]
+        public async Task<IActionResult> ToggleCarState(int carId)
+        {
+            try
+            {
+                var newState = await _ownerCarService.DoiStateCarAsync(carId);
+                return Ok(new { carId, isActive = newState });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+        }
+
+        // 🛠️ Thêm bảo trì cho xe
+        [HttpPost("cars/{carId:int}/maintenances")]
         public async Task<IActionResult> AddMaintenanceToCar(int carId, [FromBody] CreateMaintenanceDTO maintenanceDto)
         {
             if (maintenanceDto == null)
-            {
-                return BadRequest();
-            }
+                return BadRequest("Thông tin bảo trì không hợp lệ.");
 
             try
             {
-                var createdMaintenance = await _ownerCarService.themMaintenanceChoXeAsync(carId, maintenanceDto);
-                return CreatedAtAction(nameof(GetOwnerCarById), new { id = createdMaintenance.MaintenanceID }, createdMaintenance);
+                var createdMaintenance = await _ownerCarService.ThemMaintenanceChoXeAsync(carId, maintenanceDto);
+                return CreatedAtAction(nameof(GetMaintenanceById),
+                    new { carId = carId, maintenanceId = createdMaintenance.MaintenanceID },
+                    createdMaintenance);
             }
-            catch (Exception ex)
+            catch (KeyNotFoundException ex)
             {
                 return NotFound(new { message = ex.Message });
             }
         }
-        [HttpGet("{carId}/maintenances/{maintenanceId}")]
+
+        // 🔍 Lấy chi tiết bảo trì
+        [HttpGet("cars/{carId:int}/maintenances/{maintenanceId:int}")]
         public async Task<IActionResult> GetMaintenanceById(int carId, int maintenanceId)
         {
-            var maintenance = await _ownerCarService.layMaintenanceTheoIdAsync(maintenanceId);
+            var maintenance = await _ownerCarService.LayMaintenanceTheoIdAsync(maintenanceId);
             if (maintenance == null || maintenance.CarID != carId)
-            {
                 return NotFound();
-            }
+
             return Ok(maintenance);
+        }
+        [HttpPut("{ownerId:int}")]
+        public async Task<IActionResult> UpdateOwnerCar(int ownerId, [FromBody] UpdateOwnerCarDTO ownerCarDto)
+        {
+            if (ownerCarDto == null)
+                return BadRequest("Dữ liệu cập nhật không hợp lệ.");
+
+            var updatedOwnerCar = await _ownerCarService.CapNhatOwnerCarAsync(ownerId, ownerCarDto);
+            if (updatedOwnerCar == null)
+                return NotFound();
+
+            return Ok(updatedOwnerCar);
+        }
+        [HttpDelete("{ownerCarId:int}")]
+        public async Task<IActionResult> DeleteOwnerCar(int ownerCarId)
+        {
+            var result = await _ownerCarService.XoaOwnerCarAsync(ownerCarId);
+            if (!result)
+                return NotFound();
+
+            return NoContent();
         }
     }
 }

@@ -1,5 +1,4 @@
 using SDCRMS.Dtos.Car;
-
 namespace SDCRMS.Dtos.OwnerCar
 {
     public class OwnerCarDTO
@@ -10,6 +9,12 @@ namespace SDCRMS.Dtos.OwnerCar
         public DateTime LicenceIssueDate { get; set; }
         public DateTime LicenceExpiryDate { get; set; }
 
+        // Danh sách xe thuộc chủ xe
         public List<CarDTO>? Cars { get; set; } = new();
+
+        // quản lý trạng thái và thời gian
+        public bool IsActive { get; set; } = true;
+        public DateTime CreatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
     }
 }
