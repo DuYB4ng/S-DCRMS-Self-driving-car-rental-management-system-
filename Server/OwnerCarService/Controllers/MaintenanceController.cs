@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
-using SDCRMS.Dtos.Car;
-using SDCRMS.Services;
+using OwnerCarService.Dtos.Car;
+using OwnerCarService.Services;
 
-namespace SDCRMS.Controllers
+namespace OwnerCarService.Controllers
 {
     [ApiController]
     [Route("api/maintenance")]

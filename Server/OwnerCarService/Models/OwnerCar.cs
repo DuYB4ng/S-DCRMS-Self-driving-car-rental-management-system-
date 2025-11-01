@@ -1,4 +1,4 @@
-﻿namespace SDCRMS.Models
+﻿namespace OwnerCarService.Models
 {
     public class OwnerCar
     {

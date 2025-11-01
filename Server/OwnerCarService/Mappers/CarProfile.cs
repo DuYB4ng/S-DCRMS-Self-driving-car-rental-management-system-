@@ -1,9 +1,9 @@
 using AutoMapper;
-using SDCRMS.Models;
-using SDCRMS.Dtos.Car;
-using SDCRMS.Dtos.OwnerCar;
+using OwnerCarService.Models;
+using OwnerCarService.Dtos.Car;
+using OwnerCarService.Dtos.OwnerCar;
 
-namespace SDCRMS.Mappers
+namespace OwnerCarService.Mappers
 {
     public class CarProfile : Profile
     {

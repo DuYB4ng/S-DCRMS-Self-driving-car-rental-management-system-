@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using SDCRMS.Models;
-using SDCRMS.Repositories;
+using OwnerCarService.Models;
+using OwnerCarService.Repositories;
 
-namespace SDCRMS.Repositories
+namespace OwnerCarService.Repositories
 {
     public interface IOwnerCarRepository
     {

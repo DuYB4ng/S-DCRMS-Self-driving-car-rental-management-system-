@@ -1,9 +1,9 @@
 using AutoMapper;
-using SDCRMS.Dtos.Car;
-using SDCRMS.Models;
-using SDCRMS.Repositories;
+using OwnerCarService.Dtos.Car;
+using OwnerCarService.Models;
+using OwnerCarService.Repositories;
 
-namespace SDCRMS.Services
+namespace OwnerCarService.Services
 {
     public interface ICarService
     {
