@@ -10,7 +10,7 @@
 #       dockerfile: Dockerfile
 #     container_name: apigateway
 #     ports:
-#       - "8000:8080"
+#       - "8000:8080"  # cổng public -> cổng trong container
 #     depends_on:
 #       - ownercarservice
 #     environment:
@@ -70,7 +70,8 @@
 #     networks:
 #       - sdcrms-network
 #     environment:
-#       - VITE_API_BASE_URL=http://localhost:8000/api
+#       # ⚠️ Khi chạy trong Docker, không dùng localhost — gọi qua tên service
+#       - VITE_API_BASE_URL=http://apigateway:8080/api
 #     depends_on:
 #       - apigateway
 
