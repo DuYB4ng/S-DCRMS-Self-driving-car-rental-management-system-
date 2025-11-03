@@ -1,8 +1,10 @@
-﻿
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using SDCRMS.Mappers;
-
 using SDCRMS.Dtos.Payment;
+using SDCRMS.Models;
+using System.Threading.Tasks;
+using System.Linq;
 
 namespace SDCRMS.Controllers
 {
@@ -11,68 +13,80 @@ namespace SDCRMS.Controllers
     public class PaymentController : ControllerBase
     {
         private readonly AppDbContext _context;
+
         public PaymentController(AppDbContext context)
         {
             _context = context;
         }
+
+        // GET: api/payment
         [HttpGet]
-        public IActionResult GetAll()
+        public async Task<IActionResult> GetAll()
         {
-            var payments = _context.Payments.ToList();
-            return Ok(payments);
-        }
-        [HttpGet("{id}")]
-        public IActionResult GetID([FromRoute] int id)
-        {
-            var payments = _context.Payments.Find(id);
-            if (payments == null)
-            {
-                return NotFound();
-            }
+            var payments = await _context.Payments.ToListAsync();
             return Ok(payments);
         }
 
+        // GET: api/payment/{id}
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetID([FromRoute] int id)
+        {
+            var payment = await _context.Payments.FindAsync(id);
+            if (payment == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(payment);
+        }
+
+        // POST: api/payment
         [HttpPost]
-        public IActionResult taoPayment([FromBody] CreatePaymentRequestDto payDto)
+        public async Task<IActionResult> TaoPayment([FromBody] CreatePaymentRequestDto payDto)
         {
             var paymentModel = payDto.ToPaymentFromCreateDto();
-            _context.Payments.Add(paymentModel);
-            _context.SaveChanges();
-            return CreatedAtAction(nameof(GetID), new { id = paymentModel.PaymentID }, payDto.ToPaymentFromCreateDto());
+
+            await _context.Payments.AddAsync(paymentModel);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction(nameof(GetID), new { id = paymentModel.PaymentID }, paymentModel.toPaymentDto());
         }
-        [HttpPut]
-        [Route("{id}")]
-        public IActionResult Update([FromRoute] int id, [FromBody] UpdatePaymentRequestDto updateDto)
+
+        // PUT: api/payment/{id}
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update([FromRoute] int id, [FromBody] UpdatePaymentRequestDto updateDto)
         {
-            var PaymentModel = _context.Payments.FirstOrDefault(x => x.PaymentID == id);
-            if (PaymentModel == null)
+            var paymentModel = await _context.Payments.FirstOrDefaultAsync(x => x.PaymentID == id);
+            if (paymentModel == null)
             {
                 return NotFound();
             }
 
-            PaymentModel.PaymentID = updateDto.PaymentID;
-            PaymentModel.PaymentDate = updateDto.PaymentDate;
-            PaymentModel.Amount = updateDto.Amount;
-            PaymentModel.Method = updateDto.Method;
-            PaymentModel.Status = updateDto.Status;
-            PaymentModel.BookingID = updateDto.BookingID;
-            PaymentModel.Booking = updateDto.Booking;
-            _context.SaveChanges();
-            return Ok(PaymentModel.toPaymentDto());
+            paymentModel.PaymentDate = updateDto.PaymentDate;
+            paymentModel.Amount = updateDto.Amount;
+            paymentModel.Method = updateDto.Method;
+            paymentModel.Status = updateDto.Status;
+            paymentModel.BookingID = updateDto.BookingID;
+            paymentModel.Booking = updateDto.Booking;
 
+            await _context.SaveChangesAsync();
+
+            return Ok(paymentModel.toPaymentDto());
         }
 
-        [HttpDelete]
-        [Route("{id}")]
-        public IActionResult Delete([FromRoute] int id)
+        // DELETE: api/payment/{id}
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete([FromRoute] int id)
         {
-            var paymentModel = _context.Payments.FirstOrDefault(x => x.PaymentID == id);
-            if (paymentModel != null)
+            var paymentModel = await _context.Payments.FirstOrDefaultAsync(x => x.PaymentID == id);
+            if (paymentModel == null)
             {
                 return NotFound();
             }
+
             _context.Payments.Remove(paymentModel);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
+
             return NoContent();
         }
     }

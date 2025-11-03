@@ -1,78 +1,88 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using SDCRMS.Dtos.Review;
 using SDCRMS.Mappers;
+using SDCRMS.Models;
+using System.Threading.Tasks;
+using System.Linq;
 
 namespace SDCRMS.Controllers
 {
-    public class ReviewController
+    [Route("api/review")]
+    [ApiController]
+    public class ReviewController : ControllerBase
     {
-        public class ReviewMapper
+        private readonly AppDbContext _context;
+
+        public ReviewController(AppDbContext context)
         {
-            [Route("api/review")]
-            [ApiController]
-            public class ReviewController : ControllerBase
+            _context = context;
+        }
+
+        // GET: api/review
+        [HttpGet]
+        public async Task<IActionResult> GetAll()
+        {
+            var reviews = await _context.Reviews.ToListAsync();
+            return Ok(reviews);
+        }
+
+        // GET: api/review/{id}
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetID([FromRoute] int id)
+        {
+            var review = await _context.Reviews.FindAsync(id);
+            if (review == null)
             {
-                private readonly AppDbContext _context;
-
-                public ReviewController(AppDbContext context)
-                {
-                    _context = context;
-                }
-                [HttpGet]
-                public IActionResult getAll()
-                {
-                    var ReviewModel = _context.Reviews.ToList();
-                    return Ok(ReviewModel);
-                }
-                [HttpGet("id")]
-                public IActionResult GetID([FromRoute] int id)
-                {
-                    var ReviewModel = _context.Reviews.Find(id);
-                    if (ReviewModel == null)
-                    {
-                        return NotFound();
-                    }
-                    return Ok(ReviewModel);
-                }
-                [HttpPost]
-                public IActionResult taoReview([FromBody] CreateReviewRequestDto reviewDto)
-                {
-                    var ReviewModel = reviewDto.ToReviewModel();
-                    _context.Reviews.Add(ReviewModel);
-                    _context.SaveChanges();
-                    return CreatedAtAction(nameof(GetID), new { id = ReviewModel.ReviewID }, reviewDto.ToReviewModel());
-                }
-                [HttpPut]
-                [Route("{id}")]
-                public IActionResult Update([FromRoute] int id, [FromBody] UpdateReviewRequestDto updateDto)
-                {
-                    var ReviewModel = _context.Reviews.FirstOrDefault(x => x.ReviewID == id);
-                    if (ReviewModel == null)
-                    {
-                        return NotFound();
-                    }
-                    ReviewModel.ReviewID = updateDto.ReviewID;
-                    ReviewModel.Rating = updateDto.Rating;
-                    ReviewModel.Comment = updateDto.Comment;
-
-                    _context.SaveChanges();
-                    return NoContent();
-                }
-                [HttpDelete]
-                [Route("{id}")]
-                public IActionResult Delete([FromRoute] int id)
-                {
-                    var ReviewModel = _context.Reviews.FirstOrDefault(x => x.ReviewID == id);
-                    if (ReviewModel == null)
-                    {
-                        return NotFound();
-                    }
-                    _context.Reviews.Remove(ReviewModel);
-                    _context.SaveChanges();
-                    return NoContent();
-                }
-
+                return NotFound();
             }
+
+            return Ok(review);
+        }
+
+        // POST: api/review
+        [HttpPost]
+        public async Task<IActionResult> TaoReview([FromBody] CreateReviewRequestDto reviewDto)
+        {
+            var reviewModel = reviewDto.ToReviewModel();
+
+            await _context.Reviews.AddAsync(reviewModel);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction(nameof(GetID), new { id = reviewModel.ReviewID }, reviewModel);
+        }
+
+        // PUT: api/review/{id}
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update([FromRoute] int id, [FromBody] UpdateReviewRequestDto updateDto)
+        {
+            var reviewModel = await _context.Reviews.FirstOrDefaultAsync(x => x.ReviewID == id);
+            if (reviewModel == null)
+            {
+                return NotFound();
+            }
+
+            reviewModel.Rating = updateDto.Rating;
+            reviewModel.Comment = updateDto.Comment;
+
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
+
+        // DELETE: api/review/{id}
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete([FromRoute] int id)
+        {
+            var reviewModel = await _context.Reviews.FirstOrDefaultAsync(x => x.ReviewID == id);
+            if (reviewModel == null)
+            {
+                return NotFound();
+            }
+
+            _context.Reviews.Remove(reviewModel);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
         }
     }
 }

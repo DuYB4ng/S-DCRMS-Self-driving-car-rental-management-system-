@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore;
+using SDCRMS.Interfaces;
 using SDCRMS.Models;
 using SDCRMS.Repositories;
 using SDCRMS.Services;
@@ -19,6 +20,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<ICarRepository, CarRepository>();
 //Đăng kí Services
 builder.Services.AddScoped<ICarService, CarService>();
+
+builder.Services.AddScoped<IStaffRepository, StaffRepository>();
 
 var app = builder.Build();
 
