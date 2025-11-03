@@ -4,32 +4,41 @@
       "DownstreamPathTemplate": "/api/auth/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        {
-          "Host": "authservice",
-          "Port": 8081
-        }
+        { "Host": "authservice", "Port": 8081 }
       ],
       "UpstreamPathTemplate": "/api/auth/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/ownercar",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "ownercarservice", "Port": 8081 }
+      ],
+      "UpstreamPathTemplate": "/api/ownercar",
+      "UpstreamHttpMethod": [ "GET", "POST" ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer",
         "AllowedScopes": []
+      },
+      "DownstreamHeaderTransform": {
+        "Authorization": "{Authorization}"
       }
     },
     {
       "DownstreamPathTemplate": "/api/ownercar/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        {
-          "Host": "ownercarservice",
-          "Port": 8081
-        }
+        { "Host": "ownercarservice", "Port": 8081 }
       ],
       "UpstreamPathTemplate": "/api/ownercar/{everything}",
       "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer",
         "AllowedScopes": []
+      },
+      "DownstreamHeaderTransform": {
+        "Authorization": "{Authorization}"
       }
     }
   ],

@@ -121,6 +121,36 @@ namespace OwnerCarService.Migrations
                     b.ToTable("Cars");
                 });
 
+            modelBuilder.Entity("OwnerCarService.Models.CarLocation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CarID")
+                        .HasColumnType("int");
+
+                    b.Property<double>("Latitude")
+                        .HasColumnType("float");
+
+                    b.Property<double>("Longitude")
+                        .HasColumnType("float");
+
+                    b.Property<double>("Speed")
+                        .HasColumnType("float");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CarID");
+
+                    b.ToTable("CarLocations");
+                });
+
             modelBuilder.Entity("OwnerCarService.Models.Maintenance", b =>
                 {
                     b.Property<int>("MaintenanceID")
@@ -167,6 +197,10 @@ namespace OwnerCarService.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("FirebaseUid")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -178,9 +212,6 @@ namespace OwnerCarService.Migrations
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
 
                     b.HasKey("OwnerCarId");
 
@@ -196,6 +227,17 @@ namespace OwnerCarService.Migrations
                         .IsRequired();
 
                     b.Navigation("OwnerCar");
+                });
+
+            modelBuilder.Entity("OwnerCarService.Models.CarLocation", b =>
+                {
+                    b.HasOne("OwnerCarService.Models.Car", "Car")
+                        .WithMany()
+                        .HasForeignKey("CarID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Car");
                 });
 
             modelBuilder.Entity("OwnerCarService.Models.Maintenance", b =>

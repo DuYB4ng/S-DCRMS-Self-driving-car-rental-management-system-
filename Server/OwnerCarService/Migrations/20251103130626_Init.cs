@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace OwnerCarService.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class Init : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -17,7 +17,7 @@ namespace OwnerCarService.Migrations
                 {
                     OwnerCarId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    UserId = table.Column<int>(type: "int", nullable: false),
+                    FirebaseUid = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     DrivingLicence = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     LicenceIssueDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     LicenceExpiryDate = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -73,6 +73,29 @@ namespace OwnerCarService.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "CarLocations",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    CarID = table.Column<int>(type: "int", nullable: false),
+                    Latitude = table.Column<double>(type: "float", nullable: false),
+                    Longitude = table.Column<double>(type: "float", nullable: false),
+                    Speed = table.Column<double>(type: "float", nullable: false),
+                    Timestamp = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CarLocations", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_CarLocations_Cars_CarID",
+                        column: x => x.CarID,
+                        principalTable: "Cars",
+                        principalColumn: "CarID",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Maintenances",
                 columns: table => new
                 {
@@ -96,6 +119,11 @@ namespace OwnerCarService.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_CarLocations_CarID",
+                table: "CarLocations",
+                column: "CarID");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Cars_OwnerCarID",
                 table: "Cars",
                 column: "OwnerCarID");
@@ -109,6 +137,9 @@ namespace OwnerCarService.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "CarLocations");
+
             migrationBuilder.DropTable(
                 name: "Maintenances");
 
