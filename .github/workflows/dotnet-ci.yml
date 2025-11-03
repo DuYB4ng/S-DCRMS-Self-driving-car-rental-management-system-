@@ -6,6 +6,7 @@ on:
             - main
             - toai
             - test
+            - bang
     pull_request:
         branches:
             - main
