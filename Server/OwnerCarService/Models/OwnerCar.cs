@@ -3,7 +3,7 @@
     public class OwnerCar
     {
         public int OwnerCarId { get; set; }
-        public int UserId { get; set; }     // Liên kết đến UserService
+        public string FirebaseUid { get; set; } = string.Empty; 
         public string DrivingLicence { get; set; } = string.Empty;
         public DateTime LicenceIssueDate { get; set; }
         public DateTime LicenceExpiryDate { get; set; }
