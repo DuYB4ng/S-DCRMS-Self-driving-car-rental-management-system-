@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE = "http://localhost:5188/api/OwnerCar"; // Đổi theo port thật
+const API_BASE = `${import.meta.env.VITE_API_BASE_URL}/OwnerCar`;// Đổi theo port thật
 
 export const getAllOwnerCars = async () => {
   const res = await axios.get(`${API_BASE}`);

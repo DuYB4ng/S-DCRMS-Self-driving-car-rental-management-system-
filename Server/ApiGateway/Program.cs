@@ -22,14 +22,35 @@ builder.Services.AddAuthentication("Bearer")
             ValidAudience = projectId,
             ValidateLifetime = true
         };
-    });
+    }
+);
+// builder.Services.AddAuthorization(options =>
+// {
+//     options.AddPolicy("AdminOnly", p => p.RequireClaim("role", "Admin"));
+//     options.AddPolicy("OwnerOnly", p => p.RequireClaim("role", "OwnerCar"));
+//     options.AddPolicy("StaffOnly", p => p.RequireClaim("role", "Staff"));
+//     options.AddPolicy("CustomerOnly", p => p.RequireClaim("role", "Customer"));
+// });
 
-// Thêm Ocelot vào container
+// Thêm Ocelot + CORS + Logging
 builder.Services.AddOcelot();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();
 
 var app = builder.Build();
 
+// Middleware thứ tự quan trọng
 app.UseHttpsRedirection();
+app.UseCors("AllowAll");          //CORS trước Authentication
 app.UseAuthentication();
 app.UseAuthorization();
 
