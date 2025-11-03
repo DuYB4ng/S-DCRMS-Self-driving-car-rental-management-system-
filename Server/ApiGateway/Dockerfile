@@ -5,6 +5,7 @@ COPY *.csproj ./
 RUN dotnet restore
 
 COPY . ./
+COPY ocelot.json ./ocelot.json
 
 RUN dotnet publish -c Release -o /app/publish
 

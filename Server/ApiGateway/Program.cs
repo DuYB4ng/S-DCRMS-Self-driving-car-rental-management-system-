@@ -5,56 +5,50 @@ using Ocelot.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Đọc cấu hình Ocelot từ file ocelot.json
+// Load file ocelot.json
 builder.Configuration.AddJsonFile("ocelot.json", optional: false, reloadOnChange: true);
 
-// Cấu hình xác thực Firebase JWT
-builder.Services.AddAuthentication("Bearer")
-    .AddJwtBearer("Bearer", options =>
+// 🔐 Firebase Project ID
+var firebaseProjectId = "sdcrms-49dfb";
+
+// Cấu hình Authentication cho Ocelot
+builder.Services.AddAuthentication()
+    .AddJwtBearer("Bearer", options => // 👈 phải trùng với ocelot.json
     {
-        var projectId = "sdcrms-49dfb"; // 🔹 Thay bằng Firebase Project ID
-        options.Authority = $"https://securetoken.google.com/{projectId}";
+        options.Authority = $"https://securetoken.google.com/{firebaseProjectId}";
+        options.RequireHttpsMetadata = true;
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
-            ValidIssuer = $"https://securetoken.google.com/{projectId}",
+            ValidIssuer = $"https://securetoken.google.com/{firebaseProjectId}",
             ValidateAudience = true,
-            ValidAudience = projectId,
+            ValidAudience = firebaseProjectId,
             ValidateLifetime = true
         };
-    }
-);
-// builder.Services.AddAuthorization(options =>
-// {
-//     options.AddPolicy("AdminOnly", p => p.RequireClaim("role", "Admin"));
-//     options.AddPolicy("OwnerOnly", p => p.RequireClaim("role", "OwnerCar"));
-//     options.AddPolicy("StaffOnly", p => p.RequireClaim("role", "Staff"));
-//     options.AddPolicy("CustomerOnly", p => p.RequireClaim("role", "Customer"));
-// });
+    });
 
-// Thêm Ocelot + CORS + Logging
+// Tùy chọn thêm Authorization (role-based)
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminOnly", p => p.RequireClaim("email", "admin@gmail.com"));
+});
+
+// Thêm Ocelot và CORS
 builder.Services.AddOcelot();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
-    {
-        policy.AllowAnyOrigin()
-              .AllowAnyHeader()
-              .AllowAnyMethod();
-    });
+        policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
 });
-builder.Logging.AddConsole();
-builder.Logging.AddDebug();
 
 var app = builder.Build();
 
-// Middleware thứ tự quan trọng
-app.UseHttpsRedirection();
-app.UseCors("AllowAll");          //CORS trước Authentication
+app.UseCors("AllowAll");
+
+// 🚀 Quan trọng: Xác thực trước Ocelot
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Kích hoạt Ocelot Gateway
 await app.UseOcelot();
 
 app.Run();

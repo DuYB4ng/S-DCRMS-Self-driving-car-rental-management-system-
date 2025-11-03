@@ -11,6 +11,7 @@ namespace OwnerCarService.Repositories
         Task<OwnerCar?> ThemOwnerCarAsync(OwnerCar ownerCar);
         Task<OwnerCar?> CapNhatOwnerCarAsync(OwnerCar ownerCar);
         Task<bool> XoaOwnerCarAsync(int ownerCarId);
+        Task<OwnerCar?> LayOwnerCarTheoFirebaseUidAsync(string firebaseUid);
     }
 
     public class OwnerCarRepository : IOwnerCarRepository
@@ -34,7 +35,7 @@ namespace OwnerCarService.Repositories
 
         public async Task<OwnerCar?> ThemOwnerCarAsync(OwnerCar ownerCar)
         {
-            if (await _context.OwnerCars.AnyAsync(o => o.UserId == ownerCar.UserId))
+            if (await _context.OwnerCars.AnyAsync(o => o.FirebaseUid == ownerCar.FirebaseUid))
                 throw new InvalidOperationException("Người dùng này đã có hồ sơ chủ xe.");
 
             _context.OwnerCars.Add(ownerCar);
@@ -66,6 +67,11 @@ namespace OwnerCarService.Repositories
             _context.OwnerCars.Remove(ownerCar);
             await _context.SaveChangesAsync();
             return true;
+        }
+        public async Task<OwnerCar?> LayOwnerCarTheoFirebaseUidAsync(string firebaseUid)
+        {
+            return await _context.OwnerCars.Include(oc => oc.Cars)
+                                           .FirstOrDefaultAsync(oc => oc.FirebaseUid == firebaseUid);
         }
     }
 }

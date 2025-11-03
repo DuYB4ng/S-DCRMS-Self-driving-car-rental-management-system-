@@ -35,7 +35,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8081
-      - ConnectionStrings__DefaultConnection=Server=db;Database=OwnerCarDB;User=sa;Password=YourStrong!Passw0rd
+      - ConnectionStrings__DefaultConnection=Server=db;Database=OwnerCarDB;User=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True
       - KAFKA__BootstrapServers=kafka:9092
     depends_on:
       - db
@@ -82,10 +82,11 @@ services:
   # Zookeeper (Kafka dependency)
   # ==========================
   zookeeper:
-    image: bitnami/zookeeper:latest
+    image: confluentinc/cp-zookeeper:7.4.0
     container_name: zookeeper
     environment:
-      - ALLOW_ANONYMOUS_LOGIN=yes
+      - ZOOKEEPER_CLIENT_PORT=2181
+      - ZOOKEEPER_TICK_TIME=2000
     ports:
       - "2181:2181"
     networks:
@@ -95,21 +96,22 @@ services:
   # Kafka Broker
   # ==========================
   kafka:
-    image: bitnami/kafka:latest
+    image: confluentinc/cp-kafka:7.4.0
     container_name: kafka
+    hostname: kafka
     environment:
-      - KAFKA_BROKER_ID=1
-      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
-      - ALLOW_PLAINTEXT_LISTENER=yes
-      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092
-      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
-      - KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     depends_on:
       - zookeeper
     ports:
       - "9092:9092"
     networks:
       - sdcrms-network
+
   # ==========================
   # Nifi
   # ==========================
@@ -117,7 +119,7 @@ services:
     image: apache/nifi:latest
     container_name: nifi
     ports:
-      - "8081:8080" # Giao diện web NiFi
+      - "8088:8080" # Giao diện web NiFi
     environment:
       - NIFI_WEB_HTTP_PORT=8080
     depends_on:
@@ -129,6 +131,7 @@ services:
 # ==========================
 networks:
   sdcrms-network:
+    name: sdcrms-network
     driver: bridge
 
 volumes:

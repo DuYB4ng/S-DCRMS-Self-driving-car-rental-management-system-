@@ -3,39 +3,42 @@ using System.Text.Json;
 
 namespace OwnerCarService.Services
 {
-    public class KafkaProducer
+    public class KafkaProducer : IDisposable
     {
-        private readonly string _bootstrapServers;
+        private readonly IProducer<Null, string> _producer;
 
         public KafkaProducer(IConfiguration configuration)
         {
-            _bootstrapServers = configuration["KAFKA__BootstrapServers"] ?? "localhost:9092";
+            var bootstrapServers = configuration["KAFKA__BootstrapServers"] ?? "localhost:9092";
+
+            var config = new ProducerConfig
+            {
+                BootstrapServers = bootstrapServers,
+                Acks = Acks.All
+            };
+
+            _producer = new ProducerBuilder<Null, string>(config).Build();
         }
 
         public async Task SendMessageAsync<T>(string topic, T message)
         {
-            var config = new ProducerConfig
-            {
-                BootstrapServers = _bootstrapServers,
-                Acks = Acks.All
-            };
-
-            using var producer = new ProducerBuilder<Null, string>(config).Build();
             var json = JsonSerializer.Serialize(message);
 
             try
             {
-                var dr = await producer.ProduceAsync(
+                var result = await _producer.ProduceAsync(
                     topic,
-                    new Message<Null, string> { Value = json }
-                );
+                    new Message<Null, string> { Value = json });
 
-                Console.WriteLine($"✅ Sent message to {dr.TopicPartitionOffset}: {json}");
+                Console.WriteLine($"✅ Sent message to {result.TopicPartitionOffset}: {json}");
             }
-            catch (ProduceException<Null, string> e)
+            catch (ProduceException<Null, string> ex)
             {
-                Console.WriteLine($"❌ Delivery failed: {e.Error.Reason}");
+                Console.WriteLine($"❌ Delivery failed: {ex.Error.Reason}");
+                throw;
             }
         }
+
+        public void Dispose() => _producer.Dispose();
     }
 }
