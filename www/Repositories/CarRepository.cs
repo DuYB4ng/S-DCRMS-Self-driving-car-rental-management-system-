@@ -3,77 +3,78 @@
     using System.Collections.Generic;
     using System.Threading.Tasks;
 
-    namespace SDCRMS.Repositories
+namespace SDCRMS.Repositories
+{
+    public interface ICarRepository
     {
-        public interface ICarRepository
+        Task<IEnumerable<Car>> layTatCaXeAsync();
+        Task<Car?> layXeTheoIdAsync(int carId);
+        Task<Car> themXeAsync(Car car);
+        Task<Car?> capNhatXeAsync(Car car);
+        Task<bool> xoaXeAsync(int carId);
+    }
+
+    public class CarRepository : ICarRepository
+    {
+        private readonly AppDbContext _context;
+
+        public CarRepository(AppDbContext context)
         {
-            Task<IEnumerable<Car>> layTatCaXeAsync();
-            Task<Car?> layXeTheoIdAsync(int carId);
-            Task<Car> themXeAsync(Car car);
-            Task<Car?> capNhatXeAsync(Car car);
-            Task<bool> xoaXeAsync(int carId);
+            _context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
-        public class CarRepository : ICarRepository
+        public async Task<Car?> capNhatXeAsync(Car car)
         {
-            private readonly AppDbContext _context;
-
-            public CarRepository(AppDbContext context)
+            var existingCar = await _context.Cars.FindAsync(car.CarID);
+            if (existingCar == null)
             {
-                _context = context ?? throw new ArgumentNullException(nameof(context));
+                return null; // Không tìm thấy xe để cập nhật
             }
 
-       public async Task<Car?> capNhatXeAsync(Car car)
+            existingCar.NameCar = car.NameCar;
+            existingCar.LicensePlate = car.LicensePlate;
+            existingCar.ModelYear = car.ModelYear;
+            existingCar.State = car.State;
+            existingCar.Seat = car.Seat;
+            existingCar.TypeCar = car.TypeCar;
+            existingCar.Price = car.Price;
+            existingCar.urlImage = car.urlImage;
+
+            _context.Cars.Update(existingCar);
+            await _context.SaveChangesAsync();
+
+            return existingCar;
+        }
+
+
+        public async Task<IEnumerable<Car>> layTatCaXeAsync()
+        {
+            return await _context.Cars.ToListAsync();
+        }
+
+        public async Task<Car?> layXeTheoIdAsync(int carId)
+        {
+            return await _context.Cars.FindAsync(carId).AsTask();
+        }
+
+        public async Task<Car> themXeAsync(Car car)
+        {
+            _context.Cars.Add(car);
+            await _context.SaveChangesAsync();
+            return car;
+        }
+
+        public async Task<bool> xoaXeAsync(int carId)
+        {
+            var car = await _context.Cars.FindAsync(carId);
+            if (car != null)
             {
-                var existingCar = await _context.Cars.FindAsync(car.CarID);
-                if (existingCar == null)
-                {
-                    return null; // Không tìm thấy xe để cập nhật
-                }
-
-                existingCar.NameCar = car.NameCar;
-                existingCar.LicensePlate = car.LicensePlate;
-                existingCar.ModelYear = car.ModelYear;
-                existingCar.State = car.State;
-                existingCar.Seat = car.Seat;
-                existingCar.TypeCar = car.TypeCar;
-                existingCar.Price = car.Price;
-                existingCar.urlImage = car.urlImage;
-
-                _context.Cars.Update(existingCar);
+                _context.Cars.Remove(car);
                 await _context.SaveChangesAsync();
-
-                return existingCar;
+                return true;
             }
-
-
-            public async Task<IEnumerable<Car>> layTatCaXeAsync()
-            {
-                return await _context.Cars.ToListAsync();
-            }
-
-            public async Task<Car?> layXeTheoIdAsync(int carId)
-            {
-                return await _context.Cars.FindAsync(carId).AsTask();
-            }
-
-            public async Task<Car> themXeAsync(Car car)
-            {
-                _context.Cars.Add(car);
-                await _context.SaveChangesAsync();
-                return car;
-            }
-
-            public async Task<bool> xoaXeAsync(int carId)
-            {
-                var car = await _context.Cars.FindAsync(carId);
-                if (car != null)
-                {
-                    _context.Cars.Remove(car);
-                    await _context.SaveChangesAsync();
-                    return true;
-                }
-                return false;
-            }
+            return false;
         }
     }
+}
+    

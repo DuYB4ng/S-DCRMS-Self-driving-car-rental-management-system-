@@ -53,6 +53,7 @@ builder.Services.AddScoped<IMaintenanceRepository, MaintenanceRepository>();
 builder.Services.AddScoped<ICarService, CarService>();
 builder.Services.AddScoped<IOwnerCarService, OwnerCarService.Services.OwnerCarService>();
 builder.Services.AddScoped<IMaintenanceService, MaintenanceService>();
+builder.Services.AddScoped<KafkaProducer>();
 
 var app = builder.Build();
 
