@@ -1,4 +1,4 @@
-namespace SDCRMS.AuthService.Models
+namespace AuthService.Models
 {
     public class AuthUser
     {

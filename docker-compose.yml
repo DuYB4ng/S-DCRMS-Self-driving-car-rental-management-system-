@@ -10,13 +10,15 @@ services:
       dockerfile: Dockerfile
     container_name: apigateway
     ports:
-      - "8000:8080"  # cổng public -> cổng trong container
+      - "8000:8080"  # public:container
     depends_on:
       - ownercarservice
+      - kafka
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
       - OWNER_CAR_SERVICE_URL=http://ownercarservice:8081
+      - KAFKA__BootstrapServers=kafka:9092
     networks:
       - sdcrms-network
 
@@ -34,8 +36,10 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8081
       - ConnectionStrings__DefaultConnection=Server=db;Database=OwnerCarDB;User=sa;Password=YourStrong!Passw0rd
+      - KAFKA__BootstrapServers=kafka:9092
     depends_on:
       - db
+      - kafka
     networks:
       - sdcrms-network
 
@@ -74,6 +78,52 @@ services:
     depends_on:
       - apigateway
 
+  # ==========================
+  # Zookeeper (Kafka dependency)
+  # ==========================
+  zookeeper:
+    image: bitnami/zookeeper:latest
+    container_name: zookeeper
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+    ports:
+      - "2181:2181"
+    networks:
+      - sdcrms-network
+
+  # ==========================
+  # Kafka Broker
+  # ==========================
+  kafka:
+    image: bitnami/kafka:latest
+    container_name: kafka
+    environment:
+      - KAFKA_BROKER_ID=1
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
+      - KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    networks:
+      - sdcrms-network
+  # ==========================
+  # Nifi
+  # ==========================
+  nifi:
+    image: apache/nifi:latest
+    container_name: nifi
+    ports:
+      - "8081:8080" # Giao diện web NiFi
+    environment:
+      - NIFI_WEB_HTTP_PORT=8080
+    depends_on:
+      - kafka
+    networks:
+      - sdcrms-network
 # ==========================
 # Shared network & volumes
 # ==========================

@@ -10,7 +10,7 @@ public class AppDbContext : DbContext
     public DbSet<Car> Cars { get; set; }
     public DbSet<OwnerCar> OwnerCars { get; set; }
     public DbSet<Maintenance> Maintenances { get; set; }
-
+    public DbSet<CarLocation> CarLocations { get; set; }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
