@@ -5,6 +5,7 @@ using SDCRMS.Dtos.Payment;
 using SDCRMS.Models;
 using System.Threading.Tasks;
 using System.Linq;
+using SDCRMS.Interfaces;
 
 namespace SDCRMS.Controllers
 {
@@ -13,17 +14,19 @@ namespace SDCRMS.Controllers
     public class PaymentController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly IPaymentRepository _paymentRepo;
 
-        public PaymentController(AppDbContext context)
+        public PaymentController(AppDbContext context, IPaymentRepository paymentRepo)
         {
             _context = context;
+            _paymentRepo = paymentRepo;
         }
 
         // GET: api/payment
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            var payments = await _context.Payments.ToListAsync();
+            var payments = await _paymentRepo.GetAllAsync();
             return Ok(payments);
         }
 
@@ -31,7 +34,7 @@ namespace SDCRMS.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetID([FromRoute] int id)
         {
-            var payment = await _context.Payments.FindAsync(id);
+            var payment = await _paymentRepo.GetByIdAsync(id);
             if (payment == null)
             {
                 return NotFound();
@@ -46,8 +49,7 @@ namespace SDCRMS.Controllers
         {
             var paymentModel = payDto.ToPaymentFromCreateDto();
 
-            await _context.Payments.AddAsync(paymentModel);
-            await _context.SaveChangesAsync();
+            await _paymentRepo.CreateAsync(paymentModel);
 
             return CreatedAtAction(nameof(GetID), new { id = paymentModel.PaymentID }, paymentModel.toPaymentDto());
         }
@@ -56,21 +58,13 @@ namespace SDCRMS.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> Update([FromRoute] int id, [FromBody] UpdatePaymentRequestDto updateDto)
         {
-            var paymentModel = await _context.Payments.FirstOrDefaultAsync(x => x.PaymentID == id);
+            var paymentModel = await _paymentRepo.UpdateAsync(id, updateDto);
             if (paymentModel == null)
             {
                 return NotFound();
             }
 
-            paymentModel.PaymentDate = updateDto.PaymentDate;
-            paymentModel.Amount = updateDto.Amount;
-            paymentModel.Method = updateDto.Method;
-            paymentModel.Status = updateDto.Status;
-            paymentModel.BookingID = updateDto.BookingID;
-            paymentModel.Booking = updateDto.Booking;
-
             await _context.SaveChangesAsync();
-
             return Ok(paymentModel.toPaymentDto());
         }
 
@@ -78,14 +72,11 @@ namespace SDCRMS.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete([FromRoute] int id)
         {
-            var paymentModel = await _context.Payments.FirstOrDefaultAsync(x => x.PaymentID == id);
+            var paymentModel = await _paymentRepo.DeleteAsync(id);
             if (paymentModel == null)
             {
                 return NotFound();
             }
-
-            _context.Payments.Remove(paymentModel);
-            await _context.SaveChangesAsync();
 
             return NoContent();
         }

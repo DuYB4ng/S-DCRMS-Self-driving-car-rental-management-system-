@@ -20,9 +20,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<ICarRepository, CarRepository>();
 //Đăng kí Services
 builder.Services.AddScoped<ICarService, CarService>();
-
 builder.Services.AddScoped<IStaffRepository, StaffRepository>();
-
+builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

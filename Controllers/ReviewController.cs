@@ -5,6 +5,7 @@ using SDCRMS.Mappers;
 using SDCRMS.Models;
 using System.Threading.Tasks;
 using System.Linq;
+using SDCRMS.Interfaces;
 
 namespace SDCRMS.Controllers
 {
@@ -13,17 +14,19 @@ namespace SDCRMS.Controllers
     public class ReviewController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly IReviewRepository _reviewRepo;
 
-        public ReviewController(AppDbContext context)
+        public ReviewController(AppDbContext context, IReviewRepository reviewRepo)
         {
             _context = context;
+            _reviewRepo = reviewRepo;
         }
 
         // GET: api/review
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            var reviews = await _context.Reviews.ToListAsync();
+            var reviews = await _reviewRepo.GetAllAsync();
             return Ok(reviews);
         }
 
@@ -31,7 +34,7 @@ namespace SDCRMS.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetID([FromRoute] int id)
         {
-            var review = await _context.Reviews.FindAsync(id);
+            var review = await _reviewRepo.GetByIdAsync(id);
             if (review == null)
             {
                 return NotFound();
@@ -46,24 +49,20 @@ namespace SDCRMS.Controllers
         {
             var reviewModel = reviewDto.ToReviewModel();
 
-            await _context.Reviews.AddAsync(reviewModel);
-            await _context.SaveChangesAsync();
+            await _reviewRepo.CreateAsync(reviewModel);
 
-            return CreatedAtAction(nameof(GetID), new { id = reviewModel.ReviewID }, reviewModel);
+            return CreatedAtAction(nameof(GetID), new { id = reviewModel.ReviewID }, reviewModel.toReviewDto());
         }
 
         // PUT: api/review/{id}
         [HttpPut("{id}")]
         public async Task<IActionResult> Update([FromRoute] int id, [FromBody] UpdateReviewRequestDto updateDto)
         {
-            var reviewModel = await _context.Reviews.FirstOrDefaultAsync(x => x.ReviewID == id);
+            var reviewModel = await _reviewRepo.UpdateAsync(id, updateDto);
             if (reviewModel == null)
             {
                 return NotFound();
             }
-
-            reviewModel.Rating = updateDto.Rating;
-            reviewModel.Comment = updateDto.Comment;
 
             await _context.SaveChangesAsync();
             return NoContent();
@@ -73,14 +72,11 @@ namespace SDCRMS.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete([FromRoute] int id)
         {
-            var reviewModel = await _context.Reviews.FirstOrDefaultAsync(x => x.ReviewID == id);
+            var reviewModel = await _reviewRepo.DeleteAsync(id);
             if (reviewModel == null)
             {
                 return NotFound();
             }
-
-            _context.Reviews.Remove(reviewModel);
-            await _context.SaveChangesAsync();
 
             return NoContent();
         }
