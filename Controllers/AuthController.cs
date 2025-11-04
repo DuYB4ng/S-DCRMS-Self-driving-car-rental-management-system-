@@ -17,11 +17,17 @@ namespace SDCRMS.Controllers
     {
         private readonly AppDbContext _context;
         private readonly IJwtService _jwtService;
+        private readonly IPasswordHasher _passwordHasher;
 
-        public AuthController(AppDbContext context, IJwtService jwtService)
+        public AuthController(
+            AppDbContext context,
+            IJwtService jwtService,
+            IPasswordHasher passwordHasher
+        )
         {
             _context = context;
             _jwtService = jwtService;
+            _passwordHasher = passwordHasher;
         }
 
         [HttpPost("login")]
@@ -36,8 +42,8 @@ namespace SDCRMS.Controllers
             if (user == null)
                 return Unauthorized(new { message = "Invalid email or password" });
 
-            // Kiểm tra mật khẩu
-            if (user.Password != loginDto.Password)
+            // Kiểm tra mật khẩu với PBKDF2
+            if (!_passwordHasher.VerifyPassword(loginDto.Password, user.Password))
                 return Unauthorized(new { message = "Invalid email or password" });
 
             // Tạo JWT token
@@ -72,6 +78,9 @@ namespace SDCRMS.Controllers
             if (await _context.Users.AnyAsync(u => u.Email == createDto.Email))
                 return BadRequest(new { message = "Email already exists" });
 
+            // Hash password với PBKDF2
+            var hashedPassword = _passwordHasher.HashPassword(createDto.Password);
+
             // Tạo admin user mới
             var admin = new Models.Admin
             {
@@ -84,7 +93,7 @@ namespace SDCRMS.Controllers
                 Address = createDto.Address,
                 Sex = createDto.Sex,
                 Birthday = createDto.Birthday,
-                Password = createDto.Password,
+                Password = _passwordHasher.HashPassword(createDto.Password), // Hash password
             };
 
             _context.Users.Add(admin);
