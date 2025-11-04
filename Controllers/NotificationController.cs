@@ -1,10 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using SDCRMS.DTOs.Admin;
+using SDCRMS.Authorization;
 using SDCRMS.DTOs.Notification;
 using SDCRMS.Mappers;
 using SDCRMS.Models;
-using SDCRMS.Services;
 
 namespace SDCRMS.Controllers
 {
@@ -21,6 +21,7 @@ namespace SDCRMS.Controllers
 
         // Get: api/notification
         [HttpGet]
+        [Authorize(Policy = AuthorizationPolicies.AuthenticatedUser)]
         public async Task<IActionResult> GetNotifications()
         {
             var notifications = await _context.Notifications.ToListAsync();
@@ -30,6 +31,7 @@ namespace SDCRMS.Controllers
 
         // Get: api/notification/{id}
         [HttpGet("{id}")]
+        [Authorize(Policy = AuthorizationPolicies.AuthenticatedUser)]
         public async Task<IActionResult> GetNotification(int id)
         {
             var notification = await _context.Notifications.FindAsync(id);
@@ -42,6 +44,7 @@ namespace SDCRMS.Controllers
 
         // Post: api/notification
         [HttpPost]
+        [Authorize(Policy = AuthorizationPolicies.AdminOnly)]
         public async Task<IActionResult> PostNotification([FromBody] CreateNotificationDto dto)
         {
             var notification = dto.ToNotification();
@@ -57,6 +60,7 @@ namespace SDCRMS.Controllers
 
         // Put: api/notification/{id}
         [HttpPut("{id}")]
+        [Authorize(Policy = AuthorizationPolicies.AdminOnly)]
         public async Task<IActionResult> PutNotification(
             int id,
             [FromBody] CreateNotificationDto dto
@@ -79,6 +83,7 @@ namespace SDCRMS.Controllers
 
         // Delete: api/notification/{id}
         [HttpDelete("{id}")]
+        [Authorize(Policy = AuthorizationPolicies.AdminOnly)]
         public async Task<IActionResult> DeleteNotification(int id)
         {
             var notification = await _context.Notifications.FindAsync(id);

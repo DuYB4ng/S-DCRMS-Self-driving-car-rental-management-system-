@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using SDCRMS.Authorization;
 using SDCRMS.DTOs.Admin;
 using SDCRMS.Mapper;
 
@@ -8,7 +9,7 @@ namespace SDCRMS.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = AuthorizationPolicies.AdminOnly)]
     public class AdminController : ControllerBase
     {
         private readonly AppDbContext _context;

@@ -48,6 +48,7 @@ namespace SDCRMS.Services
                 new Claim(ClaimTypes.Email, user.Email ?? string.Empty),
                 new Claim(ClaimTypes.Name, ($"{user.FirstName} {user.LastName}").Trim()),
                 new Claim(ClaimTypes.Role, user.Role.ToString()),
+                new Claim("role", user.Role.ToString()),
             };
 
             var descriptor = new SecurityTokenDescriptor

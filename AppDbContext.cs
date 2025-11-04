@@ -17,4 +17,11 @@ public class AppDbContext : DbContext
     public DbSet<Admin> Admins { get; set; }
     public DbSet<Notification> Notifications { get; set; }
     public DbSet<Maintenance> Maintenances { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Users>().HasKey(u => u.UserID);
+
+        base.OnModelCreating(modelBuilder);
+    }
 }
