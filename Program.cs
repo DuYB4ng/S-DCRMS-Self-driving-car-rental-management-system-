@@ -87,11 +87,20 @@ builder.Services.AddRoleBasedAuthorization();
 
 // Register services
 builder.Services.AddScoped<IJwtService, JwtService>();
+builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<
     SDCRMS.Repositories.IAdminRepository,
     SDCRMS.Repositories.AdminRepository
 >();
 builder.Services.AddScoped<SDCRMS.Services.IAdminServices, SDCRMS.Services.AdminServices>();
+builder.Services.AddScoped<
+    SDCRMS.Repositories.INotificationRepository,
+    SDCRMS.Repositories.NotificationRepository
+>();
+builder.Services.AddScoped<
+    SDCRMS.Services.INotificationServices,
+    SDCRMS.Services.NotificationServices
+>();
 
 var app = builder.Build();
 
