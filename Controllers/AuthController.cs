@@ -3,6 +3,7 @@ using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using SDCRMS.Authorization;
 using SDCRMS.DTOs.Admin;
 using SDCRMS.DTOs.Auth;
 using SDCRMS.Models.Enums;
@@ -60,6 +61,12 @@ namespace SDCRMS.Controllers
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
+
+            var hasAnyAdmin = await _context.Users.AnyAsync(u => u.Role == UserRole.Admin);
+            if (hasAnyAdmin && !User.IsInRole(RoleNames.Admin))
+            {
+                return Forbid();
+            }
 
             // Kiểm tra email đã tồn tại
             if (await _context.Users.AnyAsync(u => u.Email == createDto.Email))
