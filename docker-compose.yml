@@ -159,6 +159,12 @@ services:
       - SINGLE_USER_CREDENTIALS_USERNAME=admin
       - SINGLE_USER_CREDENTIALS_PASSWORD=admin12345678
       - NIFI_REGISTRY_URL=http://nifi-registry:18080
+    volumes:
+      - ./nifi_data/conf:/opt/nifi/nifi-current/conf
+      - ./nifi_data/state:/opt/nifi/nifi-current/state
+      - ./nifi_data/database_repository:/opt/nifi/nifi-current/database_repository
+      - ./nifi_data/flowfile_repository:/opt/nifi/nifi-current/flowfile_repository
+      - ./nifi_data/provenance_repository:/opt/nifi/nifi-current/provenance_repository
     depends_on:
       - kafka
     restart: always
