@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using OwnerCarService.Models;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 
 public class AppDbContext : DbContext
 {
@@ -7,22 +8,36 @@ public class AppDbContext : DbContext
         : base(options)
     {
     }
+
     public DbSet<Car> Cars { get; set; }
     public DbSet<OwnerCar> OwnerCars { get; set; }
     public DbSet<Maintenance> Maintenances { get; set; }
-    public DbSet<CarLocation> CarLocations { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
         modelBuilder.Entity<Maintenance>()
-            .HasOne(e => e.Car)              // Maintenance có 1 Car
-            .WithMany(e => e.Maintenances)   // Car có nhiều Maintenance
-            .HasForeignKey(e => e.CarID)     // FK nằm ở bảng Maintenance
-            .OnDelete(DeleteBehavior.Cascade); // Xóa cascade
+            .HasOne(e => e.Car)
+            .WithMany(e => e.Maintenances)
+            .HasForeignKey(e => e.CarID)
+            .OnDelete(DeleteBehavior.Cascade);
+
         modelBuilder.Entity<Car>()
-            .HasOne(e => e.OwnerCar)         // Car có 1 OwnerCar
-            .WithMany(e => e.Cars)           // OwnerCar có nhiều Car
-            .HasForeignKey(e => e.OwnerCarID) // FK nằm ở bảng Car
-            .OnDelete(DeleteBehavior.Cascade); // Xóa cascade
+            .HasOne(e => e.OwnerCar)
+            .WithMany(e => e.Cars)
+            .HasForeignKey(e => e.OwnerCarID)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Car>(entity =>
+        {
+            entity.Property(e => e.Deposit).HasPrecision(18, 2);
+            entity.Property(e => e.PricePerDay).HasPrecision(18, 2);
+        });
+
+        modelBuilder.Entity<Maintenance>(entity =>
+        {
+            entity.Property(e => e.Cost).HasPrecision(18, 2);
+        });
     }
 }

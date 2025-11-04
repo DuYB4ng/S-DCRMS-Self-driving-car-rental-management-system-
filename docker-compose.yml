@@ -10,7 +10,7 @@ services:
       dockerfile: Dockerfile
     container_name: apigateway
     ports:
-      - "8000:8080"  # public:container
+      - "8000:8080"
     depends_on:
       - ownercarservice
       - kafka
@@ -19,11 +19,12 @@ services:
       - ASPNETCORE_URLS=http://+:8080
       - OWNER_CAR_SERVICE_URL=http://ownercarservice:8081
       - KAFKA__BootstrapServers=kafka:9092
+      - KAFKA__Topic=car_location
     networks:
       - sdcrms-network
 
   # ==========================
-  # OwnerCar Microservice
+  # OwnerCar Microservice (Producer)
   # ==========================
   ownercarservice:
     build:
@@ -35,29 +36,60 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8081
-      - ConnectionStrings__DefaultConnection=Server=db;Database=OwnerCarDB;User=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True
+      
+      - ConnectionStrings__DefaultConnection=server=db;port=3306;database=OwnerCarDB;user=root;password=YourStrong@Password123;
       - KAFKA__BootstrapServers=kafka:9092
+      - KAFKA__Topic=car_location
     depends_on:
-      - db
-      - kafka
+      db:
+        condition: service_healthy
+      kafka:
+        condition: service_started
     networks:
       - sdcrms-network
 
   # ==========================
-  # SQL Server Database
+  # OwnerCar Consumer (Kafka -> SQL)
   # ==========================
-  db:
-    image: mcr.microsoft.com/mssql/server:2022-latest
-    container_name: sdcrms-db
+  ownercarconsumer:
+    build:
+      context: ./Server/OwnerCarConsumer
+      dockerfile: Dockerfile
+    container_name: ownercarconsumer
+    depends_on:
+      db:
+        condition: service_healthy
+      kafka:
+        condition: service_started
     environment:
-      - ACCEPT_EULA=Y
-      - SA_PASSWORD=YourStrong!Passw0rd
-    ports:
-      - "1433:1433"
-    volumes:
-      - mssql-data:/var/opt/mssql
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=server=db;port=3306;database=TelemetryDB;user=root;password=YourStrong@Password123;
+      - KAFKA__BootstrapServers=kafka:9092
+      - KAFKA__Topic=car_location
     networks:
       - sdcrms-network
+
+  # ==========================
+  # MySQL Database
+  # ==========================
+  db:
+    image: mysql:8.0
+    container_name: sdcrms-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: YourStrong@Password123
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./Server/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - sdcrms-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-pYourStrong@Password123"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   # ==========================
   # React Frontend (Vite)
@@ -102,9 +134,10 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
     depends_on:
       - zookeeper
     ports:
@@ -116,16 +149,22 @@ services:
   # Nifi
   # ==========================
   nifi:
-    image: apache/nifi:latest
+    image: apache/nifi:1.27.0
     container_name: nifi
     ports:
-      - "8088:8080" # Giao diện web NiFi
+      - "8088:8080"
     environment:
       - NIFI_WEB_HTTP_PORT=8080
+      - NIFI_WEB_HTTP_HOST=0.0.0.0
+      - SINGLE_USER_CREDENTIALS_USERNAME=admin
+      - SINGLE_USER_CREDENTIALS_PASSWORD=admin12345678
+      - NIFI_REGISTRY_URL=http://nifi-registry:18080
     depends_on:
       - kafka
+    restart: always
     networks:
       - sdcrms-network
+
 # ==========================
 # Shared network & volumes
 # ==========================
@@ -135,4 +174,4 @@ networks:
     driver: bridge
 
 volumes:
-  mssql-data:
+  mysql-data:

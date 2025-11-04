@@ -9,7 +9,8 @@ namespace OwnerCarService.Services
 
         public KafkaProducer(IConfiguration configuration)
         {
-            var bootstrapServers = configuration["KAFKA__BootstrapServers"] ?? "localhost:9092";
+            var kafkaSection = configuration.GetSection("Kafka");
+            var bootstrapServers = kafkaSection["BootstrapServers"] ?? "localhost:9092";
 
             var config = new ProducerConfig
             {
