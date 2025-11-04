@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using SDCRMS.Authorization;
 using SDCRMS.DTOs.Admin;
 using SDCRMS.Mapper;
+using SDCRMS.Services;
 
 namespace SDCRMS.Controllers
 {
@@ -12,11 +13,19 @@ namespace SDCRMS.Controllers
     [Authorize(Policy = AuthorizationPolicies.AdminOnly)]
     public class AdminController : ControllerBase
     {
+        private readonly IAdminServices _adminServices;
         private readonly AppDbContext _context;
+        private readonly IPasswordHasher _passwordHasher;
 
-        public AdminController(AppDbContext context)
+        public AdminController(
+            IAdminServices adminServices,
+            AppDbContext context,
+            IPasswordHasher passwordHasher
+        )
         {
+            _adminServices = adminServices;
             _context = context;
+            _passwordHasher = passwordHasher;
         }
 
         // GET: api/admin - chỉ Admin mới được truy cập
@@ -119,14 +128,14 @@ namespace SDCRMS.Controllers
             if (exists)
                 return BadRequest(new { message = "Email already exists" });
 
-            // Map DTO -> Admin entity
             var admin = dto.ToAdmin();
-            admin.JoinDate = DateTime.UtcNow;
+            var createdAdmin = await _adminServices.TaoAdminAsync(admin, dto.Password);
 
-            _context.Admins.Add(admin);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(GetById), new { id = admin.UserID }, admin.ToAdminDto());
+            return CreatedAtAction(
+                nameof(GetById),
+                new { id = createdAdmin.UserID },
+                createdAdmin.ToAdminDto()
+            );
         }
     }
 }
