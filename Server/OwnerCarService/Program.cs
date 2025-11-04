@@ -48,15 +48,17 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 //     options.AddPolicy("CustomerOnly", policy => policy.RequireRole("Customer"));
 // });
 
-// Đăng ký DbContext với connection string
+// Đăng ký DbContext với connection string MySQL
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
-    options.UseSqlServer(
-        builder.Configuration.GetConnectionString("DefaultConnection"),
-        sqlOptions =>
-        {
-            sqlOptions.EnableRetryOnFailure(5, TimeSpan.FromSeconds(10), null);
-        });
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+    var serverVersion = new MySqlServerVersion(new Version(8, 0, 36)); // ví dụ MySQL 8.0.36
+
+    options.UseMySql(connectionString, serverVersion, mySqlOptions =>
+    {
+        mySqlOptions.EnableRetryOnFailure(5, TimeSpan.FromSeconds(10), null);
+    });
 });
 
 
@@ -89,14 +91,25 @@ builder.Services.AddScoped<ICarService, CarService>();
 builder.Services.AddScoped<IOwnerCarService, OwnerCarService.Services.OwnerCarService>();
 builder.Services.AddScoped<IMaintenanceService, MaintenanceService>();
 builder.Services.AddScoped<KafkaProducer>();
-// builder.Services.AddHostedService<KafkaConsumerService>();
 
 var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.EnsureCreated();
+
+    // Tự động migrate nếu có file migration mới
+    try
+    {
+        Console.WriteLine("🗄️ Checking database state...");
+        db.Database.Migrate(); // 👈 Dòng này sẽ tự tạo DB nếu chưa tồn tại
+        Console.WriteLine("✅ Database created or already up to date.");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"❌ Database migration failed: {ex.Message}");
+    }
 }
+
 // ----------------- Cấu hình Pipeline -----------------
 if (app.Environment.IsDevelopment())
 {

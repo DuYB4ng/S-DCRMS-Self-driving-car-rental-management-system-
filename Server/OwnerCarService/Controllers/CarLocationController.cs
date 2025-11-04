@@ -23,6 +23,9 @@ namespace OwnerCarService.Controllers
             if (carLocation == null)
                 return BadRequest("Invalid car location data");
 
+            _logger.LogInformation("📦 Received from API: CarID={CarID}, Lat={Lat}, Lng={Lng}, Speed={Speed}",
+                carLocation.CarID, carLocation.Latitude, carLocation.Longitude, carLocation.Speed);
+
             try
             {
                 await _producer.SendMessageAsync("car_location", carLocation);
