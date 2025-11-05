@@ -1,10 +1,29 @@
-# Please refer https://aka.ms/HTTPSinContainer on how to setup an https developer certificate for your ASP.NET Core service.
+version: "3.8"
 
 services:
-  sdcrms:
-    image: sdcrms
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=Admin123@
+    ports:
+      - "1444:1433"
+    volumes:
+      - sqldata:/var/opt/mssql
+
+  admin-service:
+    image: sdcrms-admin
     build:
       context: .
       dockerfile: ./Dockerfile
     ports:
-      - 5100:5100
+      - "5100:5100"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__AdminServiceConnection=Server=sqlserver,1433;Database=SDCRMS_AdminService;User Id=SA;Password=Admin123@;TrustServerCertificate=True
+      - ServiceUrls__UserService=http://user-service:5001
+    depends_on:
+      - sqlserver
+
+volumes:
+  sqldata:
