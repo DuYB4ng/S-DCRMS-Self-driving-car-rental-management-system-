@@ -9,21 +9,32 @@ export default function Login() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
       const token = await userCredential.user.getIdToken();
       console.log("Firebase Token:", token);
 
       // Gửi token qua API Gateway
-      const res = await fetch("https://localhost:7000/ownercar/cars", {
+      const res = await fetch("http://localhost:5100/ownercar/cars", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
+
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+
       const data = await res.json();
       console.log("Data:", data);
-
+      alert("Login successful!");
     } catch (err) {
+      console.error("Error:", err);
       setError(err.message);
     }
   };
