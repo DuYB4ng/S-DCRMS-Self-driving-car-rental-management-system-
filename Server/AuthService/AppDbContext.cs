@@ -1,14 +1,28 @@
-﻿using Microsoft.EntityFrameworkCore;
-using AuthService.Models;
-public class AppDbContext : DbContext
+﻿namespace AuthService.Data
 {
-    public AppDbContext(DbContextOptions<AppDbContext> options)
-        : base(options)
+    using Microsoft.EntityFrameworkCore;
+    using AuthService.Models;
+
+    public class AppDbContext : DbContext
     {
-    }
-    public DbSet<AuthUser> AuthUsers { get; set; }
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
-    {
-        base.OnModelCreating(modelBuilder);
+        public AppDbContext(DbContextOptions<AppDbContext> options)
+            : base(options)
+        {
+        }
+
+        public DbSet<AuthUser> AuthUsers { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<AuthUser>(entity =>
+            {
+                entity.HasKey(u => u.Id);
+                entity.HasIndex(u => u.FirebaseUid).IsUnique();
+                entity.Property(u => u.Email).IsRequired();
+                entity.Property(u => u.Role).HasDefaultValue("Customer");
+            });
+        }
     }
 }
