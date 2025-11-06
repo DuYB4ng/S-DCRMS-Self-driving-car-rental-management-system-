@@ -100,9 +100,9 @@ namespace SDCRMS.Controllers
                 {
                     var userIds = await response.Content.ReadFromJsonAsync<List<int>>();
 
-                    foreach (var userId in userIds ?? new List<int>())
-                    {
-                        var notification = new Notification
+                    // Bulk insert - tạo tất cả notifications một lúc
+                    var notifications = (userIds ?? new List<int>())
+                        .Select(userId => new Notification
                         {
                             UserID = userId,
                             Title = dto.Title,
@@ -110,13 +110,19 @@ namespace SDCRMS.Controllers
                             CreatedAt = DateTime.UtcNow,
                             Read = false,
                             LinkURL = "",
-                        };
-                        _context.Notifications.Add(notification);
-                    }
+                        })
+                        .ToList();
 
+                    _context.Notifications.AddRange(notifications);
                     await _context.SaveChangesAsync();
 
-                    return Ok(new { message = "Notification broadcasted successfully" });
+                    return Ok(
+                        new
+                        {
+                            message = "Notification broadcasted successfully",
+                            count = notifications.Count,
+                        }
+                    );
                 }
 
                 return StatusCode(500, new { message = "Failed to fetch users" });

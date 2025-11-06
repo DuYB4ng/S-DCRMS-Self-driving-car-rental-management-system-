@@ -59,20 +59,6 @@ namespace SDCRMS.Controllers
         [HttpGet("dashboard")]
         public async Task<IActionResult> GetDashboardData()
         {
-            var totalAdmins = await _context.Admins.CountAsync();
-
-            return Ok(
-                new
-                {
-                    TotalUsers = 100,
-                    TotalAdmins = totalAdmins,
-                    TotalStaff = 10,
-                    TotalCustomers = 90,
-                    Message = "Admin dashboard data (mock)",
-                }
-            );
-
-            /*
             var client = _httpClientFactory.CreateClient();
             var userServiceUrl = _configuration["ServiceUrls:UserService"];
 
@@ -88,7 +74,6 @@ namespace SDCRMS.Controllers
                         new
                         {
                             TotalUsers = userStats?.TotalUsers ?? 0,
-                            TotalAdmins = totalAdmins,
                             TotalStaff = userStats?.TotalStaff ?? 0,
                             TotalCustomers = userStats?.TotalCustomers ?? 0,
                             Message = "Admin dashboard data",
@@ -101,7 +86,6 @@ namespace SDCRMS.Controllers
                         new
                         {
                             TotalUsers = 0,
-                            TotalAdmins = totalAdmins,
                             TotalStaff = 0,
                             TotalCustomers = 0,
                             Message = "Admin dashboard data (User Service unavailable)",
@@ -116,7 +100,6 @@ namespace SDCRMS.Controllers
                     new { message = "Error connecting to User Service", error = ex.Message }
                 );
             }
-            */
         }
 
         // POST: api/admin/promote-user - Gọi sang User Service
