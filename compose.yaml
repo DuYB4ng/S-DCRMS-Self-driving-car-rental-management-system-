@@ -1,8 +1,7 @@
-version: "3.8"
-
 services:
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sdcrms-sqlserver
     environment:
       - ACCEPT_EULA=Y
       - SA_PASSWORD=Admin123@
@@ -10,20 +9,43 @@ services:
       - "1444:1433"
     volumes:
       - sqldata:/var/opt/mssql
+    networks:
+      - sdcrms-network
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "/opt/mssql-tools18/bin/sqlcmd -S localhost -U SA -P 'Admin123@' -Q 'SELECT 1' -C",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   admin-service:
     image: sdcrms-admin
+    container_name: sdcrms-admin-service
     build:
       context: .
       dockerfile: ./Dockerfile
     ports:
       - "5100:5100"
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__AdminServiceConnection=Server=sqlserver,1433;Database=SDCRMS_AdminService;User Id=SA;Password=Admin123@;TrustServerCertificate=True
       - ServiceUrls__UserService=http://user-service:5001
+      - UseInMemoryDatabase=false
+      - JwtSettings__Secret=your-super-secret-key-that-must-be-at-least-32-characters-long-for-security
     depends_on:
-      - sqlserver
+      sqlserver:
+        condition: service_healthy
+    networks:
+      - sdcrms-network
+    restart: unless-stopped
+
+networks:
+  sdcrms-network:
+    driver: bridge
 
 volumes:
   sqldata:
