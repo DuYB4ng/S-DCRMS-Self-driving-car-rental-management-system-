@@ -2,7 +2,7 @@
 
 namespace SDCRMS.Models
 {
-    public class Users
+    public abstract class Users
     {
         public int UserID { get; set; }
         public UserRole Role { get; set; }
@@ -10,7 +10,7 @@ namespace SDCRMS.Models
         public string LastName { get; set; } = string.Empty;
         public string FirstName { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
-        public string Password { get; set; } = string.Empty; // Thêm mật khẩu
+        public string Password { get; set; } = string.Empty;
         public string Sex { get; set; } = string.Empty;
         public DateTime Birthday { get; set; }
         public DateTime JoinDate { get; set; }
