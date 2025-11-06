@@ -10,6 +10,24 @@ using SDCRMS.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// ========== CORS CONFIGURATION ==========
+var allowedOrigins =
+    builder.Configuration.GetSection("AllowedOrigins").Get<string[]>() ?? new[]
+    {
+        "http://localhost:5173",
+    };
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(
+        "AllowFrontend",
+        policy =>
+        {
+            policy.WithOrigins(allowedOrigins).AllowAnyMethod().AllowAnyHeader().AllowCredentials();
+        }
+    );
+});
+
 // ========== DATABASE CONFIGURATION ==========
 var useInMemory = builder.Configuration.GetValue<bool>("UseInMemoryDatabase");
 if (useInMemory)
@@ -68,8 +86,18 @@ builder.Services.AddScoped<
 >();
 builder.Services.AddScoped<INotificationServices, NotificationServices>();
 
-// HTTP Client for inter-service communication
-builder.Services.AddHttpClient();
+// HTTP Client for inter-service communication with Retry Policy
+builder.Services.AddHttpClient(
+    "UserService",
+    client =>
+    {
+        var serviceUrl = builder.Configuration["ServiceUrls:UserService"];
+        if (!string.IsNullOrEmpty(serviceUrl))
+        {
+            client.BaseAddress = new Uri(serviceUrl);
+        }
+    }
+);
 
 // ========== CONTROLLERS & SWAGGER ==========
 builder.Services.AddControllers();
@@ -116,27 +144,6 @@ builder.Services.AddSwaggerGen(c =>
     );
 });
 
-// ========== CORS ==========
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy(
-        "AllowAll",
-        policy =>
-        {
-            policy
-                .WithOrigins(
-                    "http://localhost:5173",
-                    "http://localhost:5174",
-                    "http://localhost:5175",
-                    "http://localhost:3000"
-                ) // ✅ Cho phép Vite dev servers
-                .AllowAnyMethod()
-                .AllowAnyHeader()
-                .AllowCredentials();
-        }
-    );
-});
-
 var app = builder.Build();
 
 // ========== MIDDLEWARE PIPELINE ==========
@@ -149,7 +156,7 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-app.UseCors("AllowAll");
+app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

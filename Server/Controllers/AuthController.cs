@@ -1,9 +1,8 @@
-using System.Security.Cryptography;
-using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SDCRMS.Authorization;
+using SDCRMS.Data;
 using SDCRMS.DTOs.Admin;
 using SDCRMS.DTOs.Auth;
 using SDCRMS.Models.Enums;
@@ -15,12 +14,12 @@ namespace SDCRMS.Controllers
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly AdminDbContext _context;
         private readonly IJwtService _jwtService;
         private readonly IPasswordHasher _passwordHasher;
 
         public AuthController(
-            AppDbContext context,
+            AdminDbContext context,
             IJwtService jwtService,
             IPasswordHasher passwordHasher
         )
@@ -38,7 +37,7 @@ namespace SDCRMS.Controllers
                 return BadRequest(ModelState);
 
             // Tìm user theo email
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == loginDto.Email);
+            var user = await _context.Admins.FirstOrDefaultAsync(u => u.Email == loginDto.Email);
             if (user == null)
                 return Unauthorized(new { message = "Invalid email or password" });
 
@@ -68,14 +67,14 @@ namespace SDCRMS.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var hasAnyAdmin = await _context.Users.AnyAsync(u => u.Role == UserRole.Admin);
+            var hasAnyAdmin = await _context.Admins.AnyAsync(u => u.Role == UserRole.Admin);
             if (hasAnyAdmin && !User.IsInRole(RoleNames.Admin))
             {
                 return Forbid();
             }
 
             // Kiểm tra email đã tồn tại
-            if (await _context.Users.AnyAsync(u => u.Email == createDto.Email))
+            if (await _context.Admins.AnyAsync(u => u.Email == createDto.Email))
                 return BadRequest(new { message = "Email already exists" });
 
             // Hash password với PBKDF2
@@ -96,7 +95,7 @@ namespace SDCRMS.Controllers
                 Password = _passwordHasher.HashPassword(createDto.Password), // Hash password
             };
 
-            _context.Users.Add(admin);
+            _context.Admins.Add(admin);
             await _context.SaveChangesAsync();
 
             return Ok(new { message = "Admin registered successfully" });
