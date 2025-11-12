@@ -1,0 +1,12 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\Server",
+    "\\Server\\reiviewService",
+    "\\Server\\reiviewService\\Controllers",
+    "\\Server\\staffMicroService",
+    "\\Server\\staffMicroService\\Controllers"
+  ],
+  "SelectedNode": "\\Server\\reiviewService\\reiviewService.csproj",
+  "PreviewInSolutionExplorer": false
+}
