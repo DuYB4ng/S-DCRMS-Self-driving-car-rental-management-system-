@@ -31,16 +31,20 @@ namespace OwnerCarConsumer.Migrations
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("CarID")
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasAnnotation("Relational:JsonPropertyName", "carID");
 
                     b.Property<double>("Latitude")
-                        .HasColumnType("double");
+                        .HasColumnType("double")
+                        .HasAnnotation("Relational:JsonPropertyName", "latitude");
 
                     b.Property<double>("Longitude")
-                        .HasColumnType("double");
+                        .HasColumnType("double")
+                        .HasAnnotation("Relational:JsonPropertyName", "longitude");
 
                     b.Property<double>("Speed")
-                        .HasColumnType("double");
+                        .HasColumnType("double")
+                        .HasAnnotation("Relational:JsonPropertyName", "speed");
 
                     b.Property<DateTime>("Timestamp")
                         .HasColumnType("datetime(6)");

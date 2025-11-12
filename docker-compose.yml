@@ -14,10 +14,16 @@ services:
     depends_on:
       - ownercarservice
       - kafka
+      - reiviewservice
+      - paymentservice 
+      - staffservice
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
       - OWNER_CAR_SERVICE_URL=http://ownercarservice:8081
+      - PAYMENT_SERVICE_URL=http://paymentservice:8083
+      - STAFF_SERVICE_URL=http://staffservice:8084
+      - REVIEW_SERVICE_URL=http://reiviewservice:8082
       - KAFKA__BootstrapServers=kafka:9092
       - KAFKA__Topic=car_location
     networks:
@@ -47,7 +53,55 @@ services:
         condition: service_started
     networks:
       - sdcrms-network
-
+      
+  # ==========================
+  # reiviewService Microservice (Producer)
+  # ==========================
+  reiviewservice:
+      build:
+        context: ./Server/reiviewService
+      ports:
+        - "8002:8082"
+      environment:
+        - ASPNETCORE_ENVIRONMENT=Development
+        - ASPNETCORE_URLS=http://+:8082
+        - ConnectionStrings__DefaultConnection=Server=sqlserver-review;Database=ReviewDB;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;Encrypt=False;
+      depends_on:
+        - db
+      networks:
+        - sdcrms-network
+  # ==========================
+  # PaymentServices Microservice (Producer)
+  # ==========================
+  paymentservice:
+      build:
+        context: ./Server/paymentServices
+      ports:
+        - "8003:8083"
+      environment:
+        - ASPNETCORE_ENVIRONMENT=Development
+        - ASPNETCORE_URLS=http://+:8083
+        - ConnectionStrings__DefaultConnection=Server=sqlserver-payment;Database=PaymentDB;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;Encrypt=False;
+      depends_on:
+        - db
+      networks:
+        - sdcrms-network
+  # ==========================
+  # staffServices Microservice (Producer)
+  # ==========================
+  staffservice:
+      build:
+        context: ./Server/staffMicroService
+      ports:
+        - "8004:8084"
+      environment:
+        - ASPNETCORE_ENVIRONMENT=Development
+        - ASPNETCORE_URLS=http://+:8084
+        - ConnectionStrings__DefaultConnection=Server=sqlserver-staff;Database=StaffDB;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;Encrypt=False;
+      depends_on:
+        - db
+      networks:
+        - sdcrms-network
   # ==========================
   # OwnerCar Consumer (Kafka -> SQL)
   # ==========================
@@ -90,6 +144,50 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
+
+  # ==========================
+  # SQL Server Database
+  # ==========================
+  sqlserver-payment:
+     image: mcr.microsoft.com/mssql/server:2022-latest
+     container_name: sqlserver-payment
+     environment:
+        - SA_PASSWORD=YourStrong!Passw0rd
+        - ACCEPT_EULA=Y
+     ports:
+        - "1433:1433"
+     volumes:
+        - ./Server/init-payment.sql:/docker-entrypoint-initdb.d/init-payment.sql
+     networks:
+        - sdcrms-network
+
+  sqlserver-staff:
+      image: mcr.microsoft.com/mssql/server:2022-latest
+      container_name: sqlserver-staff
+      environment:
+        - SA_PASSWORD=YourStrong!Passw0rd
+        - ACCEPT_EULA=Y
+      ports:
+        - "1434:1433"
+      volumes:
+        - ./Server/init-staff.sql:/docker-entrypoint-initdb.d/init-staff.sql
+      networks:
+        - sdcrms-network
+
+  sqlserver-review:
+      image: mcr.microsoft.com/mssql/server:2022-latest
+      container_name: sqlserver-review
+      environment:
+        - SA_PASSWORD=YourStrong!Passw0rd
+        - ACCEPT_EULA=Y
+      ports:
+        - "1435:1433"
+      volumes:
+        - ./Server/init-review.sql:/docker-entrypoint-initdb.d/init-review.sql
+      networks:
+        - sdcrms-network
+
+
 
   # ==========================
   # React Frontend (Vite)
@@ -215,3 +313,6 @@ networks:
 
 volumes:
   mysql-data:
+  sqlserver-payment-data:
+  sqlserver-staff-data:
+  sqlserver-review-data:
