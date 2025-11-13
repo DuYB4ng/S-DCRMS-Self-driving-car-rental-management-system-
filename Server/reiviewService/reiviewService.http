@@ -1,6 +1,0 @@
-@reiviewService_HostAddress = http://localhost:5286
-
-GET {{reiviewService_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
