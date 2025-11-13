@@ -20,33 +20,6 @@ builder.Services.AddSwaggerGen(c =>
         Description = "API quản lý xe, chủ xe và bảo trì"
     });
 });
-// ----------------- Cấu hình Firebase JWT -----------------
-var firebaseProjectId = "sdcrms-49dfb"; // 🔹 Firebase Project ID của bạn
-
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.Authority = $"https://securetoken.google.com/{firebaseProjectId}";
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidIssuer = $"https://securetoken.google.com/{firebaseProjectId}",
-            ValidateAudience = true,
-            ValidAudience = firebaseProjectId,
-            ValidateLifetime = true,
-            // RoleClaimType = "role", // 🔹 ánh xạ claim role của Firebase
-            // NameClaimType = "user_id"
-        };
-    });
-
-// ----------------- Cấu hình phân quyền theo Role -----------------
-// builder.Services.AddAuthorization(options =>
-// {
-//     options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
-//     options.AddPolicy("OwnerOnly", policy => policy.RequireRole("OwnerCar"));
-//     options.AddPolicy("StaffOnly", policy => policy.RequireRole("Staff"));
-//     options.AddPolicy("CustomerOnly", policy => policy.RequireRole("Customer"));
-// });
 
 // Đăng ký DbContext với connection string MySQL
 builder.Services.AddDbContext<AppDbContext>(options =>
