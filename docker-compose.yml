@@ -27,6 +27,22 @@ services:
     networks:
       - sdcrms-network
 
+    authservice:
+      build:
+        context: ./Server/AuthService
+        dockerfile: Dockerfile
+      container_name: authservice-sdcrms
+      ports:
+        - "8089:8089"
+      environment:
+        - ASPNETCORE_ENVIRONMENT=Development
+        - ConnectionStrings__DefaultConnection=server=db;port=3306;database=AuthDB;user=root;password=YourStrong@Password123;
+      depends_on:
+        db:
+          condition: service_healthy  # ← Đợi MySQL healthy
+      networks:
+        - sdcrms-network
+      restart: on-failure
   # ==========================
   # OwnerCar Microservice (Producer)
   # ==========================

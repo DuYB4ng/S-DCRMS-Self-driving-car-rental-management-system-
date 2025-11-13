@@ -40,6 +40,7 @@ mssql-data/
 # ================================
 # Visual Studio / VSCode
 # ================================
+.vs/
 .vscode/
 .idea/
 *.suo
