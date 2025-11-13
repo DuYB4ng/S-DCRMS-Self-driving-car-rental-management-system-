@@ -2,11 +2,15 @@
   "ExpandedNodes": [
     "",
     "\\Server",
-    "\\Server\\reiviewService",
-    "\\Server\\reiviewService\\Controllers",
     "\\Server\\staffMicroService",
-    "\\Server\\staffMicroService\\Controllers"
+    "\\Server\\staffMicroService\\Controllers",
+    "\\Server\\staffMicroService\\Dtos",
+    "\\Server\\staffMicroService\\Dtos\\Staff",
+    "\\Server\\staffMicroService\\Migrations",
+    "\\Server\\staffMicroService\\Models",
+    "\\Server\\staffMicroService\\Repositories",
+    "\\Server\\staffMicroService\\Services"
   ],
-  "SelectedNode": "\\Server\\reiviewService\\reiviewService.csproj",
+  "SelectedNode": "\\Server\\staffMicroService\\Program.cs",
   "PreviewInSolutionExplorer": false
 }
