@@ -14,12 +14,14 @@ services:
     depends_on:
       - ownercarservice
       - kafka
-      - bookingservice      
+      - bookingservice
+      - customerservice  
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
       - OWNER_CAR_SERVICE_URL=http://ownercarservice:8081
-      - BOOKING_SERVICE_URL=http://bookingservice:8083  
+      - BOOKING_SERVICE_URL=http://bookingservice:8083
+      - CUSTOMER_SERVICE_URL=http://customerservice:8085
       - KAFKA__BootstrapServers=kafka:9092
       - KAFKA__Topic=car_location
     networks:
@@ -65,6 +67,25 @@ services:
       - ConnectionStrings__DefaultConnection=Server=sqlserver-booking;Database=BookingService;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;
     depends_on:
       sqlserver-booking:
+        condition: service_started
+    networks:
+      - sdcrms-network
+  # ==========================
+  # Customer Microservice (SQL Server)
+  # ==========================
+  customerservice:
+    build:
+      context: ./Server/customerService
+      dockerfile: Dockerfile
+    container_name: customerservice
+    ports:
+      - "8085:8085"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8085
+      - ConnectionStrings__DefaultConnection=Server=sqlserver-customer;Database=CustomerService;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;
+    depends_on:
+      sqlserver-customer:
         condition: service_started
     networks:
       - sdcrms-network
@@ -127,6 +148,19 @@ services:
       - sdcrms-network
     volumes:
       - sqlserver-booking-data:/var/opt/mssql
+
+  sqlserver-customer:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sqlserver-customer
+    environment:
+      - SA_PASSWORD=YourStrong!Passw0rd
+      - ACCEPT_EULA=Y
+    ports:
+      - "1437:1433"
+    networks:
+      - sdcrms-network
+    volumes:
+      - sqlserver-customer-data:/var/opt/mssql
 
   # ==========================
   # React Frontend (Vite)
@@ -252,3 +286,4 @@ networks:
 volumes:
   mysql-data:
   sqlserver-booking-data:
+  sqlserver-customer-data:
