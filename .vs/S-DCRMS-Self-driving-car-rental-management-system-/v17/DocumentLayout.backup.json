@@ -1,18 +1,30 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "C:\\Users\\ADMIN\\Desktop\\Nifitesst\\S-DCRMS-Self-driving-car-rental-management-system-\\",
+  "WorkspaceRootPath": "C:\\Users\\ADMIN\\Desktop\\Nifitesst\\Checkout\\S-DCRMS-Self-driving-car-rental-management-system-\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ADMIN\\Desktop\\Nifitesst\\S-DCRMS-Self-driving-car-rental-management-system-\\Server\\reiviewService\\reiviewService.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Server\\reiviewService\\reiviewService.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ADMIN\\Desktop\\Nifitesst\\Checkout\\S-DCRMS-Self-driving-car-rental-management-system-\\Server\\staffMicroService\\staffMicroService.http||{5703B403-55E7-4C63-8C88-A8F52C7A45C5}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Server\\staffMicroService\\staffMicroService.http||{5703B403-55E7-4C63-8C88-A8F52C7A45C5}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ADMIN\\Desktop\\Nifitesst\\S-DCRMS-Self-driving-car-rental-management-system-\\Server\\reiviewService\\Program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Server\\reiviewService\\Program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ADMIN\\Desktop\\Nifitesst\\Checkout\\S-DCRMS-Self-driving-car-rental-management-system-\\Server\\staffMicroService\\staffMicroService.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Server\\staffMicroService\\staffMicroService.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ADMIN\\Desktop\\Nifitesst\\S-DCRMS-Self-driving-car-rental-management-system-\\docker-compose.yml||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ADMIN\\Desktop\\Nifitesst\\Checkout\\S-DCRMS-Self-driving-car-rental-management-system-\\Server\\OwnerCarService\\Dockerfile||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Server\\OwnerCarService\\Dockerfile||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ADMIN\\Desktop\\Nifitesst\\Checkout\\S-DCRMS-Self-driving-car-rental-management-system-\\Server\\staffMicroService\\Dockerfile||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Server\\staffMicroService\\Dockerfile||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ADMIN\\Desktop\\Nifitesst\\Checkout\\S-DCRMS-Self-driving-car-rental-management-system-\\docker-compose.yml||{8B382828-6202-11D1-8870-0000F87579D2}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:docker-compose.yml||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ADMIN\\Desktop\\Nifitesst\\Checkout\\S-DCRMS-Self-driving-car-rental-management-system-\\Server\\staffMicroService\\Controllers\\StaffController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Server\\staffMicroService\\Controllers\\StaffController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -22,7 +34,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 2,
+          "SelectedChildIndex": 1,
           "Children": [
             {
               "$type": "Bookmark",
@@ -30,41 +42,80 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "Program.cs",
-              "DocumentMoniker": "C:\\Users\\ADMIN\\Desktop\\Nifitesst\\S-DCRMS-Self-driving-car-rental-management-system-\\Server\\reiviewService\\Program.cs",
-              "RelativeDocumentMoniker": "Server\\reiviewService\\Program.cs",
-              "ToolTip": "C:\\Users\\ADMIN\\Desktop\\Nifitesst\\S-DCRMS-Self-driving-car-rental-management-system-\\Server\\reiviewService\\Program.cs",
-              "RelativeToolTip": "Server\\reiviewService\\Program.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAowBAAAAAdAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-12T12:46:15.203Z",
+              "DocumentIndex": 0,
+              "Title": "staffMicroService.http",
+              "DocumentMoniker": "C:\\Users\\ADMIN\\Desktop\\Nifitesst\\Checkout\\S-DCRMS-Self-driving-car-rental-management-system-\\Server\\staffMicroService\\staffMicroService.http",
+              "RelativeDocumentMoniker": "Server\\staffMicroService\\staffMicroService.http",
+              "ToolTip": "C:\\Users\\ADMIN\\Desktop\\Nifitesst\\Checkout\\S-DCRMS-Self-driving-car-rental-management-system-\\Server\\staffMicroService\\staffMicroService.http",
+              "RelativeToolTip": "Server\\staffMicroService\\staffMicroService.http",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003502|",
+              "WhenOpened": "2025-11-13T11:33:12.739Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "reiviewService.csproj",
-              "DocumentMoniker": "C:\\Users\\ADMIN\\Desktop\\Nifitesst\\S-DCRMS-Self-driving-car-rental-management-system-\\Server\\reiviewService\\reiviewService.csproj",
-              "RelativeDocumentMoniker": "Server\\reiviewService\\reiviewService.csproj",
-              "ToolTip": "C:\\Users\\ADMIN\\Desktop\\Nifitesst\\S-DCRMS-Self-driving-car-rental-management-system-\\Server\\reiviewService\\reiviewService.csproj",
-              "RelativeToolTip": "Server\\reiviewService\\reiviewService.csproj",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABgAAAAAAAAAAAAAAA==",
+              "DocumentIndex": 1,
+              "Title": "staffMicroService.csproj",
+              "DocumentMoniker": "C:\\Users\\ADMIN\\Desktop\\Nifitesst\\Checkout\\S-DCRMS-Self-driving-car-rental-management-system-\\Server\\staffMicroService\\staffMicroService.csproj",
+              "RelativeDocumentMoniker": "Server\\staffMicroService\\staffMicroService.csproj",
+              "ToolTip": "C:\\Users\\ADMIN\\Desktop\\Nifitesst\\Checkout\\S-DCRMS-Self-driving-car-rental-management-system-\\Server\\staffMicroService\\staffMicroService.csproj",
+              "RelativeToolTip": "Server\\staffMicroService\\staffMicroService.csproj",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
-              "WhenOpened": "2025-11-12T12:46:08.743Z",
+              "WhenOpened": "2025-11-13T11:33:08.037Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 2,
+              "Title": "Dockerfile",
+              "DocumentMoniker": "C:\\Users\\ADMIN\\Desktop\\Nifitesst\\Checkout\\S-DCRMS-Self-driving-car-rental-management-system-\\Server\\OwnerCarService\\Dockerfile",
+              "RelativeDocumentMoniker": "Server\\OwnerCarService\\Dockerfile",
+              "ToolTip": "C:\\Users\\ADMIN\\Desktop\\Nifitesst\\Checkout\\S-DCRMS-Self-driving-car-rental-management-system-\\Server\\OwnerCarService\\Dockerfile",
+              "RelativeToolTip": "Server\\OwnerCarService\\Dockerfile",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2025-11-13T11:33:00.529Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "Dockerfile",
+              "DocumentMoniker": "C:\\Users\\ADMIN\\Desktop\\Nifitesst\\Checkout\\S-DCRMS-Self-driving-car-rental-management-system-\\Server\\staffMicroService\\Dockerfile",
+              "RelativeDocumentMoniker": "Server\\staffMicroService\\Dockerfile",
+              "ToolTip": "C:\\Users\\ADMIN\\Desktop\\Nifitesst\\Checkout\\S-DCRMS-Self-driving-car-rental-management-system-\\Server\\staffMicroService\\Dockerfile",
+              "RelativeToolTip": "Server\\staffMicroService\\Dockerfile",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2025-11-13T11:32:31.357Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
               "Title": "docker-compose.yml",
-              "DocumentMoniker": "C:\\Users\\ADMIN\\Desktop\\Nifitesst\\S-DCRMS-Self-driving-car-rental-management-system-\\docker-compose.yml",
+              "DocumentMoniker": "C:\\Users\\ADMIN\\Desktop\\Nifitesst\\Checkout\\S-DCRMS-Self-driving-car-rental-management-system-\\docker-compose.yml",
               "RelativeDocumentMoniker": "docker-compose.yml",
-              "ToolTip": "C:\\Users\\ADMIN\\Desktop\\Nifitesst\\S-DCRMS-Self-driving-car-rental-management-system-\\docker-compose.yml",
+              "ToolTip": "C:\\Users\\ADMIN\\Desktop\\Nifitesst\\Checkout\\S-DCRMS-Self-driving-car-rental-management-system-\\docker-compose.yml",
               "RelativeToolTip": "docker-compose.yml",
-              "ViewState": "AgIAADMAAAAAAAAAAAAAAEsAAAARAAAAAAAAAA==",
+              "ViewState": "AgIAAAwAAAAAAAAAAAAAACQAAAAjAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003775|",
-              "WhenOpened": "2025-11-12T12:28:24.88Z",
+              "WhenOpened": "2025-11-13T11:30:38.047Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "StaffController.cs",
+              "DocumentMoniker": "C:\\Users\\ADMIN\\Desktop\\Nifitesst\\Checkout\\S-DCRMS-Self-driving-car-rental-management-system-\\Server\\staffMicroService\\Controllers\\StaffController.cs",
+              "RelativeDocumentMoniker": "Server\\staffMicroService\\Controllers\\StaffController.cs",
+              "ToolTip": "C:\\Users\\ADMIN\\Desktop\\Nifitesst\\Checkout\\S-DCRMS-Self-driving-car-rental-management-system-\\Server\\staffMicroService\\Controllers\\StaffController.cs",
+              "RelativeToolTip": "Server\\staffMicroService\\Controllers\\StaffController.cs",
+              "ViewState": "AgIAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-13T11:29:56.59Z",
               "EditorCaption": ""
             }
           ]
