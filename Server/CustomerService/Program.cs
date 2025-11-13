@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore;
-using BookingService.Models;
-using BookingService.Repositories;
-using BookingService.Interfaces;
+using CustomerService.Models;
+using CustomerService.Repositories;
+using CustomerService.Interfaces;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -16,16 +16,14 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
 //Đăng kí Repositores 
-builder.Services.AddScoped<IBookingRepository, BookingRepository>();
-builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
-builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
+builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.Migrate(); // tạo DB + chạy migrations nếu chưa có
+    db.Database.Migrate();
 }
 
 // Configure the HTTP request pipeline.

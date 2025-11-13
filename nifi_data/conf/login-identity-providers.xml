@@ -30,7 +30,7 @@
         <identifier>single-user-provider</identifier>
         <class>org.apache.nifi.authentication.single.user.SingleUserLoginIdentityProvider</class>
         <property name="Username">admin</property>
-        <property name="Password">$2b$12$a3u.FoUkJrOShngA7ioeGeq8m2Ut6q9h7UGXMblfQDCSJBN/1AISG</property>
+        <property name="Password">$2b$12$DDH5X326lCxfBprA17ihXeEmiMWOwEJvnQrls6rRFh9amUClBK6ri</property>
     </provider>
     <!--
         Identity Provider for users logging in with username/password against an LDAP server.
