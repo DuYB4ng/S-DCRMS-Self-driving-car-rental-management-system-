@@ -14,22 +14,40 @@ services:
     depends_on:
       - ownercarservice
       - kafka
+<<<<<<< HEAD
       - bookingservice
       - staffservice
       - customerservice
+=======
+
+      - staffservice 
+
+      - bookingservice
+      - customerservice  
+
+>>>>>>> fe6a38519a52e8946a8bd457747ee025373b7051
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
       - OWNER_CAR_SERVICE_URL=http://ownercarservice:8081
+<<<<<<< HEAD
+=======
+      - STAFF_SERVICE_URL=http://staffservice:8084
+>>>>>>> fe6a38519a52e8946a8bd457747ee025373b7051
       - BOOKING_SERVICE_URL=http://bookingservice:8083
       - STAFF_SERVICE_URL=http://staffservice:8084
       - CUSTOMER_SERVICE_URL=http://customerservice:8085
+<<<<<<< HEAD
+=======
+
+>>>>>>> fe6a38519a52e8946a8bd457747ee025373b7051
       - KAFKA__BootstrapServers=kafka:9092
       - KAFKA__Topic=car_location
     networks:
       - sdcrms-network
 
   authservice:
+<<<<<<< HEAD
     build:
       context: ./Server/AuthService
       dockerfile: Dockerfile
@@ -46,6 +64,23 @@ services:
       - sdcrms-network
     restart: on-failure
 
+=======
+      build:
+        context: ./Server/AuthService
+        dockerfile: Dockerfile
+      container_name: authservice-sdcrms
+      ports:
+        - "8089:8089"
+      environment:
+        - ASPNETCORE_ENVIRONMENT=Development
+        - ConnectionStrings__DefaultConnection=server=db;port=3306;database=AuthDB;user=root;password=YourStrong@Password123;
+      depends_on:
+        db:
+          condition: service_healthy  # ← Đợi MySQL healthy
+      networks:
+        - sdcrms-network
+      restart: on-failure
+>>>>>>> fe6a38519a52e8946a8bd457747ee025373b7051
   # ==========================
   # OwnerCar Microservice (Producer)
   # ==========================
@@ -212,4 +247,136 @@ services:
     networks:
       - sdcrms-network
     volumes:
+<<<<<<< HEAD
       - sqlserver-customer-data:/v
+=======
+      - sqlserver-customer-data:/var/opt/mssql
+
+  # ==========================
+  # React Frontend (Vite)
+  # ==========================
+  web-client:
+    build:
+      context: ./Client/sdcrms-web
+      dockerfile: Dockerfile
+    container_name: sdcrms-client
+    ports:
+      - "5173:80"
+    stdin_open: true
+    tty: true
+    networks:
+      - sdcrms-network
+    environment:
+      - VITE_API_BASE_URL=http://apigateway:8080/api
+    depends_on:
+      - apigateway
+
+  # ==========================
+  # Zookeeper (Kafka dependency)
+  # ==========================
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    container_name: zookeeper
+    environment:
+      - ZOOKEEPER_CLIENT_PORT=2181
+      - ZOOKEEPER_TICK_TIME=2000
+    ports:
+      - "2181:2181"
+    networks:
+      - sdcrms-network
+
+  # ==========================
+  # Kafka Broker
+  # ==========================
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    container_name: kafka
+    hostname: kafka
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    networks:
+      - sdcrms-network
+
+  # ==========================
+  # Nifi
+  # ==========================
+  nifi:
+    image: apache/nifi:1.27.0
+    container_name: nifi
+    ports:
+      - "8088:8080"
+    environment:
+      - NIFI_WEB_HTTP_PORT=8080
+      - NIFI_WEB_HTTP_HOST=0.0.0.0
+      - SINGLE_USER_CREDENTIALS_USERNAME=admin
+      - SINGLE_USER_CREDENTIALS_PASSWORD=admin12345678
+      - NIFI_REGISTRY_URL=http://nifi-registry:18080
+    volumes:
+      - ./nifi_data/conf:/opt/nifi/nifi-current/conf
+      - ./nifi_data/state:/opt/nifi/nifi-current/state
+      - ./nifi_data/database_repository:/opt/nifi/nifi-current/database_repository
+      - ./nifi_data/flowfile_repository:/opt/nifi/nifi-current/flowfile_repository
+      - ./nifi_data/provenance_repository:/opt/nifi/nifi-current/provenance_repository
+    depends_on:
+      - nifi_registry
+      - kafka
+    restart: always
+    networks:
+      - sdcrms-network
+
+  nifi_registry:
+    image: apache/nifi-registry:1.27.0
+    container_name: nifi-registry
+    ports:
+      - "18080:18080"
+    environment:
+      - NIFI_REGISTRY_WEB_HTTP_PORT=18080
+      - NIFI_REGISTRY_WEB_HTTP_HOST=0.0.0.0
+    restart: always
+    volumes:
+      - ./data/nifi_registry/flow_storage:/opt/nifi-registry/nifi-registry-current/flow_storage
+      - ./data/nifi_registry/database:/opt/nifi-registry/nifi-registry-current/database
+    networks:
+      - sdcrms-network
+
+  influxdb:
+    image: influxdb:2.7
+    container_name: influxdb
+    ports:
+      - "8086:8086"
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=admin123
+      - DOCKER_INFLUXDB_INIT_ORG=sdcrms
+      - DOCKER_INFLUXDB_INIT_BUCKET=car_data
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=my-super-token
+    volumes:
+      - ./influx_data:/var/lib/influxdb2
+    networks:
+      - sdcrms-network
+
+# ==========================
+# Shared network & volumes
+# ==========================
+networks:
+  sdcrms-network:
+    name: sdcrms-network
+    driver: bridge
+
+volumes:
+  mysql-data:
+  sqlserver-booking-data:
+  sqlstaff_data:
+  sqlserver-customer-data:
+
+>>>>>>> fe6a38519a52e8946a8bd457747ee025373b7051
