@@ -14,30 +14,26 @@ services:
     depends_on:
       - ownercarservice
       - kafka
-<<<<<<< HEAD
-      - bookingservice   
+
       - staffservice 
-=======
+
       - bookingservice
       - customerservice  
->>>>>>> 5a011f6be56a4978e8659d4287f593296e7f47d7
+
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
       - OWNER_CAR_SERVICE_URL=http://ownercarservice:8081
-<<<<<<< HEAD
-      - BOOKING_SERVICE_URL=http://bookingservice:8083  
       - STAFF_SERVICE_URL=http://staffservice:8084
-=======
       - BOOKING_SERVICE_URL=http://bookingservice:8083
       - CUSTOMER_SERVICE_URL=http://customerservice:8085
->>>>>>> 5a011f6be56a4978e8659d4287f593296e7f47d7
+
       - KAFKA__BootstrapServers=kafka:9092
       - KAFKA__Topic=car_location
     networks:
       - sdcrms-network
 
-    authservice:
+  authservice:
       build:
         context: ./Server/AuthService
         dockerfile: Dockerfile
@@ -343,8 +339,6 @@ networks:
 volumes:
   mysql-data:
   sqlserver-booking-data:
-<<<<<<< HEAD
   sqlstaff_data:
-=======
   sqlserver-customer-data:
->>>>>>> 5a011f6be56a4978e8659d4287f593296e7f47d7
+
