@@ -1,16 +1,8 @@
 {
   "ExpandedNodes": [
     "",
-    "\\Server",
-    "\\Server\\staffMicroService",
-    "\\Server\\staffMicroService\\Controllers",
-    "\\Server\\staffMicroService\\Dtos",
-    "\\Server\\staffMicroService\\Dtos\\Staff",
-    "\\Server\\staffMicroService\\Migrations",
-    "\\Server\\staffMicroService\\Models",
-    "\\Server\\staffMicroService\\Repositories",
-    "\\Server\\staffMicroService\\Services"
+    "\\Client\\sdcrms-web"
   ],
-  "SelectedNode": "\\Server\\staffMicroService\\Program.cs",
+  "SelectedNode": "\\nifi_data",
   "PreviewInSolutionExplorer": false
 }
