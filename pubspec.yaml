@@ -29,3 +29,5 @@ flutter_native_splash:
 flutter:
   assets:
     - assets/splash.png
+    - assets/images/logo.png
+    - assets/images/background.png

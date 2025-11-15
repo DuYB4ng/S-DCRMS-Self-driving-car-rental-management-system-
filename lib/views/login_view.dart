@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/login_viewmodel.dart';
-
+import 'home_view.dart';
 class LoginView extends StatelessWidget {
   final emailController = TextEditingController();
   final passController = TextEditingController();
@@ -83,12 +83,12 @@ class LoginView extends StatelessWidget {
                     );
 
                     if (ok) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("Đăng nhập thành công")),
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (_) => HomeView()),
                       );
-
-                      // TODO: điều hướng vào trang chủ
                     }
+
                   },
                   child: vm.isLoading
                       ? CircularProgressIndicator(color: Colors.white)
