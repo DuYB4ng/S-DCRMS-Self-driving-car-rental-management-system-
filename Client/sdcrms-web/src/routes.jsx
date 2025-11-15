@@ -23,7 +23,7 @@ export const router = createBrowserRouter([
       },
       { path: "owner", element: <OwnerCarPage /> },
       { path: "login", element: <Login /> },
-      { path: "admin", element: <AdminPage /> },
+      { path: "admin-management", element: <AdminPage /> },
       { path: "notifications", element: <NotificationPage /> },
     ],
   },
