@@ -12,7 +12,7 @@ function App() {
         <Link to="/owner" className="hover:underline">
           Quản lý chủ xe
         </Link>
-        <Link to="/admin" className="hover:underline">
+        <Link to="/admin-management" className="hover:underline">
           Admin
         </Link>
         <Link to="/notifications" className="hover:underline">

@@ -16,10 +16,14 @@ const AdminPage = () => {
 
   // Form states
   const [newAdmin, setNewAdmin] = useState({
+    firstName: "",
+    lastName: "",
     email: "",
     password: "",
-    fullName: "",
     phoneNumber: "",
+    sex: "Male",
+    birthday: "",
+    address: "",
   });
 
   const [promoteData, setPromoteData] = useState({
@@ -66,7 +70,16 @@ const AdminPage = () => {
       await createAdmin(newAdmin);
       alert("✅ Admin created successfully!");
       setShowCreateForm(false);
-      setNewAdmin({ email: "", password: "", fullName: "", phoneNumber: "" });
+      setNewAdmin({
+        firstName: "",
+        lastName: "",
+        email: "",
+        password: "",
+        phoneNumber: "",
+        sex: "Male",
+        birthday: "",
+        address: "",
+      });
       loadAdmins();
     } catch (err) {
       alert(`❌ Error: ${err.message}`);
@@ -152,8 +165,38 @@ const AdminPage = () => {
         <div className="bg-white p-6 rounded-lg shadow-md mb-6">
           <h2 className="text-xl font-bold mb-4">Create New Admin</h2>
           <form onSubmit={handleCreateAdmin} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  First Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={newAdmin.firstName}
+                  onChange={(e) =>
+                    setNewAdmin({ ...newAdmin, firstName: e.target.value })
+                  }
+                  className="w-full border rounded px-3 py-2"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Last Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={newAdmin.lastName}
+                  onChange={(e) =>
+                    setNewAdmin({ ...newAdmin, lastName: e.target.value })
+                  }
+                  className="w-full border rounded px-3 py-2"
+                />
+              </div>
+            </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Email</label>
+              <label className="block text-sm font-medium mb-1">Email *</label>
               <input
                 type="email"
                 required
@@ -165,10 +208,13 @@ const AdminPage = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Password</label>
+              <label className="block text-sm font-medium mb-1">
+                Password *
+              </label>
               <input
                 type="password"
                 required
+                minLength={6}
                 value={newAdmin.password}
                 onChange={(e) =>
                   setNewAdmin({ ...newAdmin, password: e.target.value })
@@ -176,33 +222,66 @@ const AdminPage = () => {
                 className="w-full border rounded px-3 py-2"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                Full Name
-              </label>
-              <input
-                type="text"
-                required
-                value={newAdmin.fullName}
-                onChange={(e) =>
-                  setNewAdmin({ ...newAdmin, fullName: e.target.value })
-                }
-                className="w-full border rounded px-3 py-2"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Phone Number *
+                </label>
+                <input
+                  type="tel"
+                  required
+                  value={newAdmin.phoneNumber}
+                  onChange={(e) =>
+                    setNewAdmin({ ...newAdmin, phoneNumber: e.target.value })
+                  }
+                  className="w-full border rounded px-3 py-2"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Sex *</label>
+                <select
+                  required
+                  value={newAdmin.sex}
+                  onChange={(e) =>
+                    setNewAdmin({ ...newAdmin, sex: e.target.value })
+                  }
+                  className="w-full border rounded px-3 py-2"
+                >
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                Phone Number
-              </label>
-              <input
-                type="tel"
-                required
-                value={newAdmin.phoneNumber}
-                onChange={(e) =>
-                  setNewAdmin({ ...newAdmin, phoneNumber: e.target.value })
-                }
-                className="w-full border rounded px-3 py-2"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Birthday *
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={newAdmin.birthday}
+                  onChange={(e) =>
+                    setNewAdmin({ ...newAdmin, birthday: e.target.value })
+                  }
+                  className="w-full border rounded px-3 py-2"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Address *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={newAdmin.address}
+                  onChange={(e) =>
+                    setNewAdmin({ ...newAdmin, address: e.target.value })
+                  }
+                  className="w-full border rounded px-3 py-2"
+                />
+              </div>
             </div>
             <button
               type="submit"

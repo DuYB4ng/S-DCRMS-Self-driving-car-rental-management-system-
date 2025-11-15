@@ -11,7 +11,7 @@ namespace SDCRMS.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    // [Authorize(Policy = AuthorizationPolicies.AdminOnly)] // Tạm tắt để test
+    [Authorize(Policy = AuthorizationPolicies.AdminOnly)]
     public class AdminController : ControllerBase
     {
         private readonly IAdminServices _adminServices;
@@ -59,47 +59,19 @@ namespace SDCRMS.Controllers
         [HttpGet("dashboard")]
         public async Task<IActionResult> GetDashboardData()
         {
-            var client = _httpClientFactory.CreateClient();
-            var userServiceUrl = _configuration["ServiceUrls:UserService"];
+            // Tạm thời trả về mock data vì User Service chưa tồn tại
+            var totalAdmins = await _context.Admins.CountAsync();
 
-            try
-            {
-                var response = await client.GetAsync($"{userServiceUrl}/api/user/statistics");
-
-                if (response.IsSuccessStatusCode)
+            return Ok(
+                new
                 {
-                    var userStats = await response.Content.ReadFromJsonAsync<UserStatisticsDto>();
-
-                    return Ok(
-                        new
-                        {
-                            TotalUsers = userStats?.TotalUsers ?? 0,
-                            TotalStaff = userStats?.TotalStaff ?? 0,
-                            TotalCustomers = userStats?.TotalCustomers ?? 0,
-                            Message = "Admin dashboard data",
-                        }
-                    );
+                    TotalUsers = 0, // TODO: Khi có User Service sẽ call API
+                    TotalAdmins = totalAdmins,
+                    TotalStaff = 0, // TODO: Khi có User Service sẽ call API
+                    TotalCustomers = 0, // TODO: Khi có User Service sẽ call API
+                    Message = "Admin dashboard data (User Service not available yet)",
                 }
-                else
-                {
-                    return Ok(
-                        new
-                        {
-                            TotalUsers = 0,
-                            TotalStaff = 0,
-                            TotalCustomers = 0,
-                            Message = "Admin dashboard data (User Service unavailable)",
-                        }
-                    );
-                }
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(
-                    500,
-                    new { message = "Error connecting to User Service", error = ex.Message }
-                );
-            }
+            );
         }
 
         // POST: api/admin/promote-user - Gọi sang User Service
