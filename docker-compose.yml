@@ -14,57 +14,26 @@ services:
     depends_on:
       - ownercarservice
       - kafka
-<<<<<<< HEAD
-      - bookingservice
-      - staffservice
-      - customerservice
-=======
 
       - staffservice 
 
       - bookingservice
       - customerservice  
 
->>>>>>> fe6a38519a52e8946a8bd457747ee025373b7051
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
       - OWNER_CAR_SERVICE_URL=http://ownercarservice:8081
-<<<<<<< HEAD
-=======
       - STAFF_SERVICE_URL=http://staffservice:8084
->>>>>>> fe6a38519a52e8946a8bd457747ee025373b7051
       - BOOKING_SERVICE_URL=http://bookingservice:8083
-      - STAFF_SERVICE_URL=http://staffservice:8084
       - CUSTOMER_SERVICE_URL=http://customerservice:8085
-<<<<<<< HEAD
-=======
 
->>>>>>> fe6a38519a52e8946a8bd457747ee025373b7051
       - KAFKA__BootstrapServers=kafka:9092
       - KAFKA__Topic=car_location
     networks:
       - sdcrms-network
 
   authservice:
-<<<<<<< HEAD
-    build:
-      context: ./Server/AuthService
-      dockerfile: Dockerfile
-    container_name: authservice-sdcrms
-    ports:
-      - "8089:8089"
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=server=db;port=3306;database=AuthDB;user=root;password=YourStrong@Password123;
-    depends_on:
-      db:
-        condition: service_healthy  # ← Đợi MySQL healthy
-    networks:
-      - sdcrms-network
-    restart: on-failure
-
-=======
       build:
         context: ./Server/AuthService
         dockerfile: Dockerfile
@@ -80,7 +49,6 @@ services:
       networks:
         - sdcrms-network
       restart: on-failure
->>>>>>> fe6a38519a52e8946a8bd457747ee025373b7051
   # ==========================
   # OwnerCar Microservice (Producer)
   # ==========================
@@ -124,7 +92,6 @@ services:
         condition: service_started
     networks:
       - sdcrms-network
-
   # ==========================
   # Customer Microservice (SQL Server)
   # ==========================
@@ -146,23 +113,21 @@ services:
       - sdcrms-network
 
   # ==========================
-  # staffServices Microservice
+  # staffServices Microservice 
   # ==========================
   staffservice:
     build:
-      context: ./Server/staffMicroService
-    container_name: staffservice
+        context: ./Server/staffMicroService
     ports:
-      - "8004:8084"
+        - "8004:8084"
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=http://+:8084
-      - ConnectionStrings__DefaultConnection=Server=sqlserver-staff;Database=StaffDB;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;Encrypt=False;
+        - ASPNETCORE_ENVIRONMENT=Development
+        - ASPNETCORE_URLS=http://+:8084
+        - ConnectionStrings__DefaultConnection=Server=sqlserver-staff;Database=StaffDB;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;Encrypt=False;
     depends_on:
-      - sqlserver-staff
+        - sqlserver-staff
     networks:
-      - sdcrms-network
-
+        - sdcrms-network
   # ==========================
   # OwnerCar Consumer (Kafka -> SQL)
   # ==========================
@@ -207,7 +172,7 @@ services:
       retries: 10
 
   # ==========================
-  # SQL Server Databases
+  # SQL Server Database
   # ==========================
   sqlserver-booking:
     image: mcr.microsoft.com/mssql/server:2022-latest
@@ -221,7 +186,7 @@ services:
       - sdcrms-network
     volumes:
       - sqlserver-booking-data:/var/opt/mssql
-
+   
   sqlserver-staff:
     image: mcr.microsoft.com/mssql/server:2022-latest
     container_name: sqlserver-staff
@@ -229,12 +194,13 @@ services:
       - SA_PASSWORD=YourStrong!Passw0rd
       - ACCEPT_EULA=Y
     ports:
-      - "1434:1433"
+        - "1434:1433"
     volumes:
-      - ./entrypoint.sh:/entrypoint.sh
+        - ./entrypoint.sh:/entrypoint.sh
     command: /bin/bash /entrypoint.sh
     networks:
-      - sdcrms-network
+        - sdcrms-network
+
 
   sqlserver-customer:
     image: mcr.microsoft.com/mssql/server:2022-latest
@@ -247,9 +213,6 @@ services:
     networks:
       - sdcrms-network
     volumes:
-<<<<<<< HEAD
-      - sqlserver-customer-data:/v
-=======
       - sqlserver-customer-data:/var/opt/mssql
 
   # ==========================
@@ -378,5 +341,3 @@ volumes:
   sqlserver-booking-data:
   sqlstaff_data:
   sqlserver-customer-data:
-
->>>>>>> fe6a38519a52e8946a8bd457747ee025373b7051

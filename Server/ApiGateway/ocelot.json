@@ -40,6 +40,33 @@
       "DownstreamHeaderTransform": {
         "Authorization": "{Authorization}"
       }
+    },
+    {
+      "DownstreamPathTemplate": "/api/Booking",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "bookingservice", "Port": 8083 }
+      ],
+      "UpstreamPathTemplate": "/api/booking",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/Payment",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "bookingservice", "Port": 8083 }
+      ],
+      "UpstreamPathTemplate": "/api/payment",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/Review",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "bookingservice", "Port": 8083 }
+      ],
+      "UpstreamPathTemplate": "/api/review",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
     }
   ],
   "GlobalConfiguration": {
