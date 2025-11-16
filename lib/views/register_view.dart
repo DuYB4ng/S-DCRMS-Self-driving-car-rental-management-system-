@@ -23,20 +23,22 @@ class RegisterView extends StatelessWidget {
 
               SizedBox(height: 40),
 
-              /// Title
-              Text(
-                "Welcome UTH\nCarrental",
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
+              // LOGO
+              Padding(
+                padding: const EdgeInsets.all(10),
+                child: Center(
+                  child: Image.asset(
+                    "assets/images/logo.png",
+                    height: 120,  // giảm 1 chút để nhìn gọn hơn
+                  ),
                 ),
               ),
+
 
               SizedBox(height: 18),
 
               Text(
-                "Let's help you meet up\nyour tasks",
+                "Đăng Ký Và Bắt Đầu \n Một Hành Trình Tươi Đẹp ",
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 15,
@@ -96,7 +98,12 @@ class RegisterView extends StatelessWidget {
                   ),
                   child: vm.isLoading
                       ? CircularProgressIndicator(color: Colors.white)
-                      : Text("Đăng ký"),
+                      : Text("Đăng ký",
+                    style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),),
                 ),
               ),
 
@@ -106,13 +113,13 @@ class RegisterView extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text("Already have an account? "),
+                  Text("Đã có tài khoản  "),
                   GestureDetector(
                     onTap: () {
                       Navigator.pushNamed(context, "/login");
                     },
                     child: Text(
-                      "Sign In",
+                      "Đăng Nhập",
                       style: TextStyle(
                         color: Colors.blueAccent,
                         fontWeight: FontWeight.bold,

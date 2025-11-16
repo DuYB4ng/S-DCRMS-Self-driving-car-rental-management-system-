@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/login_viewmodel.dart';
-import 'home_view.dart';
+import 'home/home_navigation.dart';   // THÊM DÒNG NÀY !!
+
 class LoginView extends StatelessWidget {
   final emailController = TextEditingController();
   final passController = TextEditingController();
@@ -21,25 +22,23 @@ class LoginView extends StatelessWidget {
 
               SizedBox(height: 40),
 
-              /// Title
-              Text(
-                "Welcome Back\nUTH Carrental",
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
+              // LOGO
+              Padding(
+                padding: const EdgeInsets.all(10),
+                child: Center(
+                  child: Image.asset(
+                    "assets/images/logo.png",
+                    height: 120,
+                  ),
                 ),
               ),
 
               SizedBox(height: 12),
 
               Text(
-                "Login to continue using the app",
+                "Đăng nhập để bắt đầu những chuyến đi dài",
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 15,
-                  color: Colors.black87,
-                ),
+                style: TextStyle(fontSize: 15, color: Colors.black87),
               ),
 
               SizedBox(height: 40),
@@ -51,15 +50,6 @@ class LoginView extends StatelessWidget {
 
               /// Password
               _inputField("Mật khẩu", "Nhập mật khẩu", passController, isPass: true),
-
-              SizedBox(height: 15),
-
-              /// Error Message
-              if (vm.errorMessage != null)
-                Text(
-                  vm.errorMessage!,
-                  style: TextStyle(color: Colors.red),
-                ),
 
               SizedBox(height: 20),
 
@@ -77,22 +67,37 @@ class LoginView extends StatelessWidget {
                   onPressed: vm.isLoading
                       ? null
                       : () async {
-                    bool ok = await vm.login(
-                      emailController.text.trim(),
-                      passController.text.trim(),
-                    );
+                    vm.setLoading(true);
 
-                    if (ok) {
+                    // LẤY GIÁ TRỊ ĐÚNG
+                    String email = emailController.text.trim();
+                    String password = passController.text.trim();
+
+                    bool result = await vm.login(email, password);
+
+                    vm.setLoading(false);
+
+                    if (result) {
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(builder: (_) => HomeView()),
+                        MaterialPageRoute(builder: (_) => HomeNavigation()),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text("Sai tài khoản hoặc mật khẩu")),
                       );
                     }
-
                   },
                   child: vm.isLoading
                       ? CircularProgressIndicator(color: Colors.white)
-                      : Text("Đăng nhập"),
+                      : Text(
+                    "Đăng nhập",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ),
 
@@ -126,12 +131,8 @@ class LoginView extends StatelessWidget {
     );
   }
 
-  Widget _inputField(
-      String label,
-      String hint,
-      TextEditingController controller,
-      {bool isPass = false}
-      ) {
+  Widget _inputField(String label, String hint, TextEditingController controller,
+      {bool isPass = false}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

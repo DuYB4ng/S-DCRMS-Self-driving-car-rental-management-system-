@@ -30,4 +30,7 @@ flutter:
   assets:
     - assets/splash.png
     - assets/images/logo.png
+    - assets/images/logo - Copy.png
     - assets/images/background.png
+    - assets/icons/home.png
+  uses-material-design: true

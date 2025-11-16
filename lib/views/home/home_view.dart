@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../viewmodels/home_viewmodel.dart';
+import '../../viewmodels/home_viewmodel.dart';
 
 class HomeView extends StatelessWidget {
   @override
@@ -10,14 +10,17 @@ class HomeView extends StatelessWidget {
     return Scaffold(
 
       backgroundColor: Colors.white,
-      bottomNavigationBar: _bottomNav(),
+
       body:Stack(
           children: [
 // Background
             Positioned.fill(
-              child: Image.asset(
-                "assets/images/background.png",
-                fit: BoxFit.cover,
+              child: Transform.scale(
+                scale: 1.8,        // phóng to 30%
+                child: Image.asset(
+                  "assets/images/background.png",
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
 // nội dung
@@ -28,22 +31,19 @@ class HomeView extends StatelessWidget {
 
                 // LOGO
                 Padding(
-                  padding: const EdgeInsets.only(right:240 ),
-                  child: Column(
-                    children: [
-                      Image.asset(
-                        "assets/images/logo.png",
-                        height: 200,
-
-                      ),
-
-                    ],
+                  padding: const EdgeInsets.all(10),
+                  child: Center(
+                    child: Image.asset(
+                      "assets/images/logo - Copy.png",
+                      height: 120,  // giảm 1 chút để nhìn gọn hơn
+                    ),
                   ),
                 ),
 
+
                 // FORM
                 Padding(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.only(left: 16, right: 16, top: 0, bottom: 16),
                   child: Container(
                     decoration: BoxDecoration(
                       color: Colors.white,
@@ -253,17 +253,5 @@ class HomeView extends StatelessWidget {
     );
   }
 
-  // Bottom nav
-  Widget _bottomNav() {
-    return BottomNavigationBar(
-      currentIndex: 0,
-      selectedItemColor: Colors.green,
-      unselectedItemColor: Colors.black54,
-      items: [
-        BottomNavigationBarItem(icon: Icon(Icons.home), label: "Trang chủ"),
-        BottomNavigationBarItem(icon: Icon(Icons.list_alt), label: "Đơn hàng"),
-        BottomNavigationBarItem(icon: Icon(Icons.person), label: "Tài khoản"),
-      ],
-    );
-  }
+
 }

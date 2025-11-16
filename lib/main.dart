@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:thuexe/viewmodels/login_viewmodel.dart';
 import 'package:thuexe/viewmodels/home_viewmodel.dart';
+import 'package:thuexe/viewmodels/order_detail_viewmodel.dart';
 import 'package:thuexe/viewmodels/register_viewmodel.dart';
 import 'package:thuexe/views/register_view.dart';
 import 'package:thuexe/views/login_view.dart';
@@ -13,6 +14,9 @@ void main() {
         ChangeNotifierProvider(create: (_) => RegisterViewModel()),
         ChangeNotifierProvider(create: (_) => LoginViewModel()),
         ChangeNotifierProvider(create: (_) => HomeViewModel()),
+        ChangeNotifierProvider(create: (_) => OrderDetailViewModel()),
+
+
       ],
       child: const MyApp(),
     ),
