@@ -10,17 +10,7 @@ namespace SDCRMS.Mappers
         {
             return new Staff
             {
-                FirebaseUid = string.IsNullOrWhiteSpace(dto.FirebaseUid)
-                    ? Guid.NewGuid().ToString() // tạo UID tạm nếu chưa có FirebaseUid
-                    : dto.FirebaseUid,
-
-                FullName = dto.FullName,
-                Email = dto.Email,
-                PhoneNumber = dto.PhoneNumber,
-                Address = dto.Address,
-                Position = dto.Position,
-                Status = "Active",
-                HireDate = DateTime.UtcNow
+                FirebaseUid = dto.FirebaseUid
             };
         }
 
@@ -30,14 +20,7 @@ namespace SDCRMS.Mappers
             return new StaffDto
             {
                 StaffId = staff.StaffId,
-                FirebaseUid = staff.FirebaseUid,
-                FullName = staff.FullName,
-                Email = staff.Email,
-                PhoneNumber = staff.PhoneNumber,
-                Address = staff.Address,
-                Position = staff.Position,
-                HireDate = staff.HireDate,
-                Status = staff.Status
+                FirebaseUid = staff.FirebaseUid
             };
         }
     }
