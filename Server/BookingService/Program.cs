@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using BookingService.Models;
 using BookingService.Repositories;
 using BookingService.Interfaces;
+using BookingService.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -19,6 +21,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<IBookingRepository, BookingRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
+
+// Đăng kí VNPay
+builder.Services.AddScoped<VNPayService>();
 
 var app = builder.Build();
 
