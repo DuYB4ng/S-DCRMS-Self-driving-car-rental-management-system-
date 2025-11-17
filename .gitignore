@@ -56,3 +56,6 @@ mssql-data/
 *.orig
 *.bak
 *.tmp
+data/nifi_registry/database/*.mv.db
+data/nifi_registry/database/
+nifi_data/conf/nifi.properties
