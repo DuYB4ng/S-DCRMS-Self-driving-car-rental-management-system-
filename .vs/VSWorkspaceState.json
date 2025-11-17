@@ -1,12 +1,8 @@
 {
   "ExpandedNodes": [
     "",
-    "\\Server",
-    "\\Server\\reiviewService",
-    "\\Server\\reiviewService\\Controllers",
-    "\\Server\\staffMicroService",
-    "\\Server\\staffMicroService\\Controllers"
+    "\\Client\\sdcrms-web"
   ],
-  "SelectedNode": "\\Server\\reiviewService\\reiviewService.csproj",
+  "SelectedNode": "\\nifi_data",
   "PreviewInSolutionExplorer": false
 }
