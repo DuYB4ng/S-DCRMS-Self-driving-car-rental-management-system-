@@ -17,10 +17,7 @@ namespace SDCRMS.Repositories
         // Lấy toàn bộ nhân viên
         public async Task<List<Staff>> GetAllAsync()
         {
-            return await _context.Staffs
-                .AsNoTracking()
-                .OrderByDescending(s => s.HireDate)
-                .ToListAsync();
+            return await _context.Staffs.ToListAsync();
         }
 
         // Lấy theo ID
@@ -53,16 +50,7 @@ namespace SDCRMS.Repositories
             var existingStaff = await _context.Staffs.FindAsync(id);
             if (existingStaff == null)
                 return null;
-
-            // Chỉ cập nhật khi có giá trị mới (tránh ghi đè null)
-            existingStaff.FullName = staffDto.FullName ?? existingStaff.FullName;
-            existingStaff.Email = staffDto.Email ?? existingStaff.Email;
-            existingStaff.PhoneNumber = staffDto.PhoneNumber ?? existingStaff.PhoneNumber;
-            existingStaff.Address = staffDto.Address ?? existingStaff.Address;
-            existingStaff.Position = staffDto.Position ?? existingStaff.Position;
-            existingStaff.Status = staffDto.Status ?? existingStaff.Status;
-            existingStaff.LastActive = DateTime.UtcNow;
-
+            existingStaff.FirebaseUid = staffDto.FirebaseUid;
             try
             {
                 await _context.SaveChangesAsync();
