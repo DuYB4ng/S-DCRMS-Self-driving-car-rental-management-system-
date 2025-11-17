@@ -42,30 +42,30 @@
       }
     },
     {
-      "DownstreamPathTemplate": "/api/Booking",
+      "DownstreamPathTemplate": "/api/booking/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         { "Host": "bookingservice", "Port": 8083 }
       ],
-      "UpstreamPathTemplate": "/api/booking",
+      "UpstreamPathTemplate": "/api/booking/{everything}",
       "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
     },
     {
-      "DownstreamPathTemplate": "/api/Payment",
+      "DownstreamPathTemplate": "/api/payment/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         { "Host": "bookingservice", "Port": 8083 }
       ],
-      "UpstreamPathTemplate": "/api/payment",
+      "UpstreamPathTemplate": "/api/payment/{everything}",
       "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
     },
     {
-      "DownstreamPathTemplate": "/api/Review",
+      "DownstreamPathTemplate": "/api/review/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         { "Host": "bookingservice", "Port": 8083 }
       ],
-      "UpstreamPathTemplate": "/api/review",
+      "UpstreamPathTemplate": "/api/review/{everything}",
       "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
     },
     {

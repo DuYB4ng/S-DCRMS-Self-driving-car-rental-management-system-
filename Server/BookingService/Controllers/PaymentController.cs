@@ -7,6 +7,7 @@ using System.Linq;
 using BookingService.Interfaces;
 using BookingService.Dtos.Payment;
 using BookingService.Mappers;
+using BookingService.Services;
 
 namespace BookingService.Controllers
 {
@@ -16,11 +17,16 @@ namespace BookingService.Controllers
     {
         private readonly AppDbContext _context;
         private readonly IPaymentRepository _paymentRepo;
+        private readonly VNPayService _vnPayService;
 
-        public PaymentController(AppDbContext context, IPaymentRepository paymentRepo)
+        public PaymentController(
+            AppDbContext context,
+            IPaymentRepository paymentRepo,
+            VNPayService vnPayService)
         {
             _context = context;
             _paymentRepo = paymentRepo;
+            _vnPayService = vnPayService;
         }
 
         // GET: api/payment
@@ -44,7 +50,7 @@ namespace BookingService.Controllers
             return Ok(payment);
         }
 
-        // POST: api/payment
+        // POST: api/payment  (tạo payment thường)
         [HttpPost]
         public async Task<IActionResult> TaoPayment([FromBody] CreatePaymentRequestDto payDto)
         {
@@ -55,9 +61,87 @@ namespace BookingService.Controllers
             return CreatedAtAction(nameof(GetID), new { id = paymentModel.PaymentID }, paymentModel.toPaymentDto());
         }
 
+        // POST: api/payment/create-vnpay  (tạo payment + URL VNPay)
+        [HttpPost("create-vnpay")]
+        public async Task<IActionResult> CreateVnPayPayment([FromBody] CreateVnPayPaymentRequestDto dto)
+        {
+            // kiểm tra booking tồn tại
+            var booking = await _context.Bookings.FirstOrDefaultAsync(b => b.BookingID == dto.BookingID);
+            if (booking == null)
+            {
+                return NotFound(new { message = "Booking not found" });
+            }
+
+            var payment = new Payment
+            {
+                PaymentDate = DateTime.UtcNow,
+                Amount = dto.Amount,
+                Method = "VNPAY",
+                Status = "Pending",
+                BookingID = dto.BookingID
+            };
+
+            await _paymentRepo.CreateAsync(payment); // sau khi lưu sẽ có PaymentID
+
+            var paymentUrl = _vnPayService.CreatePaymentUrl(payment, HttpContext);
+
+            return Ok(new
+            {
+                paymentId = payment.PaymentID,
+                paymentUrl,
+                status = payment.Status
+            });
+        }
+
+        // GET: api/payment/vnpay-ipn  (VNPay gọi IPN)
+        [HttpGet("vnpay-ipn")]
+        public async Task<IActionResult> VnPayIpn()
+        {
+            var validation = _vnPayService.ValidateIpn(Request.Query);
+
+            if (validation.RspCode != "00")
+            {
+                // Sai chữ ký → vẫn trả 200 OK với RspCode theo chuẩn VNPay
+                return Ok(new { RspCode = validation.RspCode, Message = validation.Message });
+            }
+
+            if (!int.TryParse(validation.OrderId, out var paymentId))
+            {
+                return Ok(new { RspCode = "01", Message = "Invalid order id" });
+            }
+
+            var payment = await _paymentRepo.GetByIdAsync(paymentId);
+            if (payment == null)
+            {
+                return Ok(new { RspCode = "01", Message = "Order not found" });
+            }
+
+            // VNPay amount = tiền * 100
+            if ((long)(payment.Amount * 100) != validation.Amount)
+            {
+                return Ok(new { RspCode = "04", Message = "Invalid amount" });
+            }
+
+            if (validation.ResponseCode == "00" && validation.TransactionStatus == "00")
+            {
+                payment.Status = "Success";
+                payment.PaymentDate = DateTime.Now;
+            }
+            else
+            {
+                payment.Status = "Failed";
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { RspCode = "00", Message = "Confirm Success" });
+        }
+
         // PUT: api/payment/{id}
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update([FromRoute] int id, [FromBody] UpdatePaymentRequestDto updateDto)
+        public async Task<IActionResult> Update(
+            [FromRoute] int id,
+            [FromBody] UpdatePaymentRequestDto updateDto)
         {
             var paymentModel = await _paymentRepo.UpdateAsync(id, updateDto);
             if (paymentModel == null)
