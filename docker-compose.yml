@@ -14,20 +14,26 @@ services:
     depends_on:
       - ownercarservice
       - kafka
+
+      - staffservice 
+
       - bookingservice
       - customerservice  
+
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
       - OWNER_CAR_SERVICE_URL=http://ownercarservice:8081
+      - STAFF_SERVICE_URL=http://staffservice:8084
       - BOOKING_SERVICE_URL=http://bookingservice:8083
       - CUSTOMER_SERVICE_URL=http://customerservice:8085
+
       - KAFKA__BootstrapServers=kafka:9092
       - KAFKA__Topic=car_location
     networks:
       - sdcrms-network
 
-    authservice:
+  authservice:
       build:
         context: ./Server/AuthService
         dockerfile: Dockerfile
@@ -107,6 +113,22 @@ services:
       - sdcrms-network
 
   # ==========================
+  # staffServices Microservice 
+  # ==========================
+  staffservice:
+    build:
+        context: ./Server/staffMicroService
+    ports:
+        - "8004:8084"
+    environment:
+        - ASPNETCORE_ENVIRONMENT=Development
+        - ASPNETCORE_URLS=http://+:8084
+        - ConnectionStrings__DefaultConnection=Server=sqlserver-staff;Database=StaffDB;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;Encrypt=False;
+    depends_on:
+        - sqlserver-staff
+    networks:
+        - sdcrms-network
+  # ==========================
   # OwnerCar Consumer (Kafka -> SQL)
   # ==========================
   ownercarconsumer:
@@ -164,6 +186,21 @@ services:
       - sdcrms-network
     volumes:
       - sqlserver-booking-data:/var/opt/mssql
+   
+  sqlserver-staff:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sqlserver-staff
+    environment:
+      - SA_PASSWORD=YourStrong!Passw0rd
+      - ACCEPT_EULA=Y
+    ports:
+        - "1434:1433"
+    volumes:
+        - ./entrypoint.sh:/entrypoint.sh
+    command: /bin/bash /entrypoint.sh
+    networks:
+        - sdcrms-network
+
 
   sqlserver-customer:
     image: mcr.microsoft.com/mssql/server:2022-latest
@@ -302,4 +339,6 @@ networks:
 volumes:
   mysql-data:
   sqlserver-booking-data:
+  sqlstaff_data:
   sqlserver-customer-data:
+
