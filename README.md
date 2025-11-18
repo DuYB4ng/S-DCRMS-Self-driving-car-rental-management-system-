@@ -190,13 +190,319 @@ The demand for self-drive car rentals has grown rapidly due to:
 
 ### 🌐 Web Application (React)
 
-#### Admin Portal
+#### Tech Stack
+
+- ⚛️ React 19.1.1 + Vite 7.1.7
+- 🎨 Tailwind CSS 3.4.1
+- 🔄 React Router 7.9.5
+- 📡 Axios 1.13.1
+- 🎯 Lucide React Icons
+- 🔥 Firebase 12.5.0
+- 🎨 Google Fonts (Poppins)
+
+#### Design System
+
+```css
+Primary Color: #2E7D9A
+Secondary Color: #F5F9FA
+Success: #10B981
+Warning: #F59E0B
+Danger: #EF4444
+Font: Poppins (Google Fonts)
+```
+
+#### Pages & Features
+
+##### 1️⃣ Dashboard (`/dashboard`)
+
+- ✅ Welcome banner with user greeting
+- ✅ 4 key metrics cards:
+  - 📊 Total Revenue with growth indicator
+  - 🚗 Total Cars with fleet count
+  - 📅 Total Bookings with trend
+  - 👥 Total Customers with increase rate
+- ✅ Fleet breakdown chart (Available, Rented, Maintenance)
+- ✅ Quick access grid (6 main functions)
+- ✅ Recent activities timeline
+- ✅ Responsive grid layout
+
+##### 2️⃣ Car Management (`/car-management`)
+
+- ✅ **Full CRUD Operations**
+  - ➕ Add new car (11-field modal form)
+  - ✏️ Edit car details (pre-filled form)
+  - 👁️ View car details (comprehensive modal)
+  - 🗑️ Delete car (with confirmation)
+- ✅ **Car List Features**
+  - Search by name/brand
+  - Filter by status (Available, Rented, Maintenance)
+  - Status badges with color coding
+  - Action buttons (View, Edit, Delete)
+- ✅ **Detail Modal**
+  - Full car specifications (2-column layout)
+  - Gradient pricing card
+  - Statistics section (trips, rating, revenue)
+  - Car image display
+  - Action buttons
+- ✅ **Form Fields**
+  - Name, Brand, Type, License Plate
+  - Year, Price, Transmission
+  - Seats, Fuel Type, Color
+  - Status, Image URL
+- ✅ Auto-generated Car IDs (CAR001, CAR002...)
+
+##### 3️⃣ Notification Management (`/notification`)
+
+- ✅ **CRUD Operations**
+  - Create single notification
+  - Broadcast to multiple users
+  - Edit notification (title & message)
+  - Mark as read/unread
+  - Delete notification
+- ✅ **Mock Data System**
+  - USE_MOCK toggle for offline mode
+  - 5 sample notifications
+  - Realistic API delays (300-500ms)
+  - Auto-increment IDs
+- ✅ **Notification Types**
+  - Info (blue badge)
+  - Warning (yellow badge)
+  - Error (red badge)
+  - Success (green badge)
+- ✅ **Features**
+  - Filter by user ID
+  - Unread count badge
+  - Timestamp display
+  - Color-coded by type
+  - Action buttons (Edit, Delete, Mark as Read)
+
+##### 4️⃣ Reports & Analytics (`/reports`)
+
+- ✅ **Revenue Statistics**
+  - Total revenue with trend
+  - Average revenue per booking
+  - Monthly growth percentage
+  - Export functionality
+- ✅ **Booking Trends**
+  - Monthly booking chart
+  - Peak season analysis
+  - Booking vs cancellation rate
+  - Progress bar visualization
+- ✅ **Customer Statistics**
+  - Total customers
+  - New customers this month
+  - Customer retention rate
+  - Average bookings per customer
+- ✅ **Top Performing Cars**
+  - Ranked list with badges
+  - Revenue per car
+  - Booking count
+  - Customer ratings
+- ✅ **Payment Methods**
+  - Credit card usage (45%)
+  - Bank transfer (30%)
+  - E-wallet (20%)
+  - Cash (5%)
+  - Progress bars with percentages
+- ✅ **Compliance Metrics**
+  - Active vehicles percentage
+  - Insurance coverage
+  - Maintenance completion
+  - Documentation status
+  - Circular progress indicators
+- ✅ **Gradient Backgrounds**
+  - 6 unique gradient combinations
+  - Blue-green for bookings
+  - Purple-pink for customers
+  - Orange-yellow for top cars
+  - Cyan-blue for payments
+  - Green-emerald for compliance
+- ✅ **Advanced Animations**
+  - Staggered fade-in-up (100-150ms delays)
+  - Slide-in-right for charts
+  - Progress bar fill animations (1000-2000ms)
+  - Hover scale & rotate effects
+  - Smooth 60fps transitions
+  - Reduced motion support
+
+##### 5️⃣ Admin Management (`/admin-management`)
 
 - ✅ Admin list with dashboard cards
-- ✅ Create admin form with validation
-- ✅ Responsive design (Tailwind CSS)
-- ✅ Error boundaries & loading states
-- ✅ Route: `/admin-management`
+- ✅ Create admin form (8 fields)
+- ✅ Form validation
+- ✅ Role-based access
+- ✅ API integration
+
+##### 6️⃣ User Management (`/user-management`)
+
+- 🚧 User CRUD (In Progress)
+- 🚧 Role assignment
+- 🚧 User profile viewing
+
+##### 7️⃣ Booking Management (`/booking-management`)
+
+- 📅 Planned: Booking list & details
+- 📅 Planned: Status tracking
+- 📅 Planned: Check-in/check-out
+
+##### 8️⃣ Payment Management (`/payment-management`)
+
+- 💳 Planned: Transaction history
+- 💳 Planned: Invoice generation
+- 💳 Planned: Refund processing
+
+##### 9️⃣ Settings (`/settings`)
+
+- ⚙️ System configuration
+- ⚙️ User preferences
+- ⚙️ Security settings
+
+##### 🔟 Profile (`/profile`)
+
+- 👤 User profile editing
+- 👤 Password change
+- 👤 Activity log
+
+#### Shared Components
+
+##### Layout
+
+- ✅ **Sidebar Navigation**
+  - Collapsible on mobile
+  - Active route highlighting
+  - Icon + text labels
+  - Smooth transitions
+  - Logout button
+- ✅ **Header**
+  - Menu toggle (mobile)
+  - Search bar (desktop)
+  - Notification bell with badge
+  - User profile dropdown
+  - Gradient background (#2E7D9A)
+- ✅ **Breadcrumbs** (if needed)
+
+##### UI Components
+
+- ✅ **Cards** - Gradient backgrounds with hover effects
+- ✅ **Modals** - Create, Edit, Detail, Delete confirmations
+- ✅ **Forms** - Validation, error handling, loading states
+- ✅ **Buttons** - Primary, secondary, danger variants
+- ✅ **Badges** - Status indicators with color coding
+- ✅ **Tables** - Sortable, searchable, filterable
+- ✅ **Charts** - Progress bars, stat cards
+- ✅ **Icons** - Lucide React icon library
+
+#### Animation System
+
+##### Keyframe Animations (index.css)
+
+```css
+@keyframes fade-in-up - opacity 0→1, translateY 20px→0
+@keyframes slide-in-right - opacity 0→1, translateX -30px→0
+@keyframes progress-fill - width 0%→100%
+@keyframes draw-circle - SVG stroke animation;
+```
+
+##### Timing & Delays
+
+- Base duration: 600ms (fade/slide)
+- Progress bars: 1000-2000ms
+- Stagger delays: 100-150ms
+- Hover transitions: 300-500ms
+- Easing: cubic-bezier(0.4, 0, 0.2, 1)
+
+##### Micro-interactions
+
+- Hover scale (1.05-1.1x)
+- Hover rotate (6 degrees)
+- Shadow elevation on hover
+- Active state scale (0.95x)
+- Button press feedback
+
+#### API Integration
+
+##### Mock Data System
+
+- ✅ USE_MOCK toggle for offline development
+- ✅ Realistic API delays (300-500ms)
+- ✅ Full CRUD simulation
+- ✅ Auto-increment IDs
+- ✅ Sample data for testing
+
+##### API Services
+
+- `/api/adminApi.js` - Admin CRUD operations
+- `/api/notificationApi.js` - Notification CRUD with mock support
+- `/api/carApi.js` - Car management (planned)
+- `/api/bookingApi.js` - Booking operations (planned)
+
+#### Responsive Design
+
+- ✅ Mobile-first approach
+- ✅ Breakpoints:
+  - `sm`: 640px
+  - `md`: 768px
+  - `lg`: 1024px
+  - `xl`: 1280px
+  - `2xl`: 1536px
+- ✅ Collapsible sidebar on mobile
+- ✅ Responsive grid layouts
+- ✅ Touch-friendly buttons (min 44px)
+- ✅ Optimized for tablets & desktop
+
+#### Performance Optimizations
+
+- ✅ Code splitting with React Router
+- ✅ Lazy loading for routes
+- ✅ Optimized images (Unsplash placeholders)
+- ✅ CSS purging with Tailwind
+- ✅ Vite HMR for fast development
+- ✅ Custom scrollbar (8px width)
+
+#### Accessibility Features
+
+- ✅ Semantic HTML elements
+- ✅ ARIA labels for icons
+- ✅ Keyboard navigation support
+- ✅ Focus visible outlines
+- ✅ Color contrast compliance (WCAG 2.1)
+- ✅ Reduced motion support (`prefers-reduced-motion`)
+- ✅ Screen reader friendly
+
+#### Development Tools
+
+- ✅ Vite dev server (localhost:5175)
+- ✅ Hot Module Replacement (HMR)
+- ✅ PostCSS for Tailwind processing
+- ✅ ESLint configuration
+- ✅ Environment variables (.env)
+
+#### Build & Deployment
+
+```bash
+# Development
+npm run dev
+
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
+
+# Run tests (if configured)
+npm run test
+```
+
+#### Future Enhancements
+
+- 📅 Real-time updates with WebSocket
+- 📅 PDF export for reports
+- 📅 Advanced filtering & sorting
+- 📅 Data visualization with Chart.js
+- 📅 Internationalization (i18n)
+- 📅 Dark mode support
+- 📅 Offline PWA capabilities
+- 📅 Image upload with compression
 
 ### 📱 Mobile Application (Flutter)
 
