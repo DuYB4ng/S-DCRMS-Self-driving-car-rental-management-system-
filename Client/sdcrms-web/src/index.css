@@ -1,0 +1,93 @@
+:root {
+  --primary: #0e80f1;
+  --primary-light: #63b3ff;
+  --sidebar-bg: #f5faff;
+  --text-dark: #1a1a1a;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 240px;
+  background-color: var(--sidebar-bg);
+  padding: 24px 16px;
+  border-right: 1px solid #e2e8f0;
+}
+
+.sidebar-title {
+  font-weight: 700;
+  font-size: 20px;
+  margin-bottom: 8px;
+  color: var(--primary);
+}
+
+.sidebar-sub {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 24px;
+}
+
+.sidebar-menu a {
+  display: block;
+  padding: 10px 14px;
+  margin-bottom: 6px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: var(--text-dark);
+}
+
+.sidebar-menu a.active {
+  background-color: var(--primary);
+  color: white;
+}
+
+.sidebar-menu a:hover {
+  background-color: var(--primary-light);
+  color: white;
+}
+
+/* Nội dung chính */
+.page-container {
+  padding: 32px;
+}
+
+/* Tiêu đề */
+.page-title {
+  font-size: 36px;
+  font-weight: 700;
+  margin-bottom: 32px;
+  color: var(--text-dark);
+}
+
+/* CARD TABLE */
+.table-card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px 24px;
+  border: 1px solid #e3e3e3;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* Bảng */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 16px;
+}
+
+th {
+  text-align: left;
+  padding-bottom: 12px;
+  color: var(--primary);
+  border-bottom: 2px solid var(--primary);
+}
+
+td {
+  padding: 12px 0;
+  color: #333;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+/* Hover từng dòng */
+tr:hover td {
+  background-color: #f5faff;
+}

@@ -16,7 +16,7 @@ function App() {
 
       {/* Khu vực render nội dung page */}
       <main className="p-6">
-        <Outlet />  {/* ✅ Route con (OwnerCarPage) hiển thị tại đây */}
+        <Outlet /> {/* ✅ Route con (OwnerCarPage) hiển thị tại đây */}
       </main>
     </div>
   );
