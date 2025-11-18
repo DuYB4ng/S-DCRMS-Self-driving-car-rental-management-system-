@@ -1,5 +1,14 @@
 import React, { useEffect, useState } from "react";
 import {
+  BellIcon,
+  CheckIcon,
+  Trash2Icon,
+  XIcon,
+  PlusIcon,
+  RadioIcon,
+  Edit2Icon,
+} from "lucide-react";
+import {
   getAllNotifications,
   getUserNotifications,
   createNotification,
@@ -11,19 +20,20 @@ import {
 
 const NotificationPage = () => {
   const [notifications, setNotifications] = useState([]);
+  const [selectedFilter, setSelectedFilter] = useState("Tất cả");
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showBroadcastForm, setShowBroadcastForm] = useState(false);
   const [editingNotification, setEditingNotification] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [filterUserId, setFilterUserId] = useState("");
-
-  // Form state
   const [formData, setFormData] = useState({
     userID: "",
     title: "",
     message: "",
   });
+
+  const filters = ["Tất cả", "Chưa đọc", "Đã đọc"];
 
   // Load all notifications
   const loadNotifications = async () => {
@@ -72,12 +82,12 @@ const NotificationPage = () => {
     try {
       setLoading(true);
       await createNotification(formData);
-      alert("✅ Notification created successfully!");
+      alert("✅ Tạo thông báo thành công!");
       setShowCreateForm(false);
       setFormData({ userID: "", title: "", message: "" });
       loadNotifications();
     } catch (err) {
-      alert(`❌ Error: ${err.message}`);
+      alert(`❌ Lỗi: ${err.message}`);
     } finally {
       setLoading(false);
     }
@@ -92,12 +102,12 @@ const NotificationPage = () => {
         title: formData.title,
         message: formData.message,
       });
-      alert("✅ Notification broadcasted to all users!");
+      alert("✅ Đã gửi thông báo tới tất cả người dùng!");
       setShowBroadcastForm(false);
       setFormData({ userID: "", title: "", message: "" });
       loadNotifications();
     } catch (err) {
-      alert(`❌ Error: ${err.message}`);
+      alert(`❌ Lỗi: ${err.message}`);
     } finally {
       setLoading(false);
     }
@@ -112,12 +122,13 @@ const NotificationPage = () => {
         title: formData.title,
         message: formData.message,
       });
-      alert("✅ Notification updated successfully!");
+      alert("✅ Cập nhật thông báo thành công!");
       setEditingNotification(null);
       setFormData({ userID: "", title: "", message: "" });
+      setShowCreateForm(false);
       loadNotifications();
     } catch (err) {
-      alert(`❌ Error: ${err.message}`);
+      alert(`❌ Lỗi: ${err.message}`);
     } finally {
       setLoading(false);
     }
@@ -129,19 +140,44 @@ const NotificationPage = () => {
       await markAsRead(id);
       loadNotifications();
     } catch (err) {
-      alert(`❌ Error: ${err.message}`);
+      alert(`❌ Lỗi: ${err.message}`);
+    }
+  };
+
+  // Handle mark all as read
+  const markAllAsRead = async () => {
+    try {
+      for (const notif of notifications.filter((n) => !n.read)) {
+        await markAsRead(notif.notificationID);
+      }
+      loadNotifications();
+    } catch (err) {
+      alert(`❌ Lỗi: ${err.message}`);
     }
   };
 
   // Handle delete
   const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this notification?")) {
+    if (window.confirm("Bạn có chắc muốn xóa thông báo này?")) {
       try {
         await deleteNotification(id);
-        alert("✅ Notification deleted!");
         loadNotifications();
       } catch (err) {
-        alert(`❌ Error: ${err.message}`);
+        alert(`❌ Lỗi: ${err.message}`);
+      }
+    }
+  };
+
+  // Handle delete all
+  const deleteAll = async () => {
+    if (window.confirm("Bạn có chắc muốn xóa tất cả thông báo?")) {
+      try {
+        for (const notif of notifications) {
+          await deleteNotification(notif.notificationID);
+        }
+        loadNotifications();
+      } catch (err) {
+        alert(`❌ Lỗi: ${err.message}`);
       }
     }
   };
@@ -166,84 +202,89 @@ const NotificationPage = () => {
     setFormData({ userID: "", title: "", message: "" });
   };
 
+  const getTimeAgo = (timestamp) => {
+    const date = new Date(timestamp);
+    const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+    if (seconds < 60) return "Vừa xong";
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes} phút trước`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours} giờ trước`;
+    const days = Math.floor(hours / 24);
+    return `${days} ngày trước`;
+  };
+
+  const filteredNotifications = notifications.filter((notif) => {
+    if (selectedFilter === "Tất cả") return true;
+    if (selectedFilter === "Chưa đọc") return !notif.read;
+    if (selectedFilter === "Đã đọc") return notif.read;
+    return true;
+  });
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
+
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">Notification Management</h1>
-
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          {error}
+    <div className="p-6 bg-secondary min-h-screen">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <div className="flex items-center gap-3 mb-4 md:mb-0">
+          <h1 className="text-3xl font-bold text-textPrimary">Thông báo</h1>
+          {unreadCount > 0 && (
+            <span className="bg-red-500 text-white text-sm font-bold px-3 py-1 rounded-full">
+              {unreadCount}
+            </span>
+          )}
         </div>
-      )}
-
-      {/* Action Buttons */}
-      <div className="flex flex-wrap gap-4 mb-6">
-        <button
-          onClick={() => {
-            resetForm();
-            setShowCreateForm(!showCreateForm);
-          }}
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-        >
-          {showCreateForm && !editingNotification
-            ? "Cancel"
-            : "+ Create Notification"}
-        </button>
-        <button
-          onClick={() => {
-            resetForm();
-            setShowBroadcastForm(!showBroadcastForm);
-          }}
-          className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-        >
-          {showBroadcastForm ? "Cancel" : "📢 Broadcast to All"}
-        </button>
-        <button
-          onClick={loadNotifications}
-          className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-        >
-          🔄 Refresh
-        </button>
-      </div>
-
-      {/* Filter Section */}
-      <div className="bg-white p-4 rounded-lg shadow-md mb-6">
-        <div className="flex gap-4 items-end">
-          <div className="flex-1">
-            <label className="block text-sm font-medium mb-1">
-              Filter by User ID
-            </label>
-            <input
-              type="number"
-              value={filterUserId}
-              onChange={(e) => setFilterUserId(e.target.value)}
-              placeholder="Enter User ID"
-              className="w-full border rounded px-3 py-2"
-            />
-          </div>
+        <div className="flex flex-wrap gap-3">
           <button
-            onClick={handleFilter}
-            className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600"
+            onClick={() => {
+              resetForm();
+              setShowCreateForm(!showCreateForm);
+            }}
+            className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:opacity-90 transition flex items-center gap-2 text-sm font-medium shadow-md"
           >
-            🔍 Filter
+            <PlusIcon className="w-4 h-4" />
+            Tạo mới
           </button>
           <button
             onClick={() => {
-              setFilterUserId("");
-              loadNotifications();
+              resetForm();
+              setShowBroadcastForm(!showBroadcastForm);
             }}
-            className="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500"
+            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:opacity-90 transition flex items-center gap-2 text-sm font-medium shadow-md"
           >
-            Clear
+            <RadioIcon className="w-4 h-4" />
+            Gửi tất cả
+          </button>
+          <button
+            onClick={markAllAsRead}
+            className="bg-[#2E7D9A] text-white px-4 py-2 rounded-lg hover:opacity-90 transition flex items-center gap-2 text-sm font-medium"
+          >
+            <CheckIcon className="w-4 h-4" />
+            Đánh dấu đã đọc
+          </button>
+          <button
+            onClick={deleteAll}
+            className="bg-red-600 text-white px-4 py-2 rounded-lg hover:opacity-90 transition flex items-center gap-2 text-sm font-medium"
+          >
+            <Trash2Icon className="w-4 h-4" />
+            Xóa tất cả
           </button>
         </div>
       </div>
 
+      {/* Error Alert */}
+      {error && (
+        <div className="bg-red-50 border-l-4 border-red-500 text-red-600 px-4 py-3 rounded-lg mb-6 shadow-md">
+          <p className="font-medium">Lỗi: {error}</p>
+        </div>
+      )}
+
       {/* Create/Edit Form */}
       {(showCreateForm || editingNotification) && (
-        <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-          <h2 className="text-xl font-bold mb-4">
-            {editingNotification ? "Edit Notification" : "Create Notification"}
+        <div className="bg-white rounded-xl shadow-md p-6 mb-6">
+          <h2 className="text-xl font-bold text-textPrimary mb-4">
+            {editingNotification ? "Chỉnh sửa thông báo" : "Tạo thông báo mới"}
           </h2>
           <form
             onSubmit={
@@ -255,7 +296,7 @@ const NotificationPage = () => {
           >
             {!editingNotification && (
               <div>
-                <label className="block text-sm font-medium mb-1">
+                <label className="block text-sm font-medium text-textPrimary mb-2">
                   User ID
                 </label>
                 <input
@@ -265,13 +306,15 @@ const NotificationPage = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, userID: e.target.value })
                   }
-                  className="w-full border rounded px-3 py-2"
-                  placeholder="Enter User ID"
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                  placeholder="Nhập User ID"
                 />
               </div>
             )}
             <div>
-              <label className="block text-sm font-medium mb-1">Title</label>
+              <label className="block text-sm font-medium text-textPrimary mb-2">
+                Tiêu đề
+              </label>
               <input
                 type="text"
                 required
@@ -279,41 +322,43 @@ const NotificationPage = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, title: e.target.value })
                 }
-                className="w-full border rounded px-3 py-2"
-                placeholder="Notification title"
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                placeholder="Tiêu đề thông báo"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Message</label>
+              <label className="block text-sm font-medium text-textPrimary mb-2">
+                Nội dung
+              </label>
               <textarea
                 required
                 value={formData.message}
                 onChange={(e) =>
                   setFormData({ ...formData, message: e.target.value })
                 }
-                className="w-full border rounded px-3 py-2"
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
                 rows="4"
-                placeholder="Notification message"
+                placeholder="Nội dung thông báo"
               />
             </div>
-            <div className="flex gap-4">
+            <div className="flex gap-3">
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 bg-blue-500 text-white py-2 rounded hover:bg-blue-600 disabled:bg-gray-400"
+                className="flex-1 bg-[#2E7D9A] text-white py-2 rounded-lg hover:opacity-90 transition disabled:bg-gray-400 font-medium"
               >
                 {loading
-                  ? "Saving..."
+                  ? "Đang xử lý..."
                   : editingNotification
-                  ? "Update"
-                  : "Create"}
+                  ? "Cập nhật"
+                  : "Tạo"}
               </button>
               <button
                 type="button"
                 onClick={resetForm}
-                className="px-6 bg-gray-300 text-gray-700 py-2 rounded hover:bg-gray-400"
+                className="px-6 bg-gray-300 text-textPrimary py-2 rounded-lg hover:bg-gray-400 transition font-medium"
               >
-                Cancel
+                Hủy
               </button>
             </div>
           </form>
@@ -322,13 +367,16 @@ const NotificationPage = () => {
 
       {/* Broadcast Form */}
       {showBroadcastForm && (
-        <div className="bg-green-50 p-6 rounded-lg shadow-md mb-6 border-2 border-green-300">
-          <h2 className="text-xl font-bold mb-4 text-green-800">
-            📢 Broadcast to All Users
+        <div className="bg-green-50 border-2 border-success rounded-xl shadow-md p-6 mb-6">
+          <h2 className="text-xl font-bold text-green-600 mb-4 flex items-center gap-2">
+            <RadioIcon className="w-6 h-6" />
+            Gửi thông báo tới tất cả
           </h2>
           <form onSubmit={handleBroadcast} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Title</label>
+              <label className="block text-sm font-medium text-textPrimary mb-2">
+                Tiêu đề
+              </label>
               <input
                 type="text"
                 required
@@ -336,108 +384,187 @@ const NotificationPage = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, title: e.target.value })
                 }
-                className="w-full border rounded px-3 py-2"
-                placeholder="Broadcast title"
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-success"
+                placeholder="Tiêu đề thông báo"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Message</label>
+              <label className="block text-sm font-medium text-textPrimary mb-2">
+                Nội dung
+              </label>
               <textarea
                 required
                 value={formData.message}
                 onChange={(e) =>
                   setFormData({ ...formData, message: e.target.value })
                 }
-                className="w-full border rounded px-3 py-2"
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-success"
                 rows="4"
-                placeholder="Broadcast message to all users"
+                placeholder="Nội dung gửi tới tất cả người dùng"
               />
             </div>
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-green-500 text-white py-2 rounded hover:bg-green-600 disabled:bg-gray-400"
+              className="w-full bg-green-600 text-white py-2 rounded-lg hover:opacity-90 transition disabled:bg-gray-400 font-medium"
             >
-              {loading ? "Broadcasting..." : "📢 Send to All Users"}
+              {loading ? "Đang gửi..." : "📢 Gửi tới tất cả"}
             </button>
           </form>
         </div>
       )}
 
-      {/* Notifications List */}
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        <div className="px-6 py-4 bg-gray-50 border-b">
-          <h2 className="text-xl font-bold">
-            All Notifications ({notifications.length})
-          </h2>
+      {/* Filter by User ID */}
+      <div className="bg-white rounded-lg p-4 mb-6 shadow-md">
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex-1">
+            <label className="block text-sm font-medium text-textPrimary mb-2">
+              Lọc theo User ID
+            </label>
+            <input
+              type="number"
+              value={filterUserId}
+              onChange={(e) => setFilterUserId(e.target.value)}
+              placeholder="Nhập User ID"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+          </div>
+          <div className="flex gap-2 items-end">
+            <button
+              onClick={handleFilter}
+              className="px-6 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition font-medium"
+            >
+              Lọc
+            </button>
+            <button
+              onClick={() => {
+                setFilterUserId("");
+                loadNotifications();
+              }}
+              className="px-6 py-2 bg-gray-400 text-white rounded-lg hover:bg-gray-500 transition font-medium"
+            >
+              Xóa lọc
+            </button>
+          </div>
         </div>
-        <div className="divide-y divide-gray-200">
-          {loading && notifications.length === 0 ? (
-            <div className="px-6 py-8 text-center text-gray-500">
-              Loading...
-            </div>
-          ) : notifications.length === 0 ? (
-            <div className="px-6 py-8 text-center text-gray-500">
-              No notifications found
-            </div>
-          ) : (
-            notifications.map((notification) => (
-              <div
-                key={notification.notificationID}
-                className={`px-6 py-4 hover:bg-gray-50 ${
-                  notification.read ? "bg-gray-50" : "bg-white"
-                }`}
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-semibold text-lg">
-                        {notification.title}
-                      </h3>
-                      {!notification.read && (
-                        <span className="px-2 py-0.5 bg-blue-500 text-white text-xs rounded-full">
-                          New
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-gray-700 mb-2">{notification.message}</p>
-                    <div className="flex gap-4 text-sm text-gray-500">
-                      <span>User ID: {notification.userID}</span>
-                      <span>
-                        Created:{" "}
-                        {new Date(notification.createdAt).toLocaleString()}
-                      </span>
-                    </div>
+      </div>
+
+      {/* Filters */}
+      <div className="bg-white rounded-lg p-4 mb-6 shadow-md">
+        <div className="flex flex-wrap gap-2">
+          {filters.map((filter) => (
+            <button
+              key={filter}
+              onClick={() => setSelectedFilter(filter)}
+              className={`px-4 py-2 rounded-lg font-medium transition ${
+                selectedFilter === filter
+                  ? "bg-primary text-white"
+                  : "bg-gray-100 text-textPrimary hover:bg-gray-200"
+              }`}
+            >
+              {filter}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Notifications List */}
+      <div className="space-y-3">
+        {loading && notifications.length === 0 ? (
+          <div className="text-center py-12 bg-white rounded-xl">
+            <div className="animate-spin w-12 h-12 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+            <p className="text-textSecondary">Đang tải...</p>
+          </div>
+        ) : filteredNotifications.length === 0 ? (
+          <div className="text-center py-12 bg-white rounded-xl">
+            <BellIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <p className="text-textSecondary text-lg font-medium">
+              Không có thông báo nào
+            </p>
+          </div>
+        ) : (
+          filteredNotifications.map((notif) => (
+            <div
+              key={notif.notificationID}
+              className={`bg-white rounded-xl shadow-md hover:shadow-lg transition overflow-hidden ${
+                !notif.read ? "border-l-4 border-primary" : ""
+              }`}
+            >
+              <div className="p-5">
+                <div className="flex items-start gap-4">
+                  {/* Icon */}
+                  <div
+                    className={`w-12 h-12 rounded-lg ${
+                      !notif.read ? "bg-primary" : "bg-gray-300"
+                    } flex items-center justify-center text-2xl flex-shrink-0`}
+                  >
+                    🔔
                   </div>
-                  <div className="flex gap-2 ml-4">
-                    {!notification.read && (
-                      <button
-                        onClick={() =>
-                          handleMarkAsRead(notification.notificationID)
-                        }
-                        className="px-3 py-1 bg-green-500 text-white text-sm rounded hover:bg-green-600"
-                      >
-                        ✓ Mark Read
-                      </button>
-                    )}
-                    <button
-                      onClick={() => handleEdit(notification)}
-                      className="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600"
-                    >
-                      ✏️ Edit
-                    </button>
-                    <button
-                      onClick={() => handleDelete(notification.notificationID)}
-                      className="px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600"
-                    >
-                      🗑️ Delete
-                    </button>
+
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-3 mb-2">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3
+                            className={`font-bold text-textPrimary ${
+                              !notif.read ? "text-primary" : ""
+                            }`}
+                          >
+                            {notif.title}
+                          </h3>
+                          {!notif.read && (
+                            <span className="w-2 h-2 bg-primary rounded-full"></span>
+                          )}
+                        </div>
+                        <span className="bg-purple-50 text-purple-600 text-xs px-2 py-1 rounded-full font-medium inline-block">
+                          User ID: {notif.userID}
+                        </span>
+                      </div>
+                    </div>
+
+                    <p className="text-textSecondary text-sm mb-3">
+                      {notif.message}
+                    </p>
+
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs text-textSecondary">
+                        {getTimeAgo(notif.createdAt)}
+                      </p>
+                      <div className="flex gap-2">
+                        {!notif.read && (
+                          <button
+                            onClick={() =>
+                              handleMarkAsRead(notif.notificationID)
+                            }
+                            className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition"
+                            title="Đánh dấu đã đọc"
+                          >
+                            <CheckIcon className="w-4 h-4" />
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleEdit(notif)}
+                          className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition"
+                          title="Chỉnh sửa"
+                        >
+                          <Edit2Icon className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(notif.notificationID)}
+                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
+                          title="Xóa"
+                        >
+                          <Trash2Icon className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
-            ))
-          )}
-        </div>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );
