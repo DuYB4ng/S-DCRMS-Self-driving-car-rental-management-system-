@@ -65,5 +65,69 @@ namespace BookingService.Controllers
             return NoContent();
         }
 
+        // POST: api/booking/{id}/check-in
+        [HttpPost("{id}/check-in")]
+        public async Task<IActionResult> CheckIn(int id)
+        {
+            var booking = await _context.Bookings.FindAsync(id);
+            if (booking == null)
+                return NotFound(new { message = "Booking not found" });
+
+            // chỉ cho check-in khi đã thanh toán
+            if (booking.Status != "Paid")
+                return BadRequest(new { message = "Booking must be Paid before check-in" });
+
+            if (booking.CheckIn)
+                return BadRequest(new { message = "Booking already checked in" });
+
+            booking.CheckIn = true;
+            booking.Status = "InProgress";
+
+            await _context.SaveChangesAsync();
+            return Ok(booking.ToBookingDto());
+        }
+
+        // POST: api/booking/{id}/check-out
+        [HttpPost("{id}/check-out")]
+        public async Task<IActionResult> CheckOut(int id)
+        {
+            var booking = await _context.Bookings.FindAsync(id);
+            if (booking == null)
+                return NotFound(new { message = "Booking not found" });
+
+            if (!booking.CheckIn)
+                return BadRequest(new { message = "Booking must be checked in before check-out" });
+
+            if (booking.CheckOut)
+                return BadRequest(new { message = "Booking already checked out" });
+
+            booking.CheckOut = true;
+            booking.Status = "Completed";
+
+            await _context.SaveChangesAsync();
+            return Ok(booking.ToBookingDto());
+        }
+
+        // POST: api/booking/{id}/cancel
+        [HttpPost("{id}/cancel")]
+        public async Task<IActionResult> Cancel(int id)
+        {
+            var booking = await _context.Bookings.FindAsync(id);
+            if (booking == null)
+                return NotFound(new { message = "Booking not found" });
+
+            if (booking.Status == "Completed" || booking.Status == "Cancelled")
+                return BadRequest(new { message = "Booking already completed or cancelled" });
+
+            // tuỳ rule của bạn: chỉ cho cancel khi chưa check-in
+            if (booking.CheckIn)
+                return BadRequest(new { message = "Cannot cancel after check-in" });
+
+            booking.Status = "Cancelled";
+
+            await _context.SaveChangesAsync();
+            return Ok(booking.ToBookingDto());
+        }
+
     }
 }

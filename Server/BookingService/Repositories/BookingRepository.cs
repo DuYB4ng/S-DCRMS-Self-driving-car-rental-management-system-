@@ -42,6 +42,7 @@ namespace BookingService.Repositories
 			existing.EndDate = dto.EndDate;
 			existing.CheckIn = dto.CheckIn;
 			existing.CheckOut = dto.CheckOut;
+			existing.Status = dto.Status;
 			await _context.SaveChangesAsync();
 			return existing;
 		}
