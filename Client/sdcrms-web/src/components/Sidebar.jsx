@@ -7,6 +7,13 @@ import {
   CreditCardIcon,
   BellIcon,
   LogOutIcon,
+  Users,
+  Shield,
+  AlertTriangle,
+  BarChart3,
+  Activity,
+  UserCog,
+  FileText,
 } from "lucide-react";
 
 const Sidebar = ({ isOpen, onClose }) => {
@@ -21,7 +28,25 @@ const Sidebar = ({ isOpen, onClose }) => {
       label: "Quản lý đặt xe",
     },
     { path: "/payment", icon: CreditCardIcon, label: "Thanh toán" },
+    { path: "/staff-management", icon: Users, label: "Quản lý nhân viên" },
+    {
+      path: "/compliance-policy",
+      icon: Shield,
+      label: "Chính sách tuân thủ",
+    },
+    {
+      path: "/fraud-detection",
+      icon: AlertTriangle,
+      label: "Phát hiện gian lận",
+    },
+    { path: "/reports", icon: BarChart3, label: "Báo cáo" },
+    {
+      path: "/system-monitoring",
+      icon: Activity,
+      label: "Giám sát hệ thống",
+    },
     { path: "/notifications", icon: BellIcon, label: "Thông báo" },
+    { path: "/admin-management", icon: UserCog, label: "Quản lý Admin" },
   ];
 
   const isActive = (path) => location.pathname === path;
