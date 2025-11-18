@@ -10,6 +10,9 @@ import AdminPage from "./pages/AdminPage";
 import NotificationPage from "./pages/NotificationPage";
 import SystemMonitoringPage from "./pages/SystemMonitoringPage";
 import ReportsPage from "./pages/ReportsPage";
+import StaffManagementPage from "./pages/StaffManagementPage";
+import CompliancePolicyPage from "./pages/CompliancePolicyPage";
+import FraudDetectionPage from "./pages/FraudDetectionPage";
 
 export const router = createBrowserRouter([
   {
@@ -29,6 +32,9 @@ export const router = createBrowserRouter([
       { path: "notifications", element: <NotificationPage /> },
       { path: "system-monitoring", element: <SystemMonitoringPage /> },
       { path: "reports", element: <ReportsPage /> },
+      { path: "staff-management", element: <StaffManagementPage /> },
+      { path: "compliance-policy", element: <CompliancePolicyPage /> },
+      { path: "fraud-detection", element: <FraudDetectionPage /> },
     ],
   },
 ]);
