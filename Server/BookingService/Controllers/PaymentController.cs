@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-
 using BookingService.Models;
 using System.Threading.Tasks;
 using System.Linq;
@@ -50,18 +49,56 @@ namespace BookingService.Controllers
             return Ok(payment);
         }
 
-        // POST: api/payment  (tạo payment thường)
         [HttpPost]
         public async Task<IActionResult> TaoPayment([FromBody] CreatePaymentRequestDto payDto)
         {
             var paymentModel = payDto.ToPaymentFromCreateDto();
-
             await _paymentRepo.CreateAsync(paymentModel);
 
-            return CreatedAtAction(nameof(GetID), new { id = paymentModel.PaymentID }, paymentModel.toPaymentDto());
+            // nếu method = Cash & status = Completed → coi như đã thanh toán
+            var booking = await _context.Bookings.FindAsync(paymentModel.BookingID);
+            if (booking != null && paymentModel.Status == "Completed")
+            {
+                booking.Status = "Paid";
+                await _context.SaveChangesAsync();
+            }
+
+            return CreatedAtAction(nameof(GetID),
+                new { id = paymentModel.PaymentID },
+                paymentModel.toPaymentDto());
         }
 
-        // POST: api/payment/create-vnpay  (tạo payment + URL VNPay)
+
+        // PUT: api/payment/{id}
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(
+            [FromRoute] int id,
+            [FromBody] UpdatePaymentRequestDto updateDto)
+        {
+            var paymentModel = await _paymentRepo.UpdateAsync(id, updateDto);
+            if (paymentModel == null)
+            {
+                return NotFound();
+            }
+
+            await _context.SaveChangesAsync();
+            return Ok(paymentModel.toPaymentDto());
+        }
+
+        // DELETE: api/payment/{id}
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete([FromRoute] int id)
+        {
+            var paymentModel = await _paymentRepo.DeleteAsync(id);
+            if (paymentModel == null)
+            {
+                return NotFound();
+            }
+
+            return NoContent();
+        }
+
+                // POST: api/payment/create-vnpay  (tạo payment + URL VNPay)
         [HttpPost("create-vnpay")]
         public async Task<IActionResult> CreateVnPayPayment([FromBody] CreateVnPayPaymentRequestDto dto)
         {
@@ -93,7 +130,6 @@ namespace BookingService.Controllers
             });
         }
 
-        // GET: api/payment/vnpay-ipn  (VNPay gọi IPN)
         [HttpGet("vnpay-ipn")]
         public async Task<IActionResult> VnPayIpn()
         {
@@ -101,7 +137,6 @@ namespace BookingService.Controllers
 
             if (validation.RspCode != "00")
             {
-                // Sai chữ ký → vẫn trả 200 OK với RspCode theo chuẩn VNPay
                 return Ok(new { RspCode = validation.RspCode, Message = validation.Message });
             }
 
@@ -122,48 +157,28 @@ namespace BookingService.Controllers
                 return Ok(new { RspCode = "04", Message = "Invalid amount" });
             }
 
+            // 🔽 Lấy booking tương ứng
+            var booking = await _context.Bookings.FindAsync(payment.BookingID);
+
             if (validation.ResponseCode == "00" && validation.TransactionStatus == "00")
             {
                 payment.Status = "Success";
                 payment.PaymentDate = DateTime.Now;
+
+                if (booking != null && booking.Status == "Pending")
+                {
+                    booking.Status = "Paid";   // 👈 booking đã thanh toán
+                }
             }
             else
             {
                 payment.Status = "Failed";
+                // booking vẫn Pending để user thanh toán lại
             }
 
             await _context.SaveChangesAsync();
 
             return Ok(new { RspCode = "00", Message = "Confirm Success" });
-        }
-
-        // PUT: api/payment/{id}
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(
-            [FromRoute] int id,
-            [FromBody] UpdatePaymentRequestDto updateDto)
-        {
-            var paymentModel = await _paymentRepo.UpdateAsync(id, updateDto);
-            if (paymentModel == null)
-            {
-                return NotFound();
-            }
-
-            await _context.SaveChangesAsync();
-            return Ok(paymentModel.toPaymentDto());
-        }
-
-        // DELETE: api/payment/{id}
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete([FromRoute] int id)
-        {
-            var paymentModel = await _paymentRepo.DeleteAsync(id);
-            if (paymentModel == null)
-            {
-                return NotFound();
-            }
-
-            return NoContent();
         }
     }
 }

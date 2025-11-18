@@ -20,7 +20,8 @@ namespace BookingService.Migrations
                     StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     EndDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CheckIn = table.Column<bool>(type: "bit", nullable: false),
-                    CheckOut = table.Column<bool>(type: "bit", nullable: false)
+                    CheckOut = table.Column<bool>(type: "bit", nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {

@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BookingService.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251113082554_tmp")]
+    [Migration("20251118030357_tmp")]
     partial class tmp
     {
         /// <inheritdoc />
@@ -43,6 +43,10 @@ namespace BookingService.Migrations
 
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("BookingID");
 
