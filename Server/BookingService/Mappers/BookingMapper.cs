@@ -13,7 +13,8 @@ namespace BookingService.Mappers
                 StartDate = booking.StartDate,
                 EndDate = booking.EndDate,
                 CheckIn = booking.CheckIn,
-                CheckOut = booking.CheckOut
+                CheckOut = booking.CheckOut,
+                Status = booking.Status  
             };
         }
     }
@@ -26,8 +27,9 @@ namespace BookingService.Mappers
             {
                 StartDate = bookingDto.StartDate,
                 EndDate = bookingDto.EndDate,
-                CheckIn = bookingDto.CheckIn,
-                CheckOut = bookingDto.CheckOut
+                CheckIn = false,
+                CheckOut = false,
+                Status = "Pending"
             };
         }
     }

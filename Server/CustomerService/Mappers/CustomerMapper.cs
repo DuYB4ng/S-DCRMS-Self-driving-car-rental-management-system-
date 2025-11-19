@@ -6,13 +6,15 @@ namespace CustomerService.Mappers
 {
     public static class CustomerMapper
     {
-        public static CustomerDto ToCustomerDto(this Customer customerModel) //this được hiểu là mở rộng extension method cho lớp Customer
+        public static CustomerDto ToCustomerDto(this Customer customerModel)
         {
             return new CustomerDto
             {
-               DrivingLicense = customerModel.DrivingLicense,
-               LicenseIssueDate = customerModel.LicenseIssueDate,
-               LicenseExpiryDate = customerModel.LicenseExpiryDate,
+                CustomerId = customerModel.CustomerId,
+                FirebaseUid = customerModel.FirebaseUid,
+                DrivingLicense = customerModel.DrivingLicense,
+                LicenseIssueDate = customerModel.LicenseIssueDate,
+                LicenseExpiryDate = customerModel.LicenseExpiryDate,
             };
         }
         

@@ -22,6 +22,7 @@ builder.Services.AddScoped<IStaffRepository, StaffRepository>();
 
 var app = builder.Build();
 
+
 // ✅ Thử kết nối SQL Server nhiều lần trước khi khởi chạy API
 using (var scope = app.Services.CreateScope())
 {
