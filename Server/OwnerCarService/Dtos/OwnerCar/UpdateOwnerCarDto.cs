@@ -2,7 +2,6 @@ namespace OwnerCarService.Dtos.OwnerCar
 {
     public class UpdateOwnerCarDTO
     {
-        public int OwnerCarId { get; set; }              // ID của chủ xe cần cập nhật
         public string DrivingLicence { get; set; } = string.Empty;  // Có thể thay đổi giấy phép
         public DateTime LicenceIssueDate { get; set; }
         public DateTime LicenceExpiryDate { get; set; }

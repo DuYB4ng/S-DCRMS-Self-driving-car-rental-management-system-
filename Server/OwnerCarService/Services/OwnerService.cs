@@ -136,7 +136,8 @@ namespace OwnerCarService.Services
         }
         public async Task<OwnerCarDTO?> CapNhatOwnerCarAsync(int ownerId, UpdateOwnerCarDTO ownerCarDto)
         {
-            var existingOwnerCar = await _ownerCarRepository.LayOwnerCarTheoIdAsync(ownerCarDto.OwnerCarId);
+            // dùng ownerId từ route
+            var existingOwnerCar = await _ownerCarRepository.LayOwnerCarTheoIdAsync(ownerId);
             if (existingOwnerCar == null)
                 return null;
 
