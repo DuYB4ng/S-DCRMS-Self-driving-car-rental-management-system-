@@ -17,6 +17,7 @@ namespace OwnerCarService.Mappers
             CreateMap<Maintenance, MaintenanceDTO>().ReverseMap();
             CreateMap<CreateMaintenanceDTO, Maintenance>();
             CreateMap<UpdateMaintenanceDTO, Maintenance>();
+            CreateMap<UpdateOwnerCarDTO, OwnerCar>();
         }
     }
 }
