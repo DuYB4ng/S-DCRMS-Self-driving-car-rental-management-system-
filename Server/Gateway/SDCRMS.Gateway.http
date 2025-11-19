@@ -1,0 +1,6 @@
+@SDCRMS.Gateway_HostAddress = http://localhost:5194
+
+GET {{SDCRMS.Gateway_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
