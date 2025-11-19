@@ -8,19 +8,10 @@ class CarListViewModel extends ChangeNotifier {
   String? errorMessage;
 
   List<dynamic> cars = [];
+  bool loadedOnce = false;
 
-  bool loadedOnce = false;  // ✔ CHẶN LOAD LẶP
-
-  Future<void> searchCars({
-    required String city,
-    required DateTime receiveDate,
-    required TimeOfDay receiveTime,
-    required DateTime returnDate,
-    required TimeOfDay returnTime,
-
-  }) async {
-
-    if (loadedOnce) return; // ✔ Không load lại
+  Future<void> loadCars() async {
+    if (loadedOnce) return; // tránh gọi lại
     loadedOnce = true;
 
     isLoading = true;
@@ -28,27 +19,13 @@ class CarListViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final res = await api.post("/cars/search", {
-        "city": city,
-        "receiveDate": receiveDate.toIso8601String(),
-        "receiveTime": receiveTime.format24h(),
-        "returnDate": returnDate.toIso8601String(),
-        "returnTime": returnTime.format24h(),
-      });
-
-      cars = res.data; // ✔ dữ liệu từ API
+      final res = await api.get("/car");   // ✔ ĐÚNG API
+      cars = res.data;
     } catch (e) {
-      errorMessage = "Không thể tải dữ liệu xe";
+      errorMessage = "Không thể tải danh sách xe";
     }
 
     isLoading = false;
     notifyListeners();
-  }
-}
-
-/// ✔ CORRECT: extension phải đặt ngoài class
-extension TimeFormat on TimeOfDay {
-  String format24h() {
-    return "${hour.toString().padLeft(2, "0")}:${minute.toString().padLeft(2, "0")}";
   }
 }
