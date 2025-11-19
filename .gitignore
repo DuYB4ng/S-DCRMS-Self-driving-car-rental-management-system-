@@ -11,3 +11,10 @@ obj/
 *.log
 *.tmp
 *.config
+
+# Client/UML
+Client/UML
+
+# Firebase credentials
+D:\Trifuu\Project\Server\NotificationService\FireBase
+Server/NotificationService/FireBase/*.json
