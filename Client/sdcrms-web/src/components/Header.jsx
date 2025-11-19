@@ -6,13 +6,16 @@ import {
   UserIcon,
   XIcon,
   Clock,
+  LogOut,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const Header = ({ onMenuClick }) => {
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const notificationRef = useRef(null);
+  const userMenuRef = useRef(null);
   const navigate = useNavigate();
 
   // Mock notifications data
@@ -71,16 +74,19 @@ const Header = ({ onMenuClick }) => {
       ) {
         setShowNotifications(false);
       }
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+        setShowUserMenu(false);
+      }
     };
 
-    if (showNotifications) {
+    if (showNotifications || showUserMenu) {
       document.addEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [showNotifications]);
+  }, [showNotifications, showUserMenu]);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -108,6 +114,12 @@ const Header = ({ onMenuClick }) => {
   const handleViewAll = () => {
     setShowNotifications(false);
     navigate("/notifications");
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("adminToken");
+    localStorage.removeItem("adminUser");
+    navigate("/login");
   };
 
   return (
@@ -231,16 +243,40 @@ const Header = ({ onMenuClick }) => {
             )}
           </div>
 
-          <div className="flex items-center gap-3 bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2 shadow-sm">
-            <div className="w-9 h-9 bg-white rounded-full flex items-center justify-center shadow-md">
-              <UserIcon className="w-5 h-5 text-[#2E7D9A]" />
-            </div>
-            <div className="hidden md:block">
-              <p className="text-white text-sm font-bold leading-tight">
-                Admin
-              </p>
-              <p className="text-white/80 text-xs">Administrator</p>
-            </div>
+          <div className="relative" ref={userMenuRef}>
+            <button
+              onClick={() => setShowUserMenu(!showUserMenu)}
+              className="flex items-center gap-3 bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2 shadow-sm hover:bg-white/30 transition-all"
+            >
+              <div className="w-9 h-9 bg-white rounded-full flex items-center justify-center shadow-md">
+                <UserIcon className="w-5 h-5 text-[#2E7D9A]" />
+              </div>
+              <div className="hidden md:block">
+                <p className="text-white text-sm font-bold leading-tight">
+                  Admin
+                </p>
+                <p className="text-white/80 text-xs">Administrator</p>
+              </div>
+            </button>
+
+            {/* User Dropdown Menu */}
+            {showUserMenu && (
+              <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-2xl overflow-hidden z-50 animate-fade-in-up">
+                <div className="p-4 bg-gradient-to-r from-[#2E7D9A] to-[#3498DB]">
+                  <p className="text-white font-bold text-sm">Admin</p>
+                  <p className="text-white/80 text-xs">Administrator</p>
+                </div>
+                <div className="p-2">
+                  <button
+                    onClick={handleLogout}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-left text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                  >
+                    <LogOut className="w-5 h-5" />
+                    <span className="font-medium">Đăng xuất</span>
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

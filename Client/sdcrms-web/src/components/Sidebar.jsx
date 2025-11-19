@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   HomeIcon,
@@ -18,36 +18,94 @@ import {
 
 const Sidebar = ({ isOpen, onClose }) => {
   const location = useLocation();
+  const [userRole, setUserRole] = useState(null);
+
+  useEffect(() => {
+    // Lấy user role từ localStorage
+    const userStr = localStorage.getItem("adminUser");
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        setUserRole(user.role || "Staff"); // Default Staff nếu không có role
+      } catch {
+        setUserRole("Staff");
+      }
+    }
+  }, []);
 
   const menuItems = [
-    { path: "/", icon: HomeIcon, label: "Dashboard" },
-    { path: "/car-management", icon: CarIcon, label: "Quản lý xe" },
+    {
+      path: "/",
+      icon: HomeIcon,
+      label: "Dashboard",
+      roles: ["Admin", "Staff"],
+    },
+    {
+      path: "/car-management",
+      icon: CarIcon,
+      label: "Quản lý xe",
+      roles: ["Admin", "Staff"],
+    },
     {
       path: "/booking-management",
       icon: CalendarIcon,
       label: "Quản lý đặt xe",
+      roles: ["Admin", "Staff"],
     },
-    { path: "/payment", icon: CreditCardIcon, label: "Thanh toán" },
-    { path: "/staff-management", icon: Users, label: "Quản lý nhân viên" },
+    {
+      path: "/payment",
+      icon: CreditCardIcon,
+      label: "Thanh toán",
+      roles: ["Admin", "Staff"],
+    },
+    {
+      path: "/staff-management",
+      icon: Users,
+      label: "Quản lý nhân viên",
+      roles: ["Admin"],
+    },
     {
       path: "/compliance-policy",
       icon: Shield,
       label: "Chính sách tuân thủ",
+      roles: ["Admin"],
     },
     {
       path: "/fraud-detection",
       icon: AlertTriangle,
       label: "Phát hiện gian lận",
+      roles: ["Admin"],
     },
-    { path: "/reports", icon: BarChart3, label: "Báo cáo" },
+    {
+      path: "/reports",
+      icon: BarChart3,
+      label: "Báo cáo",
+      roles: ["Admin", "Staff"],
+    },
     {
       path: "/system-monitoring",
       icon: Activity,
       label: "Giám sát hệ thống",
+      roles: ["Admin"],
     },
-    { path: "/notifications", icon: BellIcon, label: "Thông báo" },
-    { path: "/admin-management", icon: UserCog, label: "Quản lý Admin" },
+    {
+      path: "/notifications",
+      icon: BellIcon,
+      label: "Thông báo",
+      roles: ["Admin", "Staff"],
+    },
+    {
+      path: "/admin-management",
+      icon: UserCog,
+      label: "Quản lý Admin",
+      roles: ["Admin"],
+    },
   ];
+
+  // Filter menu items theo role
+  const filteredMenuItems = menuItems.filter(
+    (item) => !item.roles || item.roles.includes(userRole)
+  );
 
   const isActive = (path) => location.pathname === path;
 
@@ -90,7 +148,7 @@ const Sidebar = ({ isOpen, onClose }) => {
 
         {/* Menu Items */}
         <nav className="p-4">
-          {menuItems.map((item) => {
+          {filteredMenuItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.path);
             return (
