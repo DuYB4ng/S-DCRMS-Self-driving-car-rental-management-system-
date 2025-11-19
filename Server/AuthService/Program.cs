@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
 using AuthService.Data;
+using AuthService.Services; 
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Chỉ khởi tạo Firebase nếu chưa khởi tạo và file tồn tại
@@ -29,6 +31,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 // Đăng ký Repository
 builder.Services.AddScoped<IAuthUserRepository, AuthUserRepository>();
+
+// Đăng ký FirebaseAuthService 👈 THÊM
+builder.Services.AddScoped<FirebaseAuthService>();
 
 builder.Services.AddHttpClient();
 builder.Services.AddControllers();

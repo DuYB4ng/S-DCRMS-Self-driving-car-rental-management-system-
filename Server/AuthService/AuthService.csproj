@@ -21,6 +21,7 @@
     </PackageReference>
     <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="9.0.0-preview.7.24405.1" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.6" />
+    <None Include="firebase-adminsdk.json" CopyToOutputDirectory="Always" />
   </ItemGroup>
 
 </Project>
