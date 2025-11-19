@@ -1,0 +1,72 @@
+version: "3.8"
+
+services:
+  # Admin Service (Development với hot reload)
+  admin-service:
+    build:
+      context: .
+      dockerfile: Server/AdminService/Dockerfile
+    container_name: sdcrms-admin-service-dev
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5001
+      - JwtSettings__Secret=your-super-secret-key-that-must-be-at-least-32-characters-long-for-security
+      - JwtSettings__Issuer=SDCRMS
+      - JwtSettings__Audience=SDCRMS-Users
+      - UseInMemoryDatabase=true
+    ports:
+      - "5001:5001"
+    volumes:
+      - ./Server/AdminService:/src/Server/AdminService
+    networks:
+      - sdcrms-network
+    restart: unless-stopped
+
+  # Notification Service (Development)
+  notification-service:
+    build:
+      context: .
+      dockerfile: Server/NotificationService/Dockerfile
+    container_name: sdcrms-notification-service-dev
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5002
+      - JwtSettings__Secret=your-super-secret-key-that-must-be-at-least-32-characters-long-for-security
+      - JwtSettings__Issuer=SDCRMS
+      - JwtSettings__Audience=SDCRMS-Users
+      - Firebase__CredentialPath=FireBase/fir-dcrms-firebase-adminsdk-fbsvc-4764dba2cc.json
+      - UseInMemoryDatabase=true
+    ports:
+      - "5002:5002"
+    volumes:
+      - ./Server/NotificationService:/src/Server/NotificationService
+    networks:
+      - sdcrms-network
+    restart: unless-stopped
+
+  # API Gateway (Development)
+  gateway:
+    build:
+      context: .
+      dockerfile: Server/Gateway/Dockerfile
+    container_name: sdcrms-gateway-dev
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5000
+      - JwtSettings__Secret=your-super-secret-key-that-must-be-at-least-32-characters-long-for-security
+      - JwtSettings__Issuer=SDCRMS
+      - JwtSettings__Audience=SDCRMS-Users
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./Server/Gateway:/src/Server/Gateway
+    depends_on:
+      - admin-service
+      - notification-service
+    networks:
+      - sdcrms-network
+    restart: unless-stopped
+
+networks:
+  sdcrms-network:
+    driver: bridge

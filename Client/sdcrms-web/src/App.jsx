@@ -1,10 +1,18 @@
 import React, { useState } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const location = useLocation();
+
+  // Nếu đang ở trang login, không hiển thị sidebar/header
+  const isLoginPage = location.pathname === "/login";
+
+  if (isLoginPage) {
+    return <Outlet />;
+  }
 
   return (
     <div className="flex h-screen bg-gray-50">

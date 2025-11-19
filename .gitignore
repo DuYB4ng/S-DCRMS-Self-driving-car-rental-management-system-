@@ -16,5 +16,7 @@ obj/
 Client/UML
 
 # Firebase credentials
-D:\Trifuu\Project\Server\NotificationService\FireBase
-Server/NotificationService/FireBase/*.json
+Server/NotificationService/FireBase
+Server/FireBase
+
+

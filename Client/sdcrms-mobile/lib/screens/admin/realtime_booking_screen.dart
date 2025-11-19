@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import '../../constants.dart';
-import '../../models/booking.dart';
 
 class RealTimeBookingScreen extends StatefulWidget {
   const RealTimeBookingScreen({super.key});

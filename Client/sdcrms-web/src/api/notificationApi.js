@@ -1,4 +1,6 @@
-const API_BASE_URL = "http://localhost:5100/api";
+import axiosClient from "./axiosClient";
+
+const USE_MOCK = false; // Set to true for testing without backend
 
 // Mock data for demo (remove when backend is ready)
 const MOCK_NOTIFICATIONS = [
@@ -56,8 +58,6 @@ const MOCK_NOTIFICATIONS = [
 let mockNotifications = [...MOCK_NOTIFICATIONS];
 let nextId = 6;
 
-const USE_MOCK = true; // Set to false when backend is ready
-
 // Get all notifications
 export const getAllNotifications = async () => {
   if (USE_MOCK) {
@@ -66,9 +66,8 @@ export const getAllNotifications = async () => {
     });
   }
 
-  const response = await fetch(`${API_BASE_URL}/notification`);
-  if (!response.ok) throw new Error("Failed to fetch notifications");
-  return response.json();
+  const response = await axiosClient.get("/notification");
+  return response.data;
 };
 
 // Get notification by ID
@@ -85,9 +84,8 @@ export const getNotificationById = async (id) => {
     });
   }
 
-  const response = await fetch(`${API_BASE_URL}/notification/${id}`);
-  if (!response.ok) throw new Error("Failed to fetch notification");
-  return response.json();
+  const response = await axiosClient.get(`/notification/${id}`);
+  return response.data;
 };
 
 // Get user notifications
@@ -103,9 +101,8 @@ export const getUserNotifications = async (userId) => {
     });
   }
 
-  const response = await fetch(`${API_BASE_URL}/notification/user/${userId}`);
-  if (!response.ok) throw new Error("Failed to fetch user notifications");
-  return response.json();
+  const response = await axiosClient.get(`/notification/user/${userId}`);
+  return response.data;
 };
 
 // Create notification
@@ -128,15 +125,8 @@ export const createNotification = async (notificationData) => {
     });
   }
 
-  const response = await fetch(`${API_BASE_URL}/notification`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(notificationData),
-  });
-  if (!response.ok) throw new Error("Failed to create notification");
-  return response.json();
+  const response = await axiosClient.post("/notification", notificationData);
+  return response.data;
 };
 
 // Broadcast notification to all users
@@ -163,15 +153,11 @@ export const broadcastNotification = async (notificationData) => {
     });
   }
 
-  const response = await fetch(`${API_BASE_URL}/notification/broadcast`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(notificationData),
-  });
-  if (!response.ok) throw new Error("Failed to broadcast notification");
-  return response.json();
+  const response = await axiosClient.post(
+    "/notification/broadcast",
+    notificationData
+  );
+  return response.data;
 };
 
 // Update notification
@@ -196,15 +182,11 @@ export const updateNotification = async (id, notificationData) => {
     });
   }
 
-  const response = await fetch(`${API_BASE_URL}/notification/${id}`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(notificationData),
-  });
-  if (!response.ok) throw new Error("Failed to update notification");
-  return response.status === 204 ? null : response.json();
+  const response = await axiosClient.put(
+    `/notification/${id}`,
+    notificationData
+  );
+  return response.data;
 };
 
 // Mark notification as read
@@ -225,11 +207,8 @@ export const markAsRead = async (id) => {
     });
   }
 
-  const response = await fetch(`${API_BASE_URL}/notification/${id}/read`, {
-    method: "PUT",
-  });
-  if (!response.ok) throw new Error("Failed to mark as read");
-  return response.status === 204 ? null : response.json();
+  const response = await axiosClient.put(`/notification/${id}/read`);
+  return response.data;
 };
 
 // Delete notification
@@ -250,9 +229,6 @@ export const deleteNotification = async (id) => {
     });
   }
 
-  const response = await fetch(`${API_BASE_URL}/notification/${id}`, {
-    method: "DELETE",
-  });
-  if (!response.ok) throw new Error("Failed to delete notification");
-  return response.status === 204 ? null : response.json();
+  const response = await axiosClient.delete(`/notification/${id}`);
+  return response.data;
 };

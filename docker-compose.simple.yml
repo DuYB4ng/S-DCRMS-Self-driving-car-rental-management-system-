@@ -1,0 +1,133 @@
+services:
+  # ========================
+  # API Gateway (Ocelot - entry point)
+  # ========================
+  apigateway:
+    build:
+      context: ./Server/Gateway
+      dockerfile: Dockerfile
+    container_name: apigateway
+    ports:
+      - "8000:8080"
+    depends_on:
+      - adminservice
+      - notificationservice
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - JWT__Secret=YourSuperSecretKeyForJWTTokenGenerationAndValidation123!
+      - JWT__Issuer=SDCRMS
+      - JWT__Audience=SDCRMSUsers
+      - Firebase__CredentialPath=/app/FireBase/fir-dcrms-firebase-adminsdk-fbsvc-4764dba2cc.json
+    volumes:
+      - ./Server/FireBase:/app/FireBase
+    networks:
+      - sdcrms-network
+    restart: unless-stopped
+
+  # ========================
+  # Admin Service
+  # ========================
+  adminservice:
+    build:
+      context: ./Server/AdminService
+      dockerfile: Dockerfile
+    container_name: adminservice
+    ports:
+      - "5001:8081"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8081
+      - ConnectionStrings__DefaultConnection=server=db;port=3306;database=AdminDB;user=root;password=YourStrong@Password123;
+      - UseInMemoryDatabase=true
+      - JWT__Secret=YourSuperSecretKeyForJWTTokenGenerationAndValidation123!
+      - JWT__Issuer=SDCRMS
+      - JWT__Audience=SDCRMSUsers
+    networks:
+      - sdcrms-network
+    restart: unless-stopped
+
+  # ========================
+  # Notification Service
+  # ========================
+  notificationservice:
+    build:
+      context: ./Server/NotificationService
+      dockerfile: Dockerfile
+    container_name: notificationservice
+    ports:
+      - "5002:8082"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8082
+      - ConnectionStrings__DefaultConnection=server=db;port=3306;database=NotificationDB;user=root;password=YourStrong@Password123;
+      - UseInMemoryDatabase=true
+      - JWT__Secret=YourSuperSecretKeyForJWTTokenGenerationAndValidation123!
+      - JWT__Issuer=SDCRMS
+      - JWT__Audience=SDCRMSUsers
+      - Firebase__ProjectId=fir-dcrms
+    volumes:
+      - ./Server/NotificationService/FireBase:/app/FireBase
+    networks:
+      - sdcrms-network
+    restart: unless-stopped
+
+  # ==========================
+  # MySQL Database (Optional - services using In-Memory DB)
+  # ==========================
+  # db:
+  #   image: mysql:8.0
+  #   container_name: sdcrms-mysql
+  #   restart: always
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD: YourStrong@Password123
+  #   ports:
+  #     - "3306:3306"
+  #   volumes:
+  #     - mysql-data:/var/lib/mysql
+  #     - ./Server/init.sql:/docker-entrypoint-initdb.d/init.sql
+  #   networks:
+  #     - sdcrms-network
+  #   healthcheck:
+  #     test:
+  #       [
+  #         "CMD",
+  #         "mysqladmin",
+  #         "ping",
+  #         "-h",
+  #         "localhost",
+  #         "-pYourStrong@Password123",
+  #       ]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 10
+
+  # ==========================
+  # React Frontend (Vite)
+  # ==========================
+  web-client:
+    build:
+      context: ./Client/sdcrms-web
+      dockerfile: Dockerfile
+    container_name: sdcrms-client
+    ports:
+      - "5173:80"
+    stdin_open: true
+    tty: true
+    networks:
+      - sdcrms-network
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8000/api
+    depends_on:
+      - apigateway
+
+# ==========================
+# Shared network & volumes
+# ==========================
+networks:
+  sdcrms-network:
+    name: sdcrms-network
+    driver: bridge
+
+volumes:
+  mysql-data:

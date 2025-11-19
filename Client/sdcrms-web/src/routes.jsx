@@ -1,18 +1,32 @@
+import React from "react";
 import { createBrowserRouter } from "react-router-dom";
 import App from "./App";
-import DashboardPage from "./pages/DashboardPage";
-import CarManagementPage from "./pages/CarManagementPage";
-import BookingManagementPage from "./pages/BookingManagementPage";
-import PaymentPage from "./pages/PaymentPage";
-import OwnerCarPage from "./pages/OwnerCarPage";
-import Login from "./pages/Login";
-import AdminPage from "./pages/AdminPage";
-import NotificationPage from "./pages/NotificationPage";
-import SystemMonitoringPage from "./pages/SystemMonitoringPage";
-import ReportsPage from "./pages/ReportsPage";
-import StaffManagementPage from "./pages/StaffManagementPage";
-import CompliancePolicyPage from "./pages/CompliancePolicyPage";
-import FraudDetectionPage from "./pages/FraudDetectionPage";
+import ProtectedRoute from "./components/ProtectedRoute";
+
+// Lazy load pages to avoid initial load issues
+const DashboardPage = React.lazy(() => import("./pages/DashboardPage"));
+const CarManagementPage = React.lazy(() => import("./pages/CarManagementPage"));
+const BookingManagementPage = React.lazy(() =>
+  import("./pages/BookingManagementPage")
+);
+const PaymentPage = React.lazy(() => import("./pages/PaymentPage"));
+const OwnerCarPage = React.lazy(() => import("./pages/OwnerCarPage"));
+const Login = React.lazy(() => import("./pages/Login"));
+const AdminPage = React.lazy(() => import("./pages/AdminPage"));
+const NotificationPage = React.lazy(() => import("./pages/NotificationPage"));
+const SystemMonitoringPage = React.lazy(() =>
+  import("./pages/SystemMonitoringPage")
+);
+const ReportsPage = React.lazy(() => import("./pages/ReportsPage"));
+const StaffManagementPage = React.lazy(() =>
+  import("./pages/StaffManagementPage")
+);
+const CompliancePolicyPage = React.lazy(() =>
+  import("./pages/CompliancePolicyPage")
+);
+const FraudDetectionPage = React.lazy(() =>
+  import("./pages/FraudDetectionPage")
+);
 
 export const router = createBrowserRouter([
   {
@@ -21,20 +35,122 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <DashboardPage />,
+        element: (
+          <ProtectedRoute>
+            <React.Suspense
+              fallback={
+                <div className="flex items-center justify-center h-screen">
+                  <div className="text-xl">Loading...</div>
+                </div>
+              }
+            >
+              <DashboardPage />
+            </React.Suspense>
+          </ProtectedRoute>
+        ),
       },
-      { path: "car-management", element: <CarManagementPage /> },
-      { path: "booking-management", element: <BookingManagementPage /> },
-      { path: "payment", element: <PaymentPage /> },
-      { path: "owner", element: <OwnerCarPage /> },
-      { path: "login", element: <Login /> },
-      { path: "admin-management", element: <AdminPage /> },
-      { path: "notifications", element: <NotificationPage /> },
-      { path: "system-monitoring", element: <SystemMonitoringPage /> },
-      { path: "reports", element: <ReportsPage /> },
-      { path: "staff-management", element: <StaffManagementPage /> },
-      { path: "compliance-policy", element: <CompliancePolicyPage /> },
-      { path: "fraud-detection", element: <FraudDetectionPage /> },
+      {
+        path: "login",
+        element: (
+          <React.Suspense
+            fallback={
+              <div className="flex items-center justify-center h-screen">
+                <div className="text-xl">Loading...</div>
+              </div>
+            }
+          >
+            <Login />
+          </React.Suspense>
+        ),
+      },
+      {
+        path: "car-management",
+        element: (
+          <ProtectedRoute>
+            <CarManagementPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "booking-management",
+        element: (
+          <ProtectedRoute>
+            <BookingManagementPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "payment",
+        element: (
+          <ProtectedRoute>
+            <PaymentPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "owner",
+        element: (
+          <ProtectedRoute>
+            <OwnerCarPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "admin-management",
+        element: (
+          <ProtectedRoute>
+            <AdminPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "notifications",
+        element: (
+          <ProtectedRoute>
+            <NotificationPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "system-monitoring",
+        element: (
+          <ProtectedRoute>
+            <SystemMonitoringPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "reports",
+        element: (
+          <ProtectedRoute>
+            <ReportsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "staff-management",
+        element: (
+          <ProtectedRoute>
+            <StaffManagementPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "compliance-policy",
+        element: (
+          <ProtectedRoute>
+            <CompliancePolicyPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "fraud-detection",
+        element: (
+          <ProtectedRoute>
+            <FraudDetectionPage />
+          </ProtectedRoute>
+        ),
+      },
     ],
   },
 ]);

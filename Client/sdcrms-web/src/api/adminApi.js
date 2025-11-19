@@ -1,47 +1,43 @@
-const API_BASE_URL = "http://localhost:5100/api";
+import axiosClient from "./axiosClient";
+
+const API_BASE = "/admin";
 
 // Get all admins
 export const getAllAdmins = async () => {
-  const response = await fetch(`${API_BASE_URL}/admin`);
-  if (!response.ok) throw new Error("Failed to fetch admins");
-  return response.json();
+  const response = await axiosClient.get(API_BASE);
+  return response.data;
 };
 
 // Get admin by ID
 export const getAdminById = async (id) => {
-  const response = await fetch(`${API_BASE_URL}/admin/${id}`);
-  if (!response.ok) throw new Error("Failed to fetch admin");
-  return response.json();
+  const response = await axiosClient.get(`${API_BASE}/${id}`);
+  return response.data;
 };
 
 // Get dashboard statistics
 export const getDashboardData = async () => {
-  const response = await fetch(`${API_BASE_URL}/admin/dashboard`);
-  if (!response.ok) throw new Error("Failed to fetch dashboard data");
-  return response.json();
+  const response = await axiosClient.get(`${API_BASE}/dashboard`);
+  return response.data;
 };
 
 // Create new admin
 export const createAdmin = async (adminData) => {
-  const response = await fetch(`${API_BASE_URL}/admin`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(adminData),
-  });
-  if (!response.ok) throw new Error("Failed to create admin");
-  return response.json();
+  const response = await axiosClient.post(API_BASE, adminData);
+  return response.data;
 };
 
 // Promote user to different role
 export const promoteUser = async (userId, newRole) => {
-  const response = await fetch(
-    `${API_BASE_URL}/admin/promote-user/${userId}?newRole=${newRole}`,
-    {
-      method: "POST",
-    }
+  const response = await axiosClient.post(
+    `${API_BASE}/promote-user/${userId}?newRole=${newRole}`
   );
-  if (!response.ok) throw new Error("Failed to promote user");
-  return response.json();
+  return response.data;
+};
+
+export default {
+  getAllAdmins,
+  getAdminById,
+  getDashboardData,
+  createAdmin,
+  promoteUser,
 };
