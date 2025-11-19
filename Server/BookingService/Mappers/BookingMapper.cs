@@ -14,7 +14,8 @@ namespace BookingService.Mappers
                 EndDate = booking.EndDate,
                 CheckIn = booking.CheckIn,
                 CheckOut = booking.CheckOut,
-                Status = booking.Status  
+                Status = booking.Status,
+                CustomerId = booking.CustomerId
             };
         }
     }

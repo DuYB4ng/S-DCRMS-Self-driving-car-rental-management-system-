@@ -56,6 +56,11 @@ namespace CustomerService.Repositories
             await _context.SaveChangesAsync();
             return true;
         }
+        public async Task<Customer?> GetByFirebaseUidAsync(string firebaseUid)
+        {
+            return await _context.Customers
+                .FirstOrDefaultAsync(c => c.FirebaseUid == firebaseUid);
+        }
 
     }
 }

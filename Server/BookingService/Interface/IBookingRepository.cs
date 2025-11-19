@@ -12,7 +12,7 @@ namespace BookingService.Interfaces
     {
         Task<List<Booking>> getAllAsync();
         Task<Booking?> getByIdAsync(int id);
-        Task<Booking> createAsync(CreateBookingDto dto);
+        Task<Booking> createAsync(CreateBookingDto dto, int customerId);
         Task<Booking?> updateAsync(int id, UpdateBookingDto dto);
         Task<bool> deleteAsync(int id);
     }

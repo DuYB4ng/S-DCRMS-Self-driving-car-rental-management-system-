@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using CustomerService.Models;
 using CustomerService.Repositories;
 using CustomerService.Interfaces;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.

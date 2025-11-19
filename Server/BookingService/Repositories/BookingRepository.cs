@@ -27,9 +27,10 @@ namespace BookingService.Repositories
 		{
 			return _context.Bookings.FindAsync(id).AsTask();
 		}
-		public async Task<Booking> createAsync(CreateBookingDto bookingDto)
+		public async Task<Booking> createAsync(CreateBookingDto bookingDto, int customerId)
 		{
 			var bookingModel = bookingDto.ToCreateBookingDto();
+			bookingModel.CustomerId = customerId;
 			await _context.Bookings.AddAsync(bookingModel);
 			await _context.SaveChangesAsync();
 			return bookingModel;
