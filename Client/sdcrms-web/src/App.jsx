@@ -6,17 +6,21 @@ function App() {
     <div>
       {/* Thanh điều hướng đơn giản */}
       <nav className="bg-gray-800 text-white p-4 flex gap-4">
-        <Link to="/" className="hover:underline">
-          Trang chủ
+        <Link to="/booking" className="hover:underline">
+          Booking
         </Link>
         <Link to="/owner" className="hover:underline">
           Quản lý chủ xe
+        </Link>
+        <Link to="/login" className="hover:underline ml-auto">
+          Đăng nhập
         </Link>
       </nav>
 
       {/* Khu vực render nội dung page */}
       <main className="p-6">
-        <Outlet />  {/* ✅ Route con (OwnerCarPage) hiển thị tại đây */}
+        {/* Các route con sẽ hiển thị ở đây */}
+        <Outlet />
       </main>
     </div>
   );

@@ -9,20 +9,20 @@ namespace BookingService.Mappers
         {
             return new Review
             {
-                ReviewID = reviewModel.ReviewID,
                 Rating = reviewModel.Rating,
                 Comment = reviewModel.Comment,
-                ReviewDate = reviewModel.ReviewDate
+                ReviewDate = reviewModel.ReviewDate,
+                BookingID = reviewModel.BookingID
             };
         }
       public static Review ToReviewModel(this CreateReviewRequestDto reviewDto)
         {
             return new Review
             {
-                ReviewID = reviewDto.ReviewID,
                 Rating = reviewDto.Rating,
                 Comment = reviewDto.Comment,
-                ReviewDate = reviewDto.ReviewDate
+                ReviewDate = reviewDto.ReviewDate,
+                BookingID = reviewDto.BookingID
             };
         }
 
