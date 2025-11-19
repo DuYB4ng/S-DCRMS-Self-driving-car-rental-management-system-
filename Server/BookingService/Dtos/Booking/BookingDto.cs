@@ -10,5 +10,6 @@ namespace BookingService.Dtos.Booking
 		public bool CheckIn { get; set; }
 		public bool CheckOut { get; set; }
 		public string Status { get; set; } = string.Empty;
+		public int CustomerId { get; set; }
 	}
 }

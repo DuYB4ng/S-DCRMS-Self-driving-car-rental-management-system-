@@ -3,6 +3,7 @@ using BookingService.Mappers;
 using BookingService.Dtos.Booking;
 using Microsoft.EntityFrameworkCore;
 using BookingService.Interfaces;
+using BookingService.Services;
 
 namespace BookingService.Controllers
 {
@@ -12,10 +13,12 @@ namespace BookingService.Controllers
     {
         private readonly AppDbContext _context;
         private readonly IBookingRepository _bookingRepo;
-        public BookingController(AppDbContext context, IBookingRepository bookingRepo)
+        private readonly CustomerClient _customerClient;
+        public BookingController(AppDbContext context, IBookingRepository bookingRepo, CustomerClient customerClient)
         {
             _context = context;
             _bookingRepo = bookingRepo;
+            _customerClient = customerClient;
         }
 
         [HttpGet]
@@ -40,8 +43,25 @@ namespace BookingService.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateBookingDto bookingDto)
         {
-            var bookingModel = await _bookingRepo.createAsync(bookingDto);
-            return CreatedAtAction(nameof(GetById), new { id = bookingModel.BookingID }, bookingModel);
+            // 1. Lấy firebaseUid từ claims
+            var firebaseUid =
+                User.FindFirst("firebaseUid")?.Value ??
+                User.FindFirst("user_id")?.Value; // tùy bạn map claim nào
+
+            if (string.IsNullOrEmpty(firebaseUid))
+                return Unauthorized(new { message = "Missing firebaseUid in token" });
+
+            // 2. Gọi CustomerService lấy thông tin customer
+            var customer = await _customerClient.GetByFirebaseUidAsync(firebaseUid);
+            if (customer == null)
+                return BadRequest(new { message = "Customer profile not found" });
+
+            // 3. Truyền customerId cho BookingRepo lưu vào DB
+            var bookingModel = await _bookingRepo.createAsync(bookingDto, customer.CustomerId);
+
+            return CreatedAtAction(nameof(GetById),
+                new { id = bookingModel.BookingID },
+                bookingModel.ToBookingDto());
         }
 
         [HttpPut]

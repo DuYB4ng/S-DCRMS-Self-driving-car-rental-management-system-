@@ -14,11 +14,11 @@ services:
     depends_on:
       - ownercarservice
       - kafka
-
       - staffservice 
-
       - bookingservice
       - customerservice  
+      - userservice  
+
 
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
@@ -27,6 +27,7 @@ services:
       - STAFF_SERVICE_URL=http://staffservice:8084
       - BOOKING_SERVICE_URL=http://bookingservice:8083
       - CUSTOMER_SERVICE_URL=http://customerservice:8085
+      - USER_SERVICE_URL=http://customerservice:8086
 
       - KAFKA__BootstrapServers=kafka:9092
       - KAFKA__Topic=car_location
@@ -49,6 +50,24 @@ services:
       networks:
         - sdcrms-network
       restart: on-failure
+  # ==========================
+  # User Microservice (SQL Server)
+  # ==========================
+  userservice:
+    build:
+      context: ./Server/UserService
+      dockerfile: Dockerfile
+    container_name: userservice
+    depends_on:
+      - db
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=server=db;port=3306;database=UserDB;user=root;password=YourStrong@Password123;
+    ports:
+      - "8086:8086"
+    networks:            
+      - sdcrms-network
+
   # ==========================
   # OwnerCar Microservice (Producer)
   # ==========================

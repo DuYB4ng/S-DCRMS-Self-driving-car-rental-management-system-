@@ -5,7 +5,6 @@ COPY *.csproj ./
 RUN dotnet restore
 
 COPY . ./
-COPY ocelot.json ./ocelot.json
 
 RUN dotnet publish -c Release -o /app/publish
 
@@ -14,9 +13,9 @@ WORKDIR /app
 
 COPY --from=build /app/publish .
 
-ENV ASPNETCORE_URLS=http://+:8090
+ENV ASPNETCORE_URLS=http://+:8086
 ENV ASPNETCORE_ENVIRONMENT=Development
 
-EXPOSE 8090
+EXPOSE 8086
 
 ENTRYPOINT [ "dotnet","UserService.dll" ]

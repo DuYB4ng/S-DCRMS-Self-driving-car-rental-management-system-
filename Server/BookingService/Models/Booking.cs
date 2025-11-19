@@ -10,5 +10,6 @@ namespace BookingService.Models
         public List<Review> Reviews { get; set; } = new List<Review>();
         public Payment? Payment { get; set; }
         public string Status { get; set; } = "Pending";
+        public int CustomerId { get; set; }
     }
 }

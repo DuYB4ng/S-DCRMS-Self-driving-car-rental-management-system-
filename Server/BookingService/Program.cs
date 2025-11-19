@@ -22,6 +22,9 @@ builder.Services.AddScoped<IBookingRepository, BookingRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
 
+//Đăng ký HttpClient
+builder.Services.AddHttpClient<CustomerClient>();
+
 // Đăng kí VNPay
 builder.Services.AddScoped<VNPayService>();
 

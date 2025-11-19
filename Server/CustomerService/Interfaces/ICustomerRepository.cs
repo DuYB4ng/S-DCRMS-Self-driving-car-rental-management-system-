@@ -14,5 +14,6 @@ namespace CustomerService.Interfaces
         Task<Customer> createAsync(CreateCustomerDto customerDto);
         Task<Customer?> updateAsync(int id, UpdateCustomerDto dto);
         Task<bool> deleteAsync(int id);
+        Task<Customer?> GetByFirebaseUidAsync(string firebaseUid);
     }
 }
