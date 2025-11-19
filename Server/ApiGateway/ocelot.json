@@ -4,7 +4,7 @@
       "DownstreamPathTemplate": "/api/auth/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "authservice", "Port": 8083 }
+        { "Host": "authservice", "Port": 8089 }
       ],
       "UpstreamPathTemplate": "/api/auth/{everything}",
       "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
