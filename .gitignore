@@ -59,3 +59,4 @@ mssql-data/
 data/nifi_registry/database/*.mv.db
 data/nifi_registry/database/
 nifi_data/conf/nifi.properties
+Server/AuthService/firebase-adminsdk.json
