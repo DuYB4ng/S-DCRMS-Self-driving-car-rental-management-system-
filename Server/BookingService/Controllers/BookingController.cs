@@ -4,6 +4,7 @@ using BookingService.Dtos.Booking;
 using Microsoft.EntityFrameworkCore;
 using BookingService.Interfaces;
 using BookingService.Services;
+using Microsoft.AspNetCore.Authorization;
 
 namespace BookingService.Controllers
 {
@@ -41,28 +42,36 @@ namespace BookingService.Controllers
         }
 
         [HttpPost]
+        [AllowAnonymous]
         public async Task<IActionResult> Create([FromBody] CreateBookingDto bookingDto)
         {
-            // 1. Lấy firebaseUid từ claims
+            int customerId;
+
             var firebaseUid =
                 User.FindFirst("firebaseUid")?.Value ??
-                User.FindFirst("user_id")?.Value; // tùy bạn map claim nào
+                User.FindFirst("user_id")?.Value;
 
             if (string.IsNullOrEmpty(firebaseUid))
-                return Unauthorized(new { message = "Missing firebaseUid in token" });
+            {
+                // DEV MODE
+                customerId = 1;
+            }
+            else
+            {
+                var customer = await _customerClient.GetByFirebaseUidAsync(firebaseUid);
+                if (customer == null)
+                    return BadRequest(new { message = "Customer profile not found" });
 
-            // 2. Gọi CustomerService lấy thông tin customer
-            var customer = await _customerClient.GetByFirebaseUidAsync(firebaseUid);
-            if (customer == null)
-                return BadRequest(new { message = "Customer profile not found" });
+                customerId = customer.CustomerId;
+            }
 
-            // 3. Truyền customerId cho BookingRepo lưu vào DB
-            var bookingModel = await _bookingRepo.createAsync(bookingDto, customer.CustomerId);
+            var bookingModel = await _bookingRepo.createAsync(bookingDto, customerId);
 
             return CreatedAtAction(nameof(GetById),
                 new { id = bookingModel.BookingID },
                 bookingModel.ToBookingDto());
         }
+
 
         [HttpPut]
         [Route("{id}")]
