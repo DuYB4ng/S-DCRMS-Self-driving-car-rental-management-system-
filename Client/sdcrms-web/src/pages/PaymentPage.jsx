@@ -1,6 +1,21 @@
 import { useEffect, useState } from "react";
 import { getAllPayments } from "../api/paymentApi";
 
+const handlePayWithVnPay = async () => {
+  try {
+    const res = await createVnPayPayment({
+      bookingID: selectedBookingId,
+      amount: totalAmount,
+    });
+
+    // redirect sang trang VNPay sandbox
+    window.location.href = res.paymentUrl;
+  } catch (err) {
+    console.error(err);
+    alert("Tạo giao dịch VNPay thất bại");
+  }
+};
+
 export default function PaymentPage() {
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(false);
