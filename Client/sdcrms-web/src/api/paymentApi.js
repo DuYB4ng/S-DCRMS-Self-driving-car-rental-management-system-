@@ -12,3 +12,9 @@ export const createPayment = async (data) => {
   const res = await api.post("/api/payment", data);
   return res.data;
 };
+
+// src/api/paymentApi.js
+export const createVnPayPayment = async (data) => {
+  const res = await api.post("/api/payment/create-vnpay", data);
+  return res.data; // { paymentId, paymentUrl, status }
+};
