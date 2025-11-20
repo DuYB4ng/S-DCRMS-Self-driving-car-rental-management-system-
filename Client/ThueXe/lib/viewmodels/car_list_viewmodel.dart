@@ -19,7 +19,7 @@ class CarListViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final res = await api.get("/car");   // ✔ ĐÚNG API
+      final res = await api.get("/Car");   // ✔ ĐÚNG API
       cars = res.data;
     } catch (e) {
       errorMessage = "Không thể tải danh sách xe";

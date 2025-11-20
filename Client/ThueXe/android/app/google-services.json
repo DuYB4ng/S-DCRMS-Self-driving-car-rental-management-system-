@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "491044052539",
+    "project_id": "sdcrms-49dfb",
+    "storage_bucket": "sdcrms-49dfb.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:491044052539:android:b0ce625e8535ef673b861e",
+        "android_client_info": {
+          "package_name": "com.example.thuexe"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "491044052539-1qsf4c4in9t9r7u2aanvouk5pthvgbl2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBfXVMCBd5DWlKtlI5k8ACIEQkp63_WsrI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "491044052539-1qsf4c4in9t9r7u2aanvouk5pthvgbl2.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

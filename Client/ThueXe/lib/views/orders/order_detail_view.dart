@@ -49,7 +49,7 @@ class OrderDetailView extends StatelessWidget {
           _info("Trạng thái", order["status"]),
           _info("Check-in", order["checkIn"].toString()),
           _info("Check-out", order["checkOut"].toString()),
-
+          _info("Reviews", order["reviews"].toString()),
           SizedBox(height: 20),
           ElevatedButton(
             onPressed: () {},
