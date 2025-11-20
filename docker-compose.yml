@@ -106,6 +106,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8083
       - ConnectionStrings__DefaultConnection=Server=sqlserver-booking;Database=BookingService;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;
+      - Services__CustomerService=http://customerservice:8085
     depends_on:
       sqlserver-booking:
         condition: service_started

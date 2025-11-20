@@ -21,31 +21,36 @@ namespace BookingService.Services
         // Tạo URL thanh toán VNPay cho 1 payment
         public string CreatePaymentUrl(Payment payment, HttpContext httpContext)
         {
-            var vnp_Url = _configuration["VNPay:PaymentUrl"];
-            var vnp_Returnurl = _configuration["VNPay:ReturnUrl"];
-            var vnp_TmnCode = _configuration["VNPay:TmnCode"];
-            var vnp_HashSecret = _configuration["VNPay:HashSecret"];
+            var vnp_Url        = _configuration["VNPay:PaymentUrl"]!;
+            var vnp_Returnurl  = _configuration["VNPay:ReturnUrl"]!;
+            var vnp_TmnCode    = _configuration["VNPay:TmnCode"]!;
+            var vnp_HashSecret = _configuration["VNPay:HashSecret"]!;
 
-            var vnp_Params = new SortedList<string, string>();
+            // Giờ Việt Nam
+            var nowVN = DateTime.UtcNow.AddHours(7);
 
-            vnp_Params["vnp_Version"] = "2.1.0";
-            vnp_Params["vnp_Command"] = "pay";
-            vnp_Params["vnp_TmnCode"] = vnp_TmnCode;
-            vnp_Params["vnp_Amount"] = ((long)(payment.Amount * 100)).ToString(); // VNPay yêu cầu *100
-            vnp_Params["vnp_CreateDate"] = DateTime.Now.ToString("yyyyMMddHHmmss");
-            vnp_Params["vnp_CurrCode"] = "VND";
-            vnp_Params["vnp_IpAddr"] = GetIpAddress(httpContext);
-            vnp_Params["vnp_Locale"] = "vn";
-            vnp_Params["vnp_OrderInfo"] = $"Thanh toan booking {payment.BookingID}";
-            vnp_Params["vnp_OrderType"] = "other";
-            vnp_Params["vnp_ReturnUrl"] = vnp_Returnurl;
-            vnp_Params["vnp_TxnRef"] = payment.PaymentID.ToString();
-            vnp_Params["vnp_ExpireDate"] = DateTime.Now.AddMinutes(15).ToString("yyyyMMddHHmmss");
+            var vnp_Params = new SortedList<string, string>
+            {
+                ["vnp_Version"]    = "2.1.0",
+                ["vnp_Command"]    = "pay",
+                ["vnp_TmnCode"]    = vnp_TmnCode,
+                ["vnp_Amount"]     = ((long)(payment.Amount * 100)).ToString(),
+                ["vnp_CreateDate"] = nowVN.ToString("yyyyMMddHHmmss"),
+                ["vnp_CurrCode"]   = "VND",
+                ["vnp_IpAddr"]     = GetIpAddress(httpContext),
+                ["vnp_Locale"]     = "vn",
+                ["vnp_OrderInfo"]  = $"Thanh toan booking {payment.BookingID}",
+                ["vnp_OrderType"]  = "other",
+                ["vnp_ReturnUrl"]  = vnp_Returnurl,
+                ["vnp_TxnRef"]     = payment.PaymentID.ToString(),
+                ["vnp_ExpireDate"] = nowVN.AddMinutes(15).ToString("yyyyMMddHHmmss")
+            };
 
             var queryString = BuildQueryString(vnp_Params, vnp_HashSecret);
-
             return $"{vnp_Url}?{queryString}";
         }
+
+
 
         // Xử lý & xác thực IPN
         public VNPayIpnResult ValidateIpn(IQueryCollection query)
@@ -111,13 +116,29 @@ namespace BookingService.Services
             return ip;
         }
 
-        private static string BuildQueryString(SortedList<string, string> vnpParams, string hashSecret)
+        private static string BuildQueryString(
+            SortedList<string, string> vnpParams,
+            string hashSecret)
         {
-            var rawData = string.Join("&", vnpParams.Select(kvp => kvp.Key + "=" + kvp.Value));
-            var secureHash = HmacSHA512(hashSecret, rawData);
+            // 1. Chuỗi dùng để ký: key raw, value URL-encode
+            var hashData = string.Join("&",
+                vnpParams
+                    .Where(p => !string.IsNullOrEmpty(p.Value))
+                    .Select(kvp =>
+                        kvp.Key + "=" + Uri.EscapeDataString(kvp.Value)
+                    )
+            );
 
+            var secureHash = HmacSHA512(hashSecret, hashData);
+
+            // 2. Chuỗi query thật gửi đi: key + value đều URL-encode
             var query = string.Join("&",
-                vnpParams.Select(kvp => Uri.EscapeDataString(kvp.Key) + "=" + Uri.EscapeDataString(kvp.Value)));
+                vnpParams
+                    .Where(p => !string.IsNullOrEmpty(p.Value))
+                    .Select(kvp =>
+                        Uri.EscapeDataString(kvp.Key) + "=" + Uri.EscapeDataString(kvp.Value)
+                    )
+            );
 
             return $"{query}&vnp_SecureHash={secureHash}";
         }
