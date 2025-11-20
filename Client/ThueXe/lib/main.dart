@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:thuexe/viewmodels/car_list_viewmodel.dart';
+import 'package:thuexe/viewmodels/profile_viewmodel.dart';
 import 'viewmodels/login_viewmodel.dart';
 import 'viewmodels/register_viewmodel.dart';
 import 'viewmodels/home_viewmodel.dart';
@@ -23,6 +24,7 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => OrdersViewModel()),
         ChangeNotifierProvider(create: (_) => OrderDetailViewModel()),
         ChangeNotifierProvider(create: (_) => CarListViewModel()),
+        ChangeNotifierProvider(create: (_) => ProfileViewModel()),
 
       ],
       child: const MyApp(),
