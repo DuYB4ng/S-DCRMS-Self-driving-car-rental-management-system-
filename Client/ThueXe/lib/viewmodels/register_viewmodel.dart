@@ -7,19 +7,20 @@ class RegisterViewModel extends ChangeNotifier {
   bool isLoading = false;
   String? errorMessage;
 
-  Future<void> register(String email, String phone, String pass, String rePass) async {
+  Future<bool> register(String email, String phone, String pass, String rePass) async {
     errorMessage = null;
 
+    // Validate
     if (email.isEmpty || phone.isEmpty || pass.isEmpty || rePass.isEmpty) {
       errorMessage = "Vui lòng nhập đầy đủ thông tin";
       notifyListeners();
-      return;
+      return false;
     }
 
     if (pass != rePass) {
       errorMessage = "Mật khẩu không trùng khớp";
       notifyListeners();
-      return;
+      return false;
     }
 
     isLoading = true;
@@ -32,10 +33,14 @@ class RegisterViewModel extends ChangeNotifier {
     );
 
     isLoading = false;
+
     if (!success) {
-      errorMessage = "Đăng ký thất bại!";
+      errorMessage = "Đăng ký thất bại! Tài khoản có thể đã tồn tại.";
+      notifyListeners();
+      return false;
     }
 
     notifyListeners();
+    return true;
   }
 }

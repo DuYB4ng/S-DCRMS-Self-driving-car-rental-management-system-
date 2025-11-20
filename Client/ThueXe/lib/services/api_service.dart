@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ApiService {
   final Dio _dio = Dio(
@@ -19,11 +20,37 @@ class ApiService {
     );
   }
 
-  Future<Response> post(String path, Map<String, dynamic> data) async {
-    return await _dio.post(path, data: data);
+  /// Lấy Firebase ID Token
+  Future<String?> _getFirebaseToken() async {
+    return await FirebaseAuth.instance.currentUser?.getIdToken();
   }
 
+  /// GET request có token
   Future<Response> get(String path) async {
-    return await _dio.get(path);
+    final token = await _getFirebaseToken();
+
+    return await _dio.get(
+      path,
+      options: Options(
+        headers: {
+          "Authorization": "Bearer $token",
+        },
+      ),
+    );
+  }
+
+  /// POST request có token
+  Future<Response> post(String path, Map<String, dynamic> data) async {
+    final token = await _getFirebaseToken();
+
+    return await _dio.post(
+      path,
+      data: data,
+      options: Options(
+        headers: {
+          "Authorization": "Bearer $token",
+        },
+      ),
+    );
   }
 }
