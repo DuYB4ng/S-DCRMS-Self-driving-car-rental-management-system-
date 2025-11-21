@@ -8,18 +8,57 @@ class CarListViewModel extends ChangeNotifier {
   String? errorMessage;
 
   List<dynamic> cars = [];
-  bool loadedOnce = false;
 
-  Future<void> loadCars() async {
-    if (loadedOnce) return; // tránh gọi lại
-    loadedOnce = true;
-
+  /// ============================
+  ///  SEARCH CARS THEO YÊU CẦU
+  /// ============================
+  Future<void> searchCars({
+    required String city,
+    required DateTime receiveDate,
+    required TimeOfDay receiveTime,
+    required DateTime returnDate,
+    required TimeOfDay returnTime,
+  }) async {
     isLoading = true;
     errorMessage = null;
     notifyListeners();
 
     try {
-      final res = await api.get("/Car");   // ✔ ĐÚNG API
+      // 🔥 Gọi API lấy toàn bộ xe
+      final res = await api.get("/Car");
+      final List<dynamic> allCars = res.data;
+
+      // 🔥 Lọc thành phố (location)
+      cars = allCars.where((car) {
+        final carCity = car["location"]?.toString().trim().toLowerCase();
+        final selectedCity = city.trim().toLowerCase();
+        return carCity == selectedCity;
+      }).toList();
+
+      // 🔥 (Tùy chọn) Lọc trạng thái xe còn hoạt động
+      cars = cars.where((car) => car["isAvailable"] == true).toList();
+
+      // Bạn muốn lọc thêm theo ngày nhận / trả?
+      // Vì backend chưa có logic booking, flutter KHÔNG biết xe có bị trùng lịch
+      // nên mình chỉ lọc theo thành phố + isAvailable là đủ
+
+    } catch (e) {
+      errorMessage = "Không thể tải danh sách xe";
+    }
+
+    isLoading = false;
+    notifyListeners();
+  }
+
+  /// ============================
+  ///  LẤY TẤT CẢ XE (nếu cần)
+  /// ============================
+  Future<void> loadCars() async {
+    isLoading = true;
+    notifyListeners();
+
+    try {
+      final res = await api.get("/Car");
       cars = res.data;
     } catch (e) {
       errorMessage = "Không thể tải danh sách xe";

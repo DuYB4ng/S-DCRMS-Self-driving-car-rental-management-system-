@@ -25,12 +25,18 @@ class ApiService {
     return await FirebaseAuth.instance.currentUser?.getIdToken();
   }
 
-  /// GET request có token
-  Future<Response> get(String path) async {
+  /// ======================
+  /// GET (hỗ trợ queryParameters)
+  /// ======================
+  Future<Response> get(
+      String path, {
+        Map<String, dynamic>? queryParameters,
+      }) async {
     final token = await _getFirebaseToken();
 
     return await _dio.get(
       path,
+      queryParameters: queryParameters,
       options: Options(
         headers: {
           "Authorization": "Bearer $token",
@@ -39,13 +45,20 @@ class ApiService {
     );
   }
 
-  /// POST request có token
-  Future<Response> post(String path, Map<String, dynamic> data) async {
+  /// ======================
+  /// POST
+  /// ======================
+  Future<Response> post(
+      String path,
+      Map<String, dynamic> data, {
+        Map<String, dynamic>? queryParameters,
+      }) async {
     final token = await _getFirebaseToken();
 
     return await _dio.post(
       path,
       data: data,
+      queryParameters: queryParameters,
       options: Options(
         headers: {
           "Authorization": "Bearer $token",
