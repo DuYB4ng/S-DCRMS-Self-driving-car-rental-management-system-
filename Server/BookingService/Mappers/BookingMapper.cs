@@ -15,7 +15,8 @@ namespace BookingService.Mappers
                 CheckIn = booking.CheckIn,
                 CheckOut = booking.CheckOut,
                 Status = booking.Status,
-                CustomerId = booking.CustomerId
+                CustomerId = booking.CustomerId,
+                CarId = booking.CarId  
             };
         }
     }
@@ -30,7 +31,8 @@ namespace BookingService.Mappers
                 EndDate = bookingDto.EndDate,
                 CheckIn = false,
                 CheckOut = false,
-                Status = "Pending"
+                Status = "Pending",
+                CarId     = bookingDto.CarId 
             };
         }
     }
