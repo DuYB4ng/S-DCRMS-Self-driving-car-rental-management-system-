@@ -7,5 +7,6 @@ namespace BookingService.Dtos.Booking
         public bool CheckIn { get; set; }
         public bool CheckOut { get; set; }
         public string Status { get; set; }
+        public int CarId { get; set; }
     }
 }
