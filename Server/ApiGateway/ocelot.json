@@ -42,6 +42,24 @@
       }
     },
     {
+      "DownstreamPathTemplate": "/api/car/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "ownercarservice", "Port": 8081 }
+      ],
+      "UpstreamPathTemplate": "/api/car/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/maintenance/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "ownercarservice", "Port": 8081 }
+      ],
+      "UpstreamPathTemplate": "/api/maintenance/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
+    },
+    {
       "DownstreamPathTemplate": "/api/booking/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
