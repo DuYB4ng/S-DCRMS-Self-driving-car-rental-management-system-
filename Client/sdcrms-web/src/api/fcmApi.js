@@ -1,4 +1,4 @@
-import axiosClient from "./axiosClient";
+import axios from "axios";
 
 // Register FCM token
 export const registerFCMToken = async (token, deviceType = "Web") => {
