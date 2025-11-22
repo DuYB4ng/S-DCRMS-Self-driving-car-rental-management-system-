@@ -84,11 +84,15 @@ services:
       - ConnectionStrings__DefaultConnection=server=db;port=3306;database=OwnerCarDB;user=root;password=YourStrong@Password123;
       - KAFKA__BootstrapServers=kafka:9092
       - KAFKA__Topic=car_location
+      - Redis__ConnectionString=redis:6379
+      - Redis__DefaultTTLSeconds=300
     depends_on:
       db:
         condition: service_healthy
       kafka:
         condition: service_started
+      redis:
+        condition: service_healthy
     networks:
       - sdcrms-network
 
@@ -345,6 +349,21 @@ services:
       - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=my-super-token
     volumes:
       - ./influx_data:/var/lib/influxdb2
+    networks:
+      - sdcrms-network
+  # ==========================
+  # Redis(cache)
+  # ==========================     
+  redis:
+    image: redis:7-alpine
+    container_name: redis-sdcrms
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
     networks:
       - sdcrms-network
 

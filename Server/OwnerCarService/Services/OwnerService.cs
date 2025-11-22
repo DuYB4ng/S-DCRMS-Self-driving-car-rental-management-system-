@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using OwnerCarService.Dtos.Car;
 using AutoMapper;
 using OwnerCarService.Dtos.OwnerCar;
+using Redis.Shared.Attributes;
 
 namespace OwnerCarService.Services
 {
@@ -13,11 +14,17 @@ namespace OwnerCarService.Services
         Task<CarDTO?> OwnerCarCapNhatCarAsync(int carId, UpdateCarDTO carDto);
         Task<bool> DoiStateCarAsync(int carId);
         Task<bool> XoaCarChoOwnerAsync(int carId);
+
+        [Cache(300)]
         Task<IEnumerable<OwnerCarDTO>> LayTatCaOwnerCarAsync();
+        [Cache(300)]
         Task<OwnerCarDTO?> LayOwnerCarTheoIdAsync(int ownerCarId);
+        [Cache(300)]
         Task<IEnumerable<CarDTO>> LayTatCaXeCuaOwnerCarIdAsync(int ownerCarId);
         Task<OwnerCarDTO?> ThemOwnerCarAsync(CreateOwnerCarDTO ownerCarDto);
+        [Cache(300)]
         Task<CarDTO?> LayXeTheoIdAsync(int carId);
+        [Cache(300)]
         Task<MaintenanceDTO?> LayMaintenanceTheoIdAsync(int maintenanceId);
         Task<MaintenanceDTO> ThemMaintenanceChoXeAsync(int carId, CreateMaintenanceDTO maintenanceDto);
         Task<OwnerCarDTO?> CapNhatOwnerCarAsync(int ownerId, UpdateOwnerCarDTO ownerCarDto);
