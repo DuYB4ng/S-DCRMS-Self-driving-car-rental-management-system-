@@ -9,5 +9,6 @@
         public DateTime EndDate { get; set; }
         public bool CheckIn { get; set; }
         public bool CheckOut { get; set; }
+        public string? Status { get; set; }
     }
 }

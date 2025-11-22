@@ -42,8 +42,7 @@ namespace SDCRMS.Authorization
 
                 options.AddPolicy(
                     AuthorizationPolicies.AuthenticatedUser,
-                    policy =>
-                        policy.RequireRole(RoleNames.Admin, RoleNames.Staff, RoleNames.Customer)
+                    policy => policy.RequireAuthenticatedUser()
                 );
             });
 
@@ -51,4 +50,3 @@ namespace SDCRMS.Authorization
         }
     }
 }
-

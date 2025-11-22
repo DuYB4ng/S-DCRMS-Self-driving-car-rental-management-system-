@@ -1,5 +1,7 @@
 using System.Security.Claims;
 using System.Text;
+using FirebaseAdmin;
+using Google.Apis.Auth.OAuth2;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -45,32 +47,46 @@ else
     );
 }
 
-// ========== JWT CONFIGURATION ==========
-var jwtSettings = builder.Configuration.GetSection("JwtSettings");
-var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Secret"]!));
-
+// ========== FIREBASE JWT CONFIGURATION ==========
 builder
-    .Services.AddAuthentication(x =>
+    .Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
     {
-        x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-        x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-    })
-    .AddJwtBearer(x =>
-    {
-        x.RequireHttpsMetadata = false;
-        x.TokenValidationParameters = new TokenValidationParameters
+        options.Authority = "https://securetoken.google.com/fir-dcrms"; // projectId của bạn
+        options.TokenValidationParameters = new TokenValidationParameters
         {
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = signingKey,
             ValidateIssuer = true,
-            ValidIssuer = jwtSettings["Issuer"],
+            ValidIssuer = "https://securetoken.google.com/fir-dcrms",
             ValidateAudience = true,
-            ValidAudience = jwtSettings["Audience"],
+            ValidAudience = "fir-dcrms",
             ValidateLifetime = true,
-            ClockSkew = TimeSpan.Zero,
-            RoleClaimType = ClaimTypes.Role,
+        };
+        options.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = async context =>
+            {
+                var token =
+                    context.SecurityToken as System.IdentityModel.Tokens.Jwt.JwtSecurityToken;
+                try
+                {
+                    var firebaseToken =
+                        await FirebaseAdmin.Auth.FirebaseAuth.DefaultInstance.VerifyIdTokenAsync(
+                            token.RawData
+                        );
+                    // Có thể add thêm claim vào context.Principal nếu muốn
+                }
+                catch
+                {
+                    context.Fail("Invalid Firebase token");
+                }
+            },
         };
     });
+
+// Khởi tạo FirebaseApp (chỉ cần chạy 1 lần ở mỗi service)
+FirebaseApp.Create(
+    new AppOptions() { Credential = GoogleCredential.FromFile("FireBase/FireBaseToken.json") }
+);
 
 builder.Services.AddRoleBasedAuthorization();
 

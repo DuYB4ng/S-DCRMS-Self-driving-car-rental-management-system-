@@ -14,4 +14,3 @@ namespace SDCRMS.Models
         public string UrlImage { get; set; } = string.Empty;
     }
 }
-
