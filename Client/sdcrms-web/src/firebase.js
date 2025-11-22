@@ -1,33 +1,28 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { getMessaging, getToken, onMessage } from "firebase/messaging";
+import { getMessaging } from "firebase/messaging";
+import { getAnalytics, isSupported } from "firebase/analytics";
 
-// Firebase configuration
-// TODO: Replace with your actual Firebase config
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  apiKey: "AIzaSyBZ8qElzq9wZbDnfK0wljm3qfTPce53WUw",
+  authDomain: "fir-dcrms.firebaseapp.com",
+  projectId: "fir-dcrms",
+  storageBucket: "fir-dcrms.firebasestorage.app",
+  messagingSenderId: "958372819801",
+  appId: "1:958372819801:web:708e1f07eefa4a4f595248",
+  measurementId: "G-X316WX1DST"
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const messaging = getMessaging(app);
 
-// Initialize Firebase Authentication
-export const auth = getAuth(app);
-
-// Initialize Firebase Cloud Messaging (only in browser environment)
-let messaging = null;
-if (typeof window !== "undefined" && "serviceWorker" in navigator) {
-  try {
-    messaging = getMessaging(app);
-  } catch (error) {
-    console.warn("Firebase Messaging not supported:", error);
-  }
+// Analytics chỉ nên khởi tạo nếu chạy trên trình duyệt
+let analytics = null;
+if (typeof window !== "undefined") {
+  isSupported().then((supported) => {
+    if (supported) analytics = getAnalytics(app);
+  });
 }
 
-export { messaging, getToken, onMessage };
-export default app;
+export { app, auth, messaging, analytics };

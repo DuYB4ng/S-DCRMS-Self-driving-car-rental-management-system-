@@ -18,52 +18,6 @@ const Header = ({ onMenuClick }) => {
   const userMenuRef = useRef(null);
   const navigate = useNavigate();
 
-  // Mock notifications data
-  useEffect(() => {
-    const mockNotifications = [
-      {
-        notificationID: 1,
-        title: "🎉 Chào mừng bạn đến với SDCRMS",
-        message: "Chúc mừng bạn đã đăng ký tài khoản thành công!",
-        createdAt: new Date().toISOString(),
-        read: false,
-        type: "info",
-      },
-      {
-        notificationID: 2,
-        title: "🚗 Xe mới có sẵn",
-        message: "VinFast VF9 2023 vừa được thêm vào hệ thống.",
-        createdAt: new Date(Date.now() - 3600000).toISOString(),
-        read: false,
-        type: "success",
-      },
-      {
-        notificationID: 3,
-        title: "✅ Đặt xe thành công",
-        message: "Booking #BK001 của bạn đã được xác nhận.",
-        createdAt: new Date(Date.now() - 7200000).toISOString(),
-        read: true,
-        type: "success",
-      },
-      {
-        notificationID: 4,
-        title: "💳 Thanh toán thành công",
-        message: "Bạn đã thanh toán 1.500.000đ cho booking #BK002.",
-        createdAt: new Date(Date.now() - 86400000).toISOString(),
-        read: true,
-        type: "success",
-      },
-      {
-        notificationID: 5,
-        title: "⚠️ Nhắc nhở bảo trì",
-        message: "Xe Toyota Vios (51A-12345) cần bảo trì định kỳ.",
-        createdAt: new Date(Date.now() - 172800000).toISOString(),
-        read: false,
-        type: "warning",
-      },
-    ];
-    setNotifications(mockNotifications);
-  }, []);
 
   // Close dropdown when clicking outside
   useEffect(() => {

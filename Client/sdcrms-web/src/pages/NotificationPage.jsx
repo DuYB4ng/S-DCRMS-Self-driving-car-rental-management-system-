@@ -17,6 +17,7 @@ import {
   markAsRead,
   deleteNotification,
 } from "../api/notificationApi";
+import { useNotifications } from "../hooks/useNotifications";
 
 const NotificationPage = () => {
   const [notifications, setNotifications] = useState([]);
@@ -34,6 +35,9 @@ const NotificationPage = () => {
   });
 
   const filters = ["Tất cả", "Chưa đọc", "Đã đọc"];
+
+  // Lấy notification từ FCM
+  const { notification } = useNotifications();
 
   // Load all notifications
   const loadNotifications = async () => {
@@ -66,6 +70,14 @@ const NotificationPage = () => {
   useEffect(() => {
     loadNotifications();
   }, []);
+
+  // Khi nhận được FCM push thì tự động gọi lại API để cập nhật danh sách thông báo
+  useEffect(() => {
+    if (notification) {
+      loadNotifications();
+    }
+    // eslint-disable-next-line
+  }, [notification]);
 
   // Handle filter by user
   const handleFilter = () => {
