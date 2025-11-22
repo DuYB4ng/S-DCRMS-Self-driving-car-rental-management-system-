@@ -11,5 +11,6 @@ namespace BookingService.Models
         public Payment? Payment { get; set; }
         public string Status { get; set; } = "Pending";
         public int CustomerId { get; set; }
+        public int CarId { get; set; }
     }
 }
