@@ -6,5 +6,6 @@ namespace BookingService.Dtos.Booking
     {
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
+        public int CarId { get; set; }
     }
 }

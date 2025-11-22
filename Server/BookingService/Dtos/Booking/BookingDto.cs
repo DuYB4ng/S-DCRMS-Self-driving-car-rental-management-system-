@@ -11,5 +11,6 @@ namespace BookingService.Dtos.Booking
 		public bool CheckOut { get; set; }
 		public string Status { get; set; } = string.Empty;
 		public int CustomerId { get; set; }
+		public int CarId { get; set; }
 	}
 }

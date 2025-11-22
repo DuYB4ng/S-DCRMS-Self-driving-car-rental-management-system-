@@ -44,6 +44,7 @@ namespace BookingService.Repositories
 			existing.CheckIn = dto.CheckIn;
 			existing.CheckOut = dto.CheckOut;
 			existing.Status = dto.Status;
+			existing.CarId     = dto.CarId;
 			await _context.SaveChangesAsync();
 			return existing;
 		}

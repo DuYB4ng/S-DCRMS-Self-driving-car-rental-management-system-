@@ -5,7 +5,7 @@ using OwnerCarService.Services;
 namespace OwnerCarService.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/car")]
     public class CarController : ControllerBase
     {
         private readonly ICarService _carService;
