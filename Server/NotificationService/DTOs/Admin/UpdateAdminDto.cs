@@ -23,4 +23,3 @@ namespace SDCRMS.DTOs.Admin
         public string Address { get; set; } = string.Empty;
     }
 }
-

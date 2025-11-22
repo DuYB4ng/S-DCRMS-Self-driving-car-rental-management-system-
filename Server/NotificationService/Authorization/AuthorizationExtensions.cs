@@ -24,9 +24,7 @@ namespace SDCRMS.Authorization
         {
             services.AddAuthorization(options =>
             {
-                options.DefaultPolicy = new AuthorizationPolicyBuilder(
-                    JwtBearerDefaults.AuthenticationScheme
-                )
+                options.DefaultPolicy = new AuthorizationPolicyBuilder("Firebase")
                     .RequireAuthenticatedUser()
                     .Build();
 

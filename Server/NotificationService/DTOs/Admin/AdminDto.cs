@@ -14,4 +14,3 @@ namespace SDCRMS.DTOs.Admin
         public DateTime JoinDate { get; set; }
     }
 }
-

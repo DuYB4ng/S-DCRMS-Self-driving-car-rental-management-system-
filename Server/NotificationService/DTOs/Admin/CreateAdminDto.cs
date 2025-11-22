@@ -35,4 +35,3 @@ namespace SDCRMS.DTOs.Admin
         public string Password { get; set; } = string.Empty;
     }
 }
-
