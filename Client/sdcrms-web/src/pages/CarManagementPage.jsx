@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+import axios from "axios";
+import React, { useState, useEffect } from "react";
+
 import {
   PlusIcon,
   SearchIcon,
@@ -16,135 +18,54 @@ const CarManagementPage = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedCar, setSelectedCar] = useState(null);
-  const [carsList, setCarsList] = useState([
-    {
-      id: "CAR001",
-      name: "Toyota Vios 2020",
-      brand: "Toyota",
-      type: "Sedan",
-      licensePlate: "51A-12345",
-      year: 2020,
-      price: 500000,
-      transmission: "Tự động",
-      seats: 5,
-      fuel: "Xăng",
-      color: "Trắng",
-      status: "Sẵn sàng",
-      rating: 4.8,
-      trips: 156,
-      image: "image/toyota-vios.png",
-    },
-    {
-      id: "CAR002",
-      name: "Mazda 3 2018",
-      brand: "Mazda",
-      type: "Sedan",
-      licensePlate: "51B-67890",
-      year: 2018,
-      price: 450000,
-      transmission: "Tự động",
-      seats: 5,
-      fuel: "Xăng",
-      color: "Đỏ",
-      status: "Đang thuê",
-      rating: 4.6,
-      trips: 132,
-      image: "image/mazda-3.png",
-    },
-    {
-      id: "CAR003",
-      name: "VinFast VF6 2023",
-      brand: "VinFast",
-      type: "SUV",
-      licensePlate: "51C-11111",
-      year: 2023,
-      price: 900000,
-      transmission: "Tự động",
-      seats: 7,
-      fuel: "Điện",
-      color: "Xanh",
-      status: "Sẵn sàng",
-      rating: 4.9,
-      trips: 45,
-      image: "image/vinfast-vf6.png",
-    },
-    {
-      id: "CAR004",
-      name: "Honda City 2019",
-      brand: "Honda",
-      type: "Sedan",
-      licensePlate: "51D-22222",
-      year: 2019,
-      price: 550000,
-      transmission: "Tự động",
-      seats: 5,
-      fuel: "Xăng",
-      color: "Đen",
-      status: "Bảo trì",
-      rating: 4.7,
-      trips: 98,
-      image: "image/honda_city.png",
-    },
-    {
-      id: "CAR005",
-      name: "VinFast VF6 2023",
-      brand: "VinFast",
-      type: "SUV",
-      licensePlate: "51E-33333",
-      year: 2023,
-      price: 1200000,
-      transmission: "Tự động",
-      seats: 7,
-      fuel: "Điện",
-      color: "Bạc",
-      status: "Sẵn sàng",
-      rating: 5.0,
-      trips: 23,
-      image: "image/vinfast-vf6.png",
-    },
-  ]);
-
+  const [carsList, setCarsList] = useState([]);
   const [newCar, setNewCar] = useState({
-    name: "",
-    brand: "",
-    type: "Sedan",
-    licensePlate: "",
-    year: new Date().getFullYear(),
-    price: "",
-    transmission: "Tự động",
-    seats: 5,
-    fuel: "Xăng",
-    color: "",
-    status: "Sẵn sàng",
-    image: "image/default-car.png",
+    NameCar: "",
+    LicensePlate: "",
+    ModelYear: new Date().getFullYear(),
+    Price: "",
+    TypeCar: "Sedan",
+    Seat: "5",
+    State: true,
+    UrlImage: "image/default-car.png",
+    OwnerID: 1,
   });
 
-  const handleAddCar = (e) => {
+  // Fetch cars from backend
+  const fetchCars = async () => {
+    try {
+      const response = await axios.get("/api/car");
+      setCarsList(Array.isArray(response.data) ? response.data : []);
+    } catch (error) {
+      console.error("Lỗi khi lấy danh sách xe:", error);
+      setCarsList([]);
+    }
+  };
+
+  useEffect(() => {
+    fetchCars();
+  }, []);
+
+  const handleAddCar = async (e) => {
     e.preventDefault();
-    const carId = `CAR${String(carsList.length + 1).padStart(3, "0")}`;
-    const carToAdd = {
-      ...newCar,
-      id: carId,
-      rating: 0,
-      trips: 0,
-      price: parseInt(newCar.price),
-    };
-    setCarsList([...carsList, carToAdd]);
-    setShowAddModal(false);
-    setNewCar({
-      name: "",
-      brand: "",
-      type: "Sedan",
-      licensePlate: "",
-      year: new Date().getFullYear(),
-      price: "",
-      transmission: "Tự động",
-      seats: 5,
-      fuel: "Xăng",
-      color: "",
-      status: "Sẵn sàng",
-      image: "image/default-car.png",
-    });
+    try {
+      await axios.post("/api/car", newCar);
+      setShowAddModal(false);
+      setNewCar({
+        NameCar: "",
+        LicensePlate: "",
+        ModelYear: new Date().getFullYear(),
+        Price: "",
+        TypeCar: "Sedan",
+        Seat: "5",
+        State: true,
+        UrlImage: "image/default-car.png",
+        OwnerID: 1,
+      });
+      fetchCars();
+    } catch (error) {
+      alert("Không thể thêm xe mới.");
+    }
   };
 
   const handleInputChange = (e) => {
@@ -157,51 +78,31 @@ const CarManagementPage = () => {
 
   const handleEditCar = (car) => {
     setSelectedCar(car);
-    setNewCar({
-      name: car.name,
-      brand: car.brand,
-      type: car.type,
-      licensePlate: car.licensePlate,
-      year: car.year,
-      price: car.price,
-      transmission: car.transmission,
-      seats: car.seats,
-      fuel: car.fuel,
-      color: car.color,
-      status: car.status,
-      image: car.image,
-    });
+    setNewCar({ ...car });
     setShowEditModal(true);
   };
 
-  const handleUpdateCar = (e) => {
+  const handleUpdateCar = async (e) => {
     e.preventDefault();
-    const updatedCars = carsList.map((car) =>
-      car.id === selectedCar.id
-        ? {
-            ...car,
-            ...newCar,
-            price: parseInt(newCar.price),
-          }
-        : car
-    );
-    setCarsList(updatedCars);
-    setShowEditModal(false);
-    setSelectedCar(null);
-    setNewCar({
-      name: "",
-      brand: "",
-      type: "Sedan",
-      licensePlate: "",
-      year: new Date().getFullYear(),
-      price: "",
-      transmission: "Tự động",
-      seats: 5,
-      fuel: "Xăng",
-      color: "",
-      status: "Sẵn sàng",
-      image: "image/default-car.png",
-    });
+    try {
+      await axios.put(`/api/car/${selectedCar.CarID}`, newCar);
+      setShowEditModal(false);
+      setSelectedCar(null);
+      setNewCar({
+        NameCar: "",
+        LicensePlate: "",
+        ModelYear: new Date().getFullYear(),
+        Price: "",
+        TypeCar: "Sedan",
+        Seat: "5",
+        State: true,
+        UrlImage: "image/default-car.png",
+        OwnerID: 1,
+      });
+      fetchCars();
+    } catch (error) {
+      alert("Không thể cập nhật xe.");
+    }
   };
 
   const handleViewDetail = (car) => {
@@ -209,9 +110,14 @@ const CarManagementPage = () => {
     setShowDetailModal(true);
   };
 
-  const handleDeleteCar = (carId) => {
+  const handleDeleteCar = async (carId) => {
     if (window.confirm("Bạn có chắc chắn muốn xóa xe này?")) {
-      setCarsList(carsList.filter((car) => car.id !== carId));
+      try {
+        await axios.delete(`/api/car/${carId}`);
+        fetchCars();
+      } catch (error) {
+        alert("Không thể xóa xe.");
+      }
     }
   };
 
@@ -456,8 +362,8 @@ const CarManagementPage = () => {
                   </label>
                   <input
                     type="text"
-                    name="name"
-                    value={newCar.name}
+                    name="NameCar"
+                    value={newCar.NameCar}
                     onChange={handleInputChange}
                     placeholder="VD: Toyota Vios 2020"
                     required
@@ -465,50 +371,15 @@ const CarManagementPage = () => {
                   />
                 </div>
 
-                {/* Hãng xe */}
-                <div>
-                  <label className="block text-sm font-medium text-textPrimary mb-2">
-                    Hãng xe <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="brand"
-                    value={newCar.brand}
-                    onChange={handleInputChange}
-                    placeholder="VD: Toyota"
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                </div>
-
-                {/* Loại xe */}
-                <div>
-                  <label className="block text-sm font-medium text-textPrimary mb-2">
-                    Loại xe <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    name="type"
-                    value={newCar.type}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                  >
-                    <option value="Sedan">Sedan</option>
-                    <option value="SUV">SUV</option>
-                    <option value="Hatchback">Hatchback</option>
-                    <option value="MPV">MPV</option>
-                    <option value="Bán tải">Bán tải</option>
-                  </select>
-                </div>
-
-                {/* Biển số */}
+                {/* Biển số xe */}
                 <div>
                   <label className="block text-sm font-medium text-textPrimary mb-2">
                     Biển số xe <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
-                    name="licensePlate"
-                    value={newCar.licensePlate}
+                    name="LicensePlate"
+                    value={newCar.LicensePlate}
                     onChange={handleInputChange}
                     placeholder="VD: 51A-12345"
                     required
@@ -523,8 +394,8 @@ const CarManagementPage = () => {
                   </label>
                   <input
                     type="number"
-                    name="year"
-                    value={newCar.year}
+                    name="ModelYear"
+                    value={newCar.ModelYear}
                     onChange={handleInputChange}
                     min="2000"
                     max={new Date().getFullYear() + 1}
@@ -540,8 +411,8 @@ const CarManagementPage = () => {
                   </label>
                   <input
                     type="number"
-                    name="price"
-                    value={newCar.price}
+                    name="Price"
+                    value={newCar.Price}
                     onChange={handleInputChange}
                     placeholder="VD: 500000"
                     min="0"
@@ -550,19 +421,22 @@ const CarManagementPage = () => {
                   />
                 </div>
 
-                {/* Hộp số */}
+                {/* Loại xe */}
                 <div>
                   <label className="block text-sm font-medium text-textPrimary mb-2">
-                    Hộp số <span className="text-red-500">*</span>
+                    Loại xe <span className="text-red-500">*</span>
                   </label>
                   <select
-                    name="transmission"
-                    value={newCar.transmission}
+                    name="TypeCar"
+                    value={newCar.TypeCar}
                     onChange={handleInputChange}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                   >
-                    <option value="Tự động">Tự động</option>
-                    <option value="Số sàn">Số sàn</option>
+                    <option value="Sedan">Sedan</option>
+                    <option value="SUV">SUV</option>
+                    <option value="Hatchback">Hatchback</option>
+                    <option value="MPV">MPV</option>
+                    <option value="Bán tải">Bán tải</option>
                   </select>
                 </div>
 
@@ -572,8 +446,8 @@ const CarManagementPage = () => {
                     Số chỗ ngồi <span className="text-red-500">*</span>
                   </label>
                   <select
-                    name="seats"
-                    value={newCar.seats}
+                    name="Seat"
+                    value={newCar.Seat}
                     onChange={handleInputChange}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                   >
@@ -584,54 +458,24 @@ const CarManagementPage = () => {
                   </select>
                 </div>
 
-                {/* Nhiên liệu */}
-                <div>
-                  <label className="block text-sm font-medium text-textPrimary mb-2">
-                    Nhiên liệu <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    name="fuel"
-                    value={newCar.fuel}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                  >
-                    <option value="Xăng">Xăng</option>
-                    <option value="Dầu Diesel">Dầu Diesel</option>
-                    <option value="Điện">Điện</option>
-                    <option value="Hybrid">Hybrid</option>
-                  </select>
-                </div>
-
-                {/* Màu sắc */}
-                <div>
-                  <label className="block text-sm font-medium text-textPrimary mb-2">
-                    Màu sắc <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="color"
-                    value={newCar.color}
-                    onChange={handleInputChange}
-                    placeholder="VD: Trắng"
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                </div>
-
                 {/* Trạng thái */}
                 <div>
                   <label className="block text-sm font-medium text-textPrimary mb-2">
                     Trạng thái <span className="text-red-500">*</span>
                   </label>
                   <select
-                    name="status"
-                    value={newCar.status}
-                    onChange={handleInputChange}
+                    name="State"
+                    value={newCar.State ? "Sẵn sàng" : "Không sẵn sàng"}
+                    onChange={(e) =>
+                      setNewCar({
+                        ...newCar,
+                        State: e.target.value === "Sẵn sàng",
+                      })
+                    }
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                   >
                     <option value="Sẵn sàng">Sẵn sàng</option>
-                    <option value="Đang thuê">Đang thuê</option>
-                    <option value="Bảo trì">Bảo trì</option>
+                    <option value="Không sẵn sàng">Không sẵn sàng</option>
                   </select>
                 </div>
 
@@ -642,8 +486,8 @@ const CarManagementPage = () => {
                   </label>
                   <input
                     type="text"
-                    name="image"
-                    value={newCar.image}
+                    name="UrlImage"
+                    value={newCar.UrlImage}
                     onChange={handleInputChange}
                     placeholder="VD: image/car.png"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
@@ -702,8 +546,8 @@ const CarManagementPage = () => {
                   </label>
                   <input
                     type="text"
-                    name="name"
-                    value={newCar.name}
+                    name="NameCar"
+                    value={newCar.NameCar}
                     onChange={handleInputChange}
                     placeholder="VD: Toyota Vios 2020"
                     required
@@ -711,50 +555,15 @@ const CarManagementPage = () => {
                   />
                 </div>
 
-                {/* Hãng xe */}
-                <div>
-                  <label className="block text-sm font-medium text-textPrimary mb-2">
-                    Hãng xe <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="brand"
-                    value={newCar.brand}
-                    onChange={handleInputChange}
-                    placeholder="VD: Toyota"
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                </div>
-
-                {/* Loại xe */}
-                <div>
-                  <label className="block text-sm font-medium text-textPrimary mb-2">
-                    Loại xe <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    name="type"
-                    value={newCar.type}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                  >
-                    <option value="Sedan">Sedan</option>
-                    <option value="SUV">SUV</option>
-                    <option value="Hatchback">Hatchback</option>
-                    <option value="MPV">MPV</option>
-                    <option value="Bán tải">Bán tải</option>
-                  </select>
-                </div>
-
-                {/* Biển số */}
+                {/* Biển số xe */}
                 <div>
                   <label className="block text-sm font-medium text-textPrimary mb-2">
                     Biển số xe <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
-                    name="licensePlate"
-                    value={newCar.licensePlate}
+                    name="LicensePlate"
+                    value={newCar.LicensePlate}
                     onChange={handleInputChange}
                     placeholder="VD: 51A-12345"
                     required
@@ -769,8 +578,8 @@ const CarManagementPage = () => {
                   </label>
                   <input
                     type="number"
-                    name="year"
-                    value={newCar.year}
+                    name="ModelYear"
+                    value={newCar.ModelYear}
                     onChange={handleInputChange}
                     min="2000"
                     max={new Date().getFullYear() + 1}
@@ -786,8 +595,8 @@ const CarManagementPage = () => {
                   </label>
                   <input
                     type="number"
-                    name="price"
-                    value={newCar.price}
+                    name="Price"
+                    value={newCar.Price}
                     onChange={handleInputChange}
                     placeholder="VD: 500000"
                     min="0"
@@ -796,19 +605,22 @@ const CarManagementPage = () => {
                   />
                 </div>
 
-                {/* Hộp số */}
+                {/* Loại xe */}
                 <div>
                   <label className="block text-sm font-medium text-textPrimary mb-2">
-                    Hộp số <span className="text-red-500">*</span>
+                    Loại xe <span className="text-red-500">*</span>
                   </label>
                   <select
-                    name="transmission"
-                    value={newCar.transmission}
+                    name="TypeCar"
+                    value={newCar.TypeCar}
                     onChange={handleInputChange}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                   >
-                    <option value="Tự động">Tự động</option>
-                    <option value="Số sàn">Số sàn</option>
+                    <option value="Sedan">Sedan</option>
+                    <option value="SUV">SUV</option>
+                    <option value="Hatchback">Hatchback</option>
+                    <option value="MPV">MPV</option>
+                    <option value="Bán tải">Bán tải</option>
                   </select>
                 </div>
 
@@ -818,8 +630,8 @@ const CarManagementPage = () => {
                     Số chỗ ngồi <span className="text-red-500">*</span>
                   </label>
                   <select
-                    name="seats"
-                    value={newCar.seats}
+                    name="Seat"
+                    value={newCar.Seat}
                     onChange={handleInputChange}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                   >
@@ -830,54 +642,24 @@ const CarManagementPage = () => {
                   </select>
                 </div>
 
-                {/* Nhiên liệu */}
-                <div>
-                  <label className="block text-sm font-medium text-textPrimary mb-2">
-                    Nhiên liệu <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    name="fuel"
-                    value={newCar.fuel}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                  >
-                    <option value="Xăng">Xăng</option>
-                    <option value="Dầu Diesel">Dầu Diesel</option>
-                    <option value="Điện">Điện</option>
-                    <option value="Hybrid">Hybrid</option>
-                  </select>
-                </div>
-
-                {/* Màu sắc */}
-                <div>
-                  <label className="block text-sm font-medium text-textPrimary mb-2">
-                    Màu sắc <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="color"
-                    value={newCar.color}
-                    onChange={handleInputChange}
-                    placeholder="VD: Trắng"
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                </div>
-
                 {/* Trạng thái */}
                 <div>
                   <label className="block text-sm font-medium text-textPrimary mb-2">
                     Trạng thái <span className="text-red-500">*</span>
                   </label>
                   <select
-                    name="status"
-                    value={newCar.status}
-                    onChange={handleInputChange}
+                    name="State"
+                    value={newCar.State ? "Sẵn sàng" : "Không sẵn sàng"}
+                    onChange={(e) =>
+                      setNewCar({
+                        ...newCar,
+                        State: e.target.value === "Sẵn sàng",
+                      })
+                    }
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                   >
                     <option value="Sẵn sàng">Sẵn sàng</option>
-                    <option value="Đang thuê">Đang thuê</option>
-                    <option value="Bảo trì">Bảo trì</option>
+                    <option value="Không sẵn sàng">Không sẵn sàng</option>
                   </select>
                 </div>
 
@@ -888,8 +670,8 @@ const CarManagementPage = () => {
                   </label>
                   <input
                     type="text"
-                    name="image"
-                    value={newCar.image}
+                    name="UrlImage"
+                    value={newCar.UrlImage}
                     onChange={handleInputChange}
                     placeholder="VD: image/car.png"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"

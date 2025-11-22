@@ -1,4 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+
+import {
+  getBookings,
+  createBooking,
+  approveBooking,
+  rejectBooking,
+} from "../api/bookingManagementApi";
 import {
   RefreshCwIcon,
   PlusIcon,
@@ -8,57 +15,70 @@ import {
 
 const BookingManagementPage = () => {
   const [selectedFilter, setSelectedFilter] = useState("Tất cả");
+  const [showNewBookingModal, setShowNewBookingModal] = useState(false);
+  const [newBooking, setNewBooking] = useState({
+    CustomerID: 1,
+    CarID: 1,
+    StartDate: "",
+    EndDate: "",
+    CheckIn: false,
+    CheckOut: false,
+    Status: "Pending",
+  });
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  const bookings = [
-    {
-      id: "BK001",
-      customerId: "CUS001",
-      customerName: "Nguyễn Văn A",
-      customerPhone: "0123456789",
-      carId: "CAR001",
-      carName: "Toyota Vios 2020",
-      carImage: "image/toyota-vios.png",
-      startDate: new Date(Date.now() + 86400000),
-      endDate: new Date(Date.now() + 259200000),
-      totalPrice: 1500000,
-      status: "pending",
-      pickupLocation: "Sân bay Tân Sơn Nhất",
-      dropoffLocation: "Khách sạn Rex",
-      createdAt: new Date(Date.now() - 300000),
-    },
-    {
-      id: "BK002",
-      customerId: "CUS002",
-      customerName: "Trần Thị B",
-      customerPhone: "0987654321",
-      carId: "CAR002",
-      carName: "VinFast VF6 2023",
-      carImage: "image/vinfast-vf6.png",
-      startDate: new Date(Date.now() + 21600000),
-      endDate: new Date(Date.now() + 432000000),
-      totalPrice: 4500000,
-      status: "confirmed",
-      pickupLocation: "Bến xe Miền Đông",
-      dropoffLocation: "Vũng Tàu",
-      createdAt: new Date(Date.now() - 7200000),
-    },
-    {
-      id: "BK003",
-      customerId: "CUS003",
-      customerName: "Lê Văn C",
-      customerPhone: "0369852147",
-      carId: "CAR003",
-      carName: "Mazda 3 2018",
-      carImage: "image/mazda-3.png",
-      startDate: new Date(Date.now() - 43200000),
-      endDate: new Date(Date.now() + 129600000),
-      totalPrice: 900000,
-      status: "in_progress",
-      pickupLocation: "Quận 1",
-      dropoffLocation: "Quận 7",
-      createdAt: new Date(Date.now() - 86400000),
-    },
-  ];
+  // Fetch bookings from backend
+  const fetchBookings = async () => {
+    setLoading(true);
+    try {
+      const data = await getBookings();
+      setBookings(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("Lỗi khi lấy danh sách booking:", error);
+      alert("Không thể lấy danh sách booking từ server.");
+      setBookings([]);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchBookings();
+  }, []);
+
+  const handleApprove = async (id) => {
+    try {
+      await approveBooking(id);
+      alert("Đơn đặt xe đã được xác nhận!");
+      fetchBookings();
+    } catch (error) {
+      console.error("Lỗi khi xác nhận đơn đặt xe:", error);
+      alert("Không thể xác nhận đơn đặt xe.");
+    }
+  };
+
+  const handleReject = async (id) => {
+    try {
+      await rejectBooking(id);
+      alert("Đơn đặt xe đã bị từ chối!");
+      fetchBookings();
+    } catch (error) {
+      console.error("Lỗi khi từ chối đơn đặt xe:", error);
+      alert("Không thể từ chối đơn đặt xe.");
+    }
+  };
+
+  const handleCreateBooking = async () => {
+    try {
+      await createBooking(newBooking);
+      alert("Đặt xe mới thành công!");
+      setShowNewBookingModal(false);
+      fetchBookings();
+    } catch (error) {
+      console.error("Lỗi khi tạo đơn đặt xe mới:", error);
+      alert("Không thể tạo đơn đặt xe mới.");
+    }
+  };
 
   const filters = [
     "Tất cả",
@@ -121,16 +141,17 @@ const BookingManagementPage = () => {
     return Date.now() - createdAt < 600000; // 10 minutes
   };
 
+  const statusMap = {
+    "Chờ xác nhận": "Pending",
+    "Đã xác nhận": "Approved",
+    "Đang thuê": "InProgress",
+    "Hoàn thành": "Completed",
+    "Đã hủy": "Rejected",
+  };
+
   const filteredBookings = bookings.filter((booking) => {
     if (selectedFilter === "Tất cả") return true;
-    const statusMap = {
-      "Chờ xác nhận": "pending",
-      "Đã xác nhận": "confirmed",
-      "Đang thuê": "in_progress",
-      "Hoàn thành": "completed",
-      "Đã hủy": "cancelled",
-    };
-    return booking.status === statusMap[selectedFilter];
+    return booking.Status === statusMap[selectedFilter];
   });
 
   return (
@@ -145,12 +166,82 @@ const BookingManagementPage = () => {
             <RefreshCwIcon className="w-5 h-5" />
             Làm mới
           </button>
-          <button className="bg-[#2E7D9A] text-white px-6 py-3 rounded-lg hover:opacity-90 transition flex items-center gap-2 font-medium shadow-md">
+          <button
+            onClick={() => setShowNewBookingModal(true)}
+            className="bg-[#2E7D9A] text-white px-6 py-3 rounded-lg hover:opacity-90 transition flex items-center gap-2 font-medium shadow-md"
+          >
             <PlusIcon className="w-5 h-5" />
             Đặt xe mới
           </button>
         </div>
       </div>
+
+      {/* New Booking Modal */}
+      {showNewBookingModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+            <h2 className="text-xl font-bold mb-4">Tạo đơn đặt xe mới</h2>
+            <div className="space-y-4">
+              <input
+                type="number"
+                placeholder="CustomerID"
+                value={newBooking.CustomerID}
+                onChange={(e) =>
+                  setNewBooking({
+                    ...newBooking,
+                    CustomerID: Number(e.target.value),
+                  })
+                }
+                className="w-full p-2 border rounded"
+              />
+              <input
+                type="number"
+                placeholder="CarID"
+                value={newBooking.CarID}
+                onChange={(e) =>
+                  setNewBooking({
+                    ...newBooking,
+                    CarID: Number(e.target.value),
+                  })
+                }
+                className="w-full p-2 border rounded"
+              />
+              <input
+                type="date"
+                placeholder="Ngày bắt đầu"
+                value={newBooking.StartDate}
+                onChange={(e) =>
+                  setNewBooking({ ...newBooking, StartDate: e.target.value })
+                }
+                className="w-full p-2 border rounded"
+              />
+              <input
+                type="date"
+                placeholder="Ngày kết thúc"
+                value={newBooking.EndDate}
+                onChange={(e) =>
+                  setNewBooking({ ...newBooking, EndDate: e.target.value })
+                }
+                className="w-full p-2 border rounded"
+              />
+            </div>
+            <div className="flex justify-end gap-2 mt-4">
+              <button
+                onClick={() => setShowNewBookingModal(false)}
+                className="bg-gray-300 text-black px-4 py-2 rounded-lg hover:bg-gray-400"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={handleCreateBooking}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+              >
+                Tạo
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Filters */}
       <div className="bg-white rounded-lg p-4 mb-6 shadow-md">
@@ -270,11 +361,17 @@ const BookingManagementPage = () => {
 
                       {booking.status === "pending" && (
                         <div className="flex gap-2">
-                          <button className="bg-green-600 text-white px-4 py-2 rounded-lg hover:opacity-90 transition flex items-center gap-2 text-sm font-medium">
+                          <button
+                            onClick={() => handleApprove(booking.id)}
+                            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:opacity-90 transition flex items-center gap-2 text-sm font-medium"
+                          >
                             <CheckCircleIcon className="w-4 h-4" />
                             Xác nhận
                           </button>
-                          <button className="bg-red-600 text-white px-4 py-2 rounded-lg hover:opacity-90 transition flex items-center gap-2 text-sm font-medium">
+                          <button
+                            onClick={() => handleReject(booking.id)}
+                            className="bg-red-600 text-white px-4 py-2 rounded-lg hover:opacity-90 transition flex items-center gap-2 text-sm font-medium"
+                          >
                             <XCircleIcon className="w-4 h-4" />
                             Từ chối
                           </button>

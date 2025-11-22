@@ -4,49 +4,8 @@ import { CreditCardIcon, WalletIcon, BanknoteIcon } from "lucide-react";
 const PaymentPage = () => {
   const [selectedFilter, setSelectedFilter] = useState("Tất cả");
 
-  const payments = [
-    {
-      id: "PAY001",
-      bookingId: "BK001",
-      customerName: "Nguyễn Văn A",
-      amount: 1500000,
-      method: "momo",
-      status: "completed",
-      createdAt: new Date(Date.now() - 7200000),
-      completedAt: new Date(Date.now() - 6900000),
-      transactionId: "MOMO123456789",
-    },
-    {
-      id: "PAY002",
-      bookingId: "BK002",
-      customerName: "Trần Thị B",
-      amount: 4500000,
-      method: "vnpay",
-      status: "processing",
-      createdAt: new Date(Date.now() - 600000),
-      transactionId: "VNPAY987654321",
-    },
-    {
-      id: "PAY003",
-      bookingId: "BK003",
-      customerName: "Lê Văn C",
-      amount: 900000,
-      method: "zalopay",
-      status: "pending",
-      createdAt: new Date(Date.now() - 300000),
-    },
-    {
-      id: "PAY004",
-      bookingId: "BK004",
-      customerName: "Phạm Thị D",
-      amount: 2000000,
-      method: "bank_transfer",
-      status: "completed",
-      createdAt: new Date(Date.now() - 86400000),
-      completedAt: new Date(Date.now() - 86400000 + 7200000),
-      transactionId: "BANK202411170001",
-    },
-  ];
+  // const payments = [...] // Đã loại bỏ dữ liệu tĩnh, hãy fetch từ API
+  const [payments, setPayments] = useState([]);
 
   const filters = [
     "Tất cả",
