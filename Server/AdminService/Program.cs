@@ -73,7 +73,7 @@ builder
                 {
                     var firebaseToken =
                         await FirebaseAdmin.Auth.FirebaseAuth.DefaultInstance.VerifyIdTokenAsync(
-                            token.RawData
+                            token!.RawData
                         );
                     // Có thể add thêm claim vào context.Principal nếu muốn
                 }
@@ -190,8 +190,10 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-FirebaseApp.Create(
-    new AppOptions() { Credential = GoogleCredential.FromFile("FireBase/FireBaseToken.json") }
-);
+using (var stream = new FileStream("FireBase/FireBaseToken.json", FileMode.Open, FileAccess.Read))
+{
+    var credential = GoogleCredential.FromStream(stream);
+    FirebaseApp.Create(new AppOptions { Credential = credential });
+}
 
 app.Run();

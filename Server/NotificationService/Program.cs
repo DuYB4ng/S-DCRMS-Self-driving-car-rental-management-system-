@@ -1,8 +1,13 @@
+using System.IO;
 using System.Security.Claims;
 using System.Text;
+using System.Threading;
 using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Google.Apis.Auth.OAuth2;
+using Google.Apis.Auth.OAuth2.Flows;
+using Google.Apis.Auth.OAuth2.Responses;
+// using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -47,46 +52,44 @@ else
     );
 }
 
-// ========== FIREBASE JWT CONFIGURATION ==========
-builder
-    .Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.Authority = "https://securetoken.google.com/fir-dcrms"; // projectId của bạn
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidIssuer = "https://securetoken.google.com/fir-dcrms",
-            ValidateAudience = true,
-            ValidAudience = "fir-dcrms",
-            ValidateLifetime = true,
-        };
-        options.Events = new JwtBearerEvents
-        {
-            OnTokenValidated = async context =>
-            {
-                var token =
-                    context.SecurityToken as System.IdentityModel.Tokens.Jwt.JwtSecurityToken;
-                try
-                {
-                    var firebaseToken =
-                        await FirebaseAdmin.Auth.FirebaseAuth.DefaultInstance.VerifyIdTokenAsync(
-                            token.RawData
-                        );
-                    // Có thể add thêm claim vào context.Principal nếu muốn
-                }
-                catch
-                {
-                    context.Fail("Invalid Firebase token");
-                }
-            },
-        };
-    });
+builder.Services.AddRoleBasedAuthorization();
 
-// Khởi tạo FirebaseApp (chỉ cần chạy 1 lần ở mỗi service)
-FirebaseApp.Create(
-    new AppOptions() { Credential = GoogleCredential.FromFile("FireBase/FireBaseToken.json") }
-);
+// Đăng ký HttpClient cho DI container
+builder.Services.AddHttpClient();
+
+// Khởi tạo FirebaseApp (chỉ cần chạy 1 lần ở mỗi service) - thêm log kiểm tra lỗi runtime
+try
+{
+    var tokenPath = Path.Combine(Directory.GetCurrentDirectory(), "FireBase", "FireBaseToken.json");
+    Console.WriteLine($"[Firebase] Đường dẫn file token: {tokenPath}");
+    if (!File.Exists(tokenPath))
+    {
+        Console.WriteLine($"[Firebase] File token KHÔNG TỒN TẠI!");
+        throw new FileNotFoundException($"Không tìm thấy file token: {tokenPath}");
+    }
+    using (var stream = new FileStream(tokenPath, FileMode.Open, FileAccess.Read))
+    {
+        var credential = GoogleCredential.FromStream(stream);
+        FirebaseApp.Create(new AppOptions { Credential = credential });
+        Console.WriteLine("[Firebase] Khởi tạo FirebaseApp thành công!");
+    }
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"[Firebase] LỖI khi khởi tạo FirebaseApp: {ex.Message}\n{ex.StackTrace}");
+    throw;
+}
+
+// Đăng ký custom authentication scheme Firebase
+builder
+    .Services.AddAuthentication(options =>
+    {
+        options.DefaultScheme = SDCRMS.Authorization.FirebaseAuthenticationHandler.SchemeName;
+    })
+    .AddScheme<
+        Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions,
+        SDCRMS.Authorization.FirebaseAuthenticationHandler
+    >(SDCRMS.Authorization.FirebaseAuthenticationHandler.SchemeName, null);
 
 builder.Services.AddRoleBasedAuthorization();
 
