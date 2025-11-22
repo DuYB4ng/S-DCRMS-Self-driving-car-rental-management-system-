@@ -72,13 +72,34 @@ class _CarListViewState extends State<CarListView> {
           final car = vm.cars[index];
           return GestureDetector(
             onTap: () {
+              final receiveDateTime = DateTime(
+                widget.receiveDate.year,
+                widget.receiveDate.month,
+                widget.receiveDate.day,
+                widget.receiveTime.hour,
+                widget.receiveTime.minute,
+              );
+
+              final returnDateTime = DateTime(
+                widget.returnDate.year,
+                widget.returnDate.month,
+                widget.returnDate.day,
+                widget.returnTime.hour,
+                widget.returnTime.minute,
+              );
+
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => CarDetailView(car: car),
+                  builder: (_) => CarDetailView(
+                    car: car,
+                    receiveDate: receiveDateTime,
+                    returnDate: returnDateTime,
+                  ),
                 ),
               );
             },
+
             child: _carItem(car),
           );
         },

@@ -1,19 +1,25 @@
 import 'package:flutter/material.dart';
 
 import '../../services/booking_service.dart';
+import '../booking/booking_confirm_view.dart';
 
 class CarDetailView extends StatelessWidget {
   final dynamic car;
 
-  CarDetailView({required this.car});
+
+  final DateTime receiveDate;
+  final DateTime returnDate;
+
+  CarDetailView({
+    required this.car,
+    required this.receiveDate,
+    required this.returnDate,
+  });
+
   Future<void> handleBooking(BuildContext context) async {
     try {
       final bookingService = BookingService();
 
-      // TODO: Lấy ngày thuê thật từ HomeView → truyền qua arguments
-      // Demo tạm thời (xử lý logic thật tùy bạn)
-      final receiveDate = DateTime.now();
-      final returnDate = DateTime.now().add(Duration(days: 1));
       final price = car["pricePerDay"] ?? 0;
 
       final res = await bookingService.createBooking(
@@ -26,7 +32,6 @@ class CarDetailView extends StatelessWidget {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Đặt xe thành công!")),
       );
-
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Đặt xe thất bại: $e")),
@@ -143,11 +148,9 @@ class CarDetailView extends StatelessWidget {
                   ),
 
 
-
-
                   /// ======== MÔ TẢ ========
                   Container(
-                    width: double.infinity,               // 🔥 FULL chiều ngang
+                    width: double.infinity,
                     padding: EdgeInsets.all(16),
                     margin: EdgeInsets.only(bottom: 16),
                     decoration: BoxDecoration(
@@ -170,10 +173,6 @@ class CarDetailView extends StatelessWidget {
                       ],
                     ),
                   ),
-
-
-
-
 
                   /// ======== GIẤY TỜ & ĐĂNG KIỂM ========
                   Container(
@@ -202,7 +201,6 @@ class CarDetailView extends StatelessWidget {
                       ],
                     ),
                   ),
-
                 ],
               ),
             ),
@@ -210,14 +208,26 @@ class CarDetailView extends StatelessWidget {
         ),
       ),
 
-      /// ======== NÚT ĐẶT XE (CỐ ĐỊNH DƯỚI ĐÁY) ========
+      /// ======== NÚT ĐẶT XE ========
       bottomNavigationBar: Container(
         padding: EdgeInsets.all(16),
         height: 80,
         child: ElevatedButton(
-          onPressed: () async {
-            await handleBooking(context);
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => BookingConfirmView(
+                  car: car,
+
+                  /// ✔ KHÔNG CÒN DÙNG widget.receiveDate
+                  receiveDate: receiveDate,
+                  returnDate: returnDate,
+                ),
+              ),
+            );
           },
+
           style: ElevatedButton.styleFrom(
             backgroundColor: Color(0xFF226EA3),
             shape: RoundedRectangleBorder(
@@ -230,7 +240,6 @@ class CarDetailView extends StatelessWidget {
           ),
         ),
       ),
-
     );
   }
 
@@ -271,13 +280,13 @@ class CarDetailView extends StatelessWidget {
           Text(title,
               style: TextStyle(fontSize: 16, color: Colors.black87)),
           Text(value ?? "N/A",
-              style:
-              TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
         ],
       ),
     );
   }
 }
+
 Widget _specItem(IconData icon, String title, String value) {
   return Padding(
     padding: EdgeInsets.only(bottom: 10),
@@ -291,9 +300,10 @@ Widget _specItem(IconData icon, String title, String value) {
             children: [
               Text(title,
                   style: TextStyle(fontSize: 14, color: Colors.black54)),
-              Text(value,
-                  style: TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.w600)),
+              Text(
+                value,
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
             ],
           ),
         ),

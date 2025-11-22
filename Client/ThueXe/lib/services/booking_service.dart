@@ -8,7 +8,7 @@ class BookingService {
     required int carId,
     required DateTime receiveDate,
     required DateTime returnDate,
-    required double totalPrice,
+    required int totalPrice,
   }) async {
     return await api.post(
       "/Booking",
