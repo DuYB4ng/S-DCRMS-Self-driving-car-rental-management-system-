@@ -5,6 +5,7 @@ using OwnerCarService.Services;
 using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Redis.Shared.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -61,9 +62,14 @@ builder.Services.AddScoped<IMaintenanceRepository, MaintenanceRepository>();
 
 // Đăng ký Services
 builder.Services.AddScoped<ICarService, CarService>();
-builder.Services.AddScoped<IOwnerCarService, OwnerCarService.Services.OwnerCarService>();
+// builder.Services.AddScoped<IOwnerCarService, OwnerCarService.Services.OwnerCarService>();
 builder.Services.AddScoped<IMaintenanceService, MaintenanceService>();
 builder.Services.AddScoped<KafkaProducer>();
+// Cấu hình Redis Shared Library
+builder.Services.AddRedisShared(builder.Configuration);
+
+// Đăng ký service với proxy tự động AOP
+builder.Services.AddProxiedService<IOwnerCarService, OwnerCarService.Services.OwnerCarService>();
 
 var app = builder.Build();
 using (var scope = app.Services.CreateScope())

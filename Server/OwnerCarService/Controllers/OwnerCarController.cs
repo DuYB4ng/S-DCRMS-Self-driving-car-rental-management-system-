@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using OwnerCarService.Dtos.Car;
 using OwnerCarService.Dtos.OwnerCar;
 using OwnerCarService.Services;
+using Redis.Shared.Attributes;
 
 namespace OwnerCarService.Controllers
 {
@@ -18,6 +19,7 @@ namespace OwnerCarService.Controllers
 
         // 🧩 Lấy tất cả chủ xe
         [HttpGet]
+        [Cache(300)]
         public async Task<IActionResult> GetAllOwnerCars()
         {
             var ownerCars = await _ownerCarService.LayTatCaOwnerCarAsync();
@@ -26,6 +28,7 @@ namespace OwnerCarService.Controllers
 
         // 🔍 Lấy chủ xe theo ID
         [HttpGet("{id:int}")]
+        [Cache(300)]
         public async Task<IActionResult> GetOwnerCarById(int id)
         {
             var ownerCar = await _ownerCarService.LayOwnerCarTheoIdAsync(id);
@@ -34,6 +37,7 @@ namespace OwnerCarService.Controllers
 
         // ➕ Tạo chủ xe mới
         [HttpPost]
+        [CacheEvict("OwnerCarController:GetAllOwnerCars*")]
         public async Task<IActionResult> CreateOwnerCar([FromBody] CreateOwnerCarDTO ownerCarDto)
         {
             if (ownerCarDto == null)
@@ -47,6 +51,7 @@ namespace OwnerCarService.Controllers
 
         // 🚗 Thêm xe cho chủ xe
         [HttpPost("{ownerId:int}/cars")]
+        [CacheEvict("OwnerCarController:GetOwnerCarById*")]
         public async Task<IActionResult> AddCarToOwner(int ownerId, [FromBody] CreateCarDTO carDto)
         {
             if (carDto == null)
@@ -67,6 +72,7 @@ namespace OwnerCarService.Controllers
 
         // 🔍 Lấy xe theo ID
         [HttpGet("cars/{carId:int}")]
+        [Cache(300)]
         public async Task<IActionResult> GetCarById(int carId)
         {
             var car = await _ownerCarService.LayXeTheoIdAsync(carId);
@@ -75,6 +81,7 @@ namespace OwnerCarService.Controllers
 
         // ✏️ Cập nhật xe của chủ xe
         [HttpPut("cars/{carId:int}")]
+        [CacheEvict("OwnerCarController:GetCarById*")]
         public async Task<IActionResult> UpdateCarOfOwner(int carId, [FromBody] UpdateCarDTO carDto)
         {
             if (carDto == null || carDto.CarID != carId)
@@ -91,8 +98,9 @@ namespace OwnerCarService.Controllers
             }
         }
 
-        // Xóa xe của chủ xe
+        // 🗑️ Xóa xe của chủ xe
         [HttpDelete("cars/{carId:int}")]
+        [CacheEvict("OwnerCarController:GetCarById*")]
         public async Task<IActionResult> DeleteCarOfOwner(int carId)
         {
             try
@@ -106,8 +114,9 @@ namespace OwnerCarService.Controllers
             }
         }
 
-        // 🔄 Đổi trạng thái hoạt động xe (IsActive)
+        // 🔄 Đổi trạng thái hoạt động xe
         [HttpPatch("cars/{carId:int}/state")]
+        [CacheEvict("OwnerCarController:GetCarById*")]
         public async Task<IActionResult> ToggleCarState(int carId)
         {
             try
@@ -123,6 +132,7 @@ namespace OwnerCarService.Controllers
 
         // 🛠️ Thêm bảo trì cho xe
         [HttpPost("cars/{carId:int}/maintenances")]
+        [CacheEvict("OwnerCarController:GetCarById*")]
         public async Task<IActionResult> AddMaintenanceToCar(int carId, [FromBody] CreateMaintenanceDTO maintenanceDto)
         {
             if (maintenanceDto == null)
@@ -143,6 +153,7 @@ namespace OwnerCarService.Controllers
 
         // 🔍 Lấy chi tiết bảo trì
         [HttpGet("cars/{carId:int}/maintenances/{maintenanceId:int}")]
+        [Cache(300)]
         public async Task<IActionResult> GetMaintenanceById(int carId, int maintenanceId)
         {
             var maintenance = await _ownerCarService.LayMaintenanceTheoIdAsync(maintenanceId);
@@ -151,7 +162,10 @@ namespace OwnerCarService.Controllers
 
             return Ok(maintenance);
         }
+
+        // ✏️ Cập nhật thông tin chủ xe
         [HttpPut("{ownerId:int}")]
+        [CacheEvict("OwnerCarController:GetOwnerCarById*")]
         public async Task<IActionResult> UpdateOwnerCar(int ownerId, [FromBody] UpdateOwnerCarDTO ownerCarDto)
         {
             if (ownerCarDto == null)
@@ -163,7 +177,10 @@ namespace OwnerCarService.Controllers
 
             return Ok(updatedOwnerCar);
         }
+
+        // 🗑️ Xóa chủ xe
         [HttpDelete("{ownerCarId:int}")]
+        [CacheEvict("OwnerCarController:GetAllOwnerCars*")]
         public async Task<IActionResult> DeleteOwnerCar(int ownerCarId)
         {
             var result = await _ownerCarService.XoaOwnerCarAsync(ownerCarId);

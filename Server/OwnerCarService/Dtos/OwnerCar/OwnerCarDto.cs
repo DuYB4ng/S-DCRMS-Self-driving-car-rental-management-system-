@@ -4,7 +4,7 @@ namespace OwnerCarService.Dtos.OwnerCar
     public class OwnerCarDTO
     {
         public int OwnerCarId { get; set; }
-        public int UserId { get; set; }     // ID người dùng từ UserService
+        public string firebaseUid { get; set; }     // ID người dùng từ UserService
         public string DrivingLicence { get; set; } = string.Empty;
         public DateTime LicenceIssueDate { get; set; }
         public DateTime LicenceExpiryDate { get; set; }
