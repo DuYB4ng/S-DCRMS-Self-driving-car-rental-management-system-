@@ -1,14 +1,14 @@
-﻿using System.Text;
+﻿using System.IO;
+using System.Security.Claims;
+using System.Text;
+using System.Threading;
 using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using SDCRMS.Authorization;
 using SDCRMS.Data;
-using SDCRMS.Models;
-using SDCRMS.Models.Enums;
 using SDCRMS.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -36,60 +36,62 @@ var useInMemory = builder.Configuration.GetValue<bool>("UseInMemoryDatabase");
 if (useInMemory)
 {
     builder.Services.AddDbContext<AdminDbContext>(options =>
-        options.UseInMemoryDatabase("AdminServiceDB")
+        options.UseInMemoryDatabase("NotificationServiceDB")
     );
 }
 else
 {
     builder.Services.AddDbContext<AdminDbContext>(options =>
-        options.UseSqlServer(builder.Configuration.GetConnectionString("AdminServiceConnection"))
+        options.UseSqlServer(
+            builder.Configuration.GetConnectionString("NotificationServiceConnection")
+        )
     );
 }
 
-// ========== JWT CONFIGURATION ==========
-var jwtSettings = builder.Configuration.GetSection("JwtSettings");
-var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Secret"]!));
+builder.Services.AddRoleBasedAuthorization();
 
-builder
-    .Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
+// Đăng ký HttpClient cho DI container
+builder.Services.AddHttpClient();
+
+// Khởi tạo FirebaseApp (chỉ cần chạy 1 lần ở mỗi service) - thêm log kiểm tra lỗi runtime
+try
+{
+    var tokenPath = Path.Combine(Directory.GetCurrentDirectory(), "FireBase", "FireBaseToken.json");
+    Console.WriteLine($"[Firebase] Đường dẫn file token: {tokenPath}");
+    if (!File.Exists(tokenPath))
     {
-        options.Authority = "https://securetoken.google.com/fir-dcrms"; // projectId của bạn
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidIssuer = "https://securetoken.google.com/fir-dcrms",
-            ValidateAudience = true,
-            ValidAudience = "fir-dcrms",
-            ValidateLifetime = true,
-        };
-        options.Events = new JwtBearerEvents
-        {
-            OnTokenValidated = async context =>
-            {
-                var token =
-                    context.SecurityToken as System.IdentityModel.Tokens.Jwt.JwtSecurityToken;
-                try
-                {
-                    var firebaseToken =
-                        await FirebaseAdmin.Auth.FirebaseAuth.DefaultInstance.VerifyIdTokenAsync(
-                            token!.RawData
-                        );
-                    // Có thể add thêm claim vào context.Principal nếu muốn
-                }
-                catch
-                {
-                    context.Fail("Invalid Firebase token");
-                }
-            },
-        };
-    });
+        Console.WriteLine($"[Firebase] File token KHÔNG TỒN TẠI!");
+        throw new FileNotFoundException($"Không tìm thấy file token: {tokenPath}");
+    }
+    using (var stream = new FileStream(tokenPath, FileMode.Open, FileAccess.Read))
+    {
+        var credential = GoogleCredential.FromStream(stream);
+        FirebaseApp.Create(new AppOptions { Credential = credential });
+        Console.WriteLine("[Firebase] Khởi tạo FirebaseApp thành công!");
+    }
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"[Firebase] LỖI khi khởi tạo FirebaseApp: {ex.Message}\n{ex.StackTrace}");
+    throw;
+}
+
+// Đăng ký custom authentication scheme Firebase
+builder
+    .Services.AddAuthentication(options =>
+    {
+        options.DefaultScheme = SDCRMS.Authorization.FirebaseAuthenticationHandler.SchemeName;
+    })
+    .AddScheme<
+        Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions,
+        SDCRMS.Authorization.FirebaseAuthenticationHandler
+    >(SDCRMS.Authorization.FirebaseAuthenticationHandler.SchemeName, null);
 
 builder.Services.AddRoleBasedAuthorization();
 
 // ========== DEPENDENCY INJECTION ==========
-builder.Services.AddScoped<IJwtService, JwtService>();
-builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
+// Notification Service only needs Notification-related services
+builder.Services.AddScoped<FCMService>();
 builder.Services.AddScoped<
     SDCRMS.Repositories.IAdminRepository,
     SDCRMS.Repositories.AdminRepository
@@ -106,9 +108,9 @@ builder.Services.AddSwaggerGen(c =>
         "v1",
         new OpenApiInfo
         {
-            Title = "SDCRMS Admin Service",
+            Title = "SDCRMS Notification Service",
             Version = "v1",
-            Description = "Microservice for Admin Management & Authentication",
+            Description = "Microservice for Notification & FCM Management",
         }
     );
 
@@ -158,42 +160,11 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 // Health check endpoint
-app.MapGet("/health", () => Results.Ok(new { status = "healthy", service = "AdminService" }));
+app.MapGet(
+    "/health",
+    () => Results.Ok(new { status = "healthy", service = "NotificationService" })
+);
 
 app.MapControllers();
-
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<AdminDbContext>();
-    var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
-
-    db.Database.EnsureCreated();
-
-    // Seed default admin if database is empty
-    if (!db.Admins.Any())
-    {
-        var defaultAdmin = new Admin
-        {
-            Email = "triuu1212@gmail.com",
-            Password = passwordHasher.HashPassword("trieuhoang12"),
-            FirstName = "Admin",
-            LastName = "System",
-            Role = UserRole.Admin,
-            JoinDate = DateTime.UtcNow,
-            PhoneNumber = "0123456789",
-            Sex = "Other",
-            Birthday = new DateTime(1990, 1, 1),
-            Address = "SDCRMS HQ",
-        };
-        db.Admins.Add(defaultAdmin);
-        db.SaveChanges();
-    }
-}
-
-using (var stream = new FileStream("FireBase/FireBaseToken.json", FileMode.Open, FileAccess.Read))
-{
-    var credential = GoogleCredential.FromStream(stream);
-    FirebaseApp.Create(new AppOptions { Credential = credential });
-}
 
 app.Run();

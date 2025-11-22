@@ -15,10 +15,9 @@ namespace SDCRMS.Authorization
         public FirebaseAuthenticationHandler(
             IOptionsMonitor<AuthenticationSchemeOptions> options,
             ILoggerFactory logger,
-            UrlEncoder encoder,
-            ISystemClock clock
+            UrlEncoder encoder
         )
-            : base(options, logger, encoder, clock) { }
+            : base(options, logger, encoder) { }
 
         protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
         {
