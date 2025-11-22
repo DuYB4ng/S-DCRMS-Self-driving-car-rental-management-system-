@@ -24,8 +24,8 @@ export default function Login() {
       );
 
       // Lấy Firebase ID Token
-      const firebaseToken = await userCredential.user.getIdToken();
-      console.log("Firebase Token:", firebaseToken);
+      const token = await userCredential.user.getIdToken();
+      console.log("Firebase Token:", token);
 
       // Decode token để lấy custom claims (role)
       const tokenResult = await userCredential.user.getIdTokenResult();
@@ -33,7 +33,7 @@ export default function Login() {
         tokenResult.claims.role || tokenResult.claims.admin ? "Admin" : "Staff";
 
       // Lưu token vào localStorage
-      localStorage.setItem("adminToken", firebaseToken);
+      localStorage.setItem("adminToken", token);
       localStorage.setItem(
         "adminUser",
         JSON.stringify({

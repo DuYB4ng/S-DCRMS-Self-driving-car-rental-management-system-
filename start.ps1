@@ -19,8 +19,8 @@ Write-Host "   Admin API: http://localhost:5001"
 Write-Host "   Notif API: http://localhost:5002"
 Write-Host ""
 Write-Host "🔑 Default Admin Login:" -ForegroundColor Yellow
-Write-Host "   Email:    admin@sdcrms.com"
-Write-Host "   Password: Admin123@"
+Write-Host "   Email:    triuu1212@gmail.com"
+Write-Host "   Password: trieuhoang12"
 Write-Host ""
 Write-Host "📊 View logs: docker-compose -f docker-compose.simple.yml logs -f" -ForegroundColor Cyan
 Write-Host "🛑 Stop all:  docker-compose -f docker-compose.simple.yml down" -ForegroundColor Red
