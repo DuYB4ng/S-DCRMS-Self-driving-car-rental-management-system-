@@ -10,6 +10,8 @@ import ReviewPage from "./pages/ReviewPage";
 import StaffRoutes from "./pages/staff/StaffRoutes";
 import StaffGuard from "./guards/StaffGuard";
 
+import PaymentResultPage from "./pages/PaymentResultPage";
+
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -17,9 +19,10 @@ export const router = createBrowserRouter([
     children: [
       { path: "booking", element: <BookingPage /> },
       { path: "owner", element: <OwnerCarPage /> },
-      { path: "login", element: <Login /> }, // ⭐ login vẫn nằm tại đây
+      { path: "login", element: <Login /> },
       { path: "payment", element: <PaymentPage /> },
       { path: "review", element: <ReviewPage /> },
+      { path: "payment-result", element: <PaymentResultPage /> },
     ],
   },
 

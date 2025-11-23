@@ -26,4 +26,8 @@ class PaymentService {
       "amount": amount,
     });
   }
+
+  Future<Response> getPaymentById(int id) async {
+    return await api.get("/payment/$id");
+  }
 }
