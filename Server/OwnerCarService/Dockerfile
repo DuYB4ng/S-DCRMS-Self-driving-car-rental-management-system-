@@ -2,27 +2,29 @@
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
-# Copy csproj and restore dependencies
-COPY OwnerCarService.csproj ./
-RUN dotnet restore
+# Copy csproj files
+COPY OwnerCarService/OwnerCarService.csproj OwnerCarService/
+COPY Redis.Shared/Redis.Shared.csproj Redis.Shared/
 
-COPY . ./
+# Restore only for OwnerCarService
+RUN dotnet restore OwnerCarService/OwnerCarService.csproj
 
-# build and publish app
+# Copy toàn bộ source
+COPY . .
+
+# Build + publish
+WORKDIR /src/OwnerCarService
 RUN dotnet publish -c Release -o /app/publish
 
 # Stage 2: runtime
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
 WORKDIR /app
 
-#copy from build stage
 COPY --from=build /app/publish .
 
-#environment variables
 ENV ASPNETCORE_URLS=http://+:8081
 ENV ASPNETCORE_ENVIRONMENT=Development
 
-# Expose internal port
 EXPOSE 8081
 
-ENTRYPOINT [ "dotnet","OwnerCarService.dll" ]
+ENTRYPOINT ["dotnet", "OwnerCarService.dll"]

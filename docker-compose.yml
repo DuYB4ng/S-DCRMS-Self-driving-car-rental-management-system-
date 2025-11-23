@@ -73,8 +73,8 @@ services:
   # ==========================
   ownercarservice:
     build:
-      context: ./Server/OwnerCarService
-      dockerfile: Dockerfile
+      context: ./Server
+      dockerfile: OwnerCarService/Dockerfile
     container_name: ownercarservice
     ports:
       - "8001:8081"
@@ -339,7 +339,7 @@ services:
     image: influxdb:2.7
     container_name: influxdb
     ports:
-      - "8086:8086"
+      - "8095:8086"
     environment:
       - DOCKER_INFLUXDB_INIT_MODE=setup
       - DOCKER_INFLUXDB_INIT_USERNAME=admin

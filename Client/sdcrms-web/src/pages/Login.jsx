@@ -29,21 +29,57 @@ export default function Login() {
       setError(err.message);
     }
   };
+  const handleSignUp = async (e) => {
+  e.preventDefault();
+  setError("");
+
+  const name = e.target.name.value;
+  const email = e.target.email.value;
+  const password = e.target.password.value;
+
+  try {
+    const res = await fetch("http://localhost:8000/api/auth/signup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        displayName: name,
+        email: email,
+        password: password
+      })
+    });
+
+    const data = await res.json();
+    console.log("Signup response:", data);
+
+    if (!res.ok) {
+      throw new Error(data.error || "Signup failed");
+    }
+
+    alert("Signup successful!");
+    setIsSignUp(false);
+  } catch (err) {
+    console.error(err);
+    setError(err.message);
+  }
+};
 
   return (
     <div className="body">
       <div className={`container ${isSignUp ? "activate" : ""}`}>
       {/* SIGN UP FORM */}
       <div className="form-container sign-up-container">
-        <form id="signUpForm">
-          <h2>Create Account</h2>
-          <input type="text" placeholder="Name" required />
-          <input type="email" placeholder="Email" required />
-          <input type="password" placeholder="Password" required />
-          <input type="password" placeholder="Confirm Password" required />
-          <button type="submit">Sign Up</button>
-          <div className="error-message" id="signUpError"></div>
-        </form>
+          <form id="signUpForm" onSubmit={handleSignUp}>
+            <h2>Create Account</h2>
+
+            <input type="text" name="name" placeholder="Name" required />
+            <input type="email" name="email" placeholder="Email" required />
+            <input type="password" name="password" placeholder="Password" required />
+            <input type="password" name="confirmPassword" placeholder="Confirm Password" required />
+
+            <button type="submit">Sign Up</button>
+
+            {error && <div className="error-message">{error}</div>}
+          </form>
       </div>
 
       {/* SIGN IN FORM */}
