@@ -11,6 +11,7 @@ namespace UserService.Repositories
         Task<User> AddAsync(User user);
         Task UpdateAsync(User user);
         Task SaveChangesAsync();
+        Task<List<User>> GetAllAsync();
     }
 
     public class UserRepository : IUserRepository
@@ -22,6 +23,10 @@ namespace UserService.Repositories
             _context = context;
         }
 
+        public async Task<List<User>> GetAllAsync()
+        {
+            return await _context.Users.ToListAsync();
+        }
         public async Task<User?> GetByFirebaseUidAsync(string firebaseUid)
         {
             return await _context.Users

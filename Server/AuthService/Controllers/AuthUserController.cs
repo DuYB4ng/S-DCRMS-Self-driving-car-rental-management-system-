@@ -62,7 +62,7 @@ namespace AuthService.Services
 
                 try
                 {
-                    var response = await http.PostAsJsonAsync("http://localhost:5178/api/users/sync", newUser);
+                    var response = await http.PostAsJsonAsync("http://userservice:8086/api/users/sync", newUser);
                     if (!response.IsSuccessStatusCode)
                         Console.WriteLine($"⚠️ Failed to sync user to UserService: {response.StatusCode}");
                     else
@@ -149,7 +149,7 @@ namespace AuthService.Services
                         fullName = user.DisplayName
                     };
 
-                    var response = await http.PostAsJsonAsync("http://localhost:5178/api/users/sync", syncData);
+                    var response = await http.PostAsJsonAsync("http://userservice:8086/api/users/sync", syncData);
                     if (response.IsSuccessStatusCode)
                     {
                         Console.WriteLine($"✅ Synced user {user.FirebaseUid} to UserService");

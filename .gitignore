@@ -61,3 +61,5 @@ data/nifi_registry/database/
 nifi_data/conf/nifi.properties
 Server/AuthService/firebase-adminsdk.json
 Server/NotificationService/src/main/resources/firebase/serviceAccountKey.json
+
+influx_data/

@@ -4,6 +4,8 @@ using BookingService.Models;
 using BookingService.Repositories;
 using BookingService.Interfaces;
 using BookingService.Services;
+using BookingService.VnPay;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,9 +26,9 @@ builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
 
 //Đăng ký HttpClient
 builder.Services.AddHttpClient<CustomerClient>();
+builder.Services.AddScoped<IVnPayService, VnPayService>();
 
 // Đăng kí VNPay
-builder.Services.AddScoped<VNPayService>();
 
 var app = builder.Build();
 

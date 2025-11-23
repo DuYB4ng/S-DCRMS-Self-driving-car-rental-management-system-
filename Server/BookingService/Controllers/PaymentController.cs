@@ -7,6 +7,7 @@ using BookingService.Interfaces;
 using BookingService.Dtos.Payment;
 using BookingService.Mappers;
 using BookingService.Services;
+using BookingService.VnPay;
 
 namespace BookingService.Controllers
 {
@@ -16,12 +17,12 @@ namespace BookingService.Controllers
     {
         private readonly AppDbContext _context;
         private readonly IPaymentRepository _paymentRepo;
-        private readonly VNPayService _vnPayService;
+        private readonly IVnPayService _vnPayService;
 
         public PaymentController(
             AppDbContext context,
             IPaymentRepository paymentRepo,
-            VNPayService vnPayService)
+            IVnPayService vnPayService)
         {
             _context = context;
             _paymentRepo = paymentRepo;
@@ -98,29 +99,40 @@ namespace BookingService.Controllers
             return NoContent();
         }
 
-                // POST: api/payment/create-vnpay  (tạo payment + URL VNPay)
+        // POST: api/payment/create-vnpay
         [HttpPost("create-vnpay")]
         public async Task<IActionResult> CreateVnPayPayment([FromBody] CreateVnPayPaymentRequestDto dto)
         {
-            // kiểm tra booking tồn tại
+            // 1. kiểm tra booking
             var booking = await _context.Bookings.FirstOrDefaultAsync(b => b.BookingID == dto.BookingID);
             if (booking == null)
             {
                 return NotFound(new { message = "Booking not found" });
             }
 
+            // 2. tạo payment pending trong DB
             var payment = new Payment
             {
                 PaymentDate = DateTime.UtcNow,
-                Amount = dto.Amount,
+                Amount = dto.Amount,       // decimal
                 Method = "VNPAY",
                 Status = "Pending",
                 BookingID = dto.BookingID
             };
+            await _paymentRepo.CreateAsync(payment);
 
-            await _paymentRepo.CreateAsync(payment); // sau khi lưu sẽ có PaymentID
+            // 3. map sang PaymentInformationModel (dùng double, nên cast)
+            var info = new PaymentInformationModel
+            {
+                PaymentId       = payment.PaymentID,   
+                OrderType        = "other",
+                Amount           = (double)dto.Amount,
+                OrderDescription = $"Thanh toan booking {dto.BookingID}, payment {payment.PaymentID}",
+                Name             = "Khach hang"
+            };
 
-            var paymentUrl = _vnPayService.CreatePaymentUrl(payment, HttpContext);
+            // 4. tạo URL VNPAY
+            var paymentUrl = _vnPayService.CreatePaymentUrl(info, HttpContext);
 
             return Ok(new
             {
@@ -130,17 +142,21 @@ namespace BookingService.Controllers
             });
         }
 
+
         [HttpGet("vnpay-ipn")]
         public async Task<IActionResult> VnPayIpn()
         {
-            var validation = _vnPayService.ValidateIpn(Request.Query);
+            // Dùng service mới để validate chữ ký & đọc dữ liệu
+            var response = _vnPayService.PaymentExecute(Request.Query);
 
-            if (validation.RspCode != "00")
+            if (!response.Success)
             {
-                return Ok(new { RspCode = validation.RspCode, Message = validation.Message });
+                // Sai chữ ký
+                return Ok(new { RspCode = "97", Message = "Invalid signature" });
             }
 
-            if (!int.TryParse(validation.OrderId, out var paymentId))
+            // Lấy PaymentID từ vnp_TxnRef (response.OrderId)
+            if (!int.TryParse(response.OrderId, out var paymentId))
             {
                 return Ok(new { RspCode = "01", Message = "Invalid order id" });
             }
@@ -151,34 +167,49 @@ namespace BookingService.Controllers
                 return Ok(new { RspCode = "01", Message = "Order not found" });
             }
 
-            // VNPay amount = tiền * 100
-            if ((long)(payment.Amount * 100) != validation.Amount)
+            // Kiểm tra số tiền (nếu muốn chặt chẽ)
+            if (Request.Query.TryGetValue("vnp_Amount", out var amountStr)
+                && long.TryParse(amountStr, out var amountFromVnp))
             {
-                return Ok(new { RspCode = "04", Message = "Invalid amount" });
+                var expected = (long)(payment.Amount * 100);
+                if (expected != amountFromVnp)
+                {
+                    return Ok(new { RspCode = "04", Message = "Invalid amount" });
+                }
             }
 
-            // 🔽 Lấy booking tương ứng
+            // Lấy booking tương ứng
             var booking = await _context.Bookings.FindAsync(payment.BookingID);
 
-            if (validation.ResponseCode == "00" && validation.TransactionStatus == "00")
+            // response.VnPayResponseCode == "00" là thanh toán thành công
+            if (response.VnPayResponseCode == "00")
             {
-                payment.Status = "Success";
+                payment.Status = "Completed";
                 payment.PaymentDate = DateTime.Now;
 
                 if (booking != null && booking.Status == "Pending")
                 {
-                    booking.Status = "Paid";   // 👈 booking đã thanh toán
+                    booking.Status = "Paid";
                 }
             }
             else
             {
                 payment.Status = "Failed";
-                // booking vẫn Pending để user thanh toán lại
             }
 
             await _context.SaveChangesAsync();
 
+            // Chuẩn IPN của VNPay: xử lý ok thì trả RspCode = "00"
             return Ok(new { RspCode = "00", Message = "Confirm Success" });
+        }
+
+
+        // GET: api/payment/vnpay-return
+        [HttpGet("vnpay-return")]
+        public IActionResult VnPayReturn()
+        {
+            var response = _vnPayService.PaymentExecute(Request.Query);
+            return Ok(response);
         }
     }
 }
