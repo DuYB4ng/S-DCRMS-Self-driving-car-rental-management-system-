@@ -9,6 +9,7 @@ namespace UserService.Services
         Task<User?> GetByEmailAsync(string email);
         Task<User> CreateUserAsync(User user);
         Task UpdateUserAsync(User user);
+        Task<List<User>> GetAllAsync();
     }
 
     public class UserService : IUserService
@@ -20,6 +21,10 @@ namespace UserService.Services
             _userRepository = userRepository;
         }
 
+        public async Task<List<User>> GetAllAsync()
+        {
+            return await _userRepository.GetAllAsync();
+        }
         public async Task<User?> GetByFirebaseUidAsync(string firebaseUid)
         {
             return await _userRepository.GetByFirebaseUidAsync(firebaseUid);

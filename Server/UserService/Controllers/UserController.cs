@@ -15,6 +15,13 @@ namespace UserService.Controllers
             _userService = userService;
         }
 
+        [HttpGet]
+        public async Task<ActionResult<List<User>>> GetAll()
+        {
+            var users = await _userService.GetAllAsync();
+            return Ok(users);
+        }
+        
         [HttpGet("firebase/{firebaseUid}")]
         public async Task<ActionResult<User?>> GetByFirebaseUid(string firebaseUid)
         {
