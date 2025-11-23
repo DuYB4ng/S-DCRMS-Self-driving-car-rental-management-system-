@@ -3,36 +3,16 @@
     {
       "DownstreamPathTemplate": "/api/auth/{everything}",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        { "Host": "authservice", "Port": 8089 }
-      ],
+      "DownstreamHostAndPorts": [{ "Host": "authservice", "Port": 8089 }],
       "UpstreamPathTemplate": "/api/auth/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
-    },
-    {
-      "DownstreamPathTemplate": "/api/ownercar/{everything}",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        { "Host": "ownercarservice", "Port": 8081 }
-      ],
-      "UpstreamPathTemplate": "/api/ownercar/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
-      },
-      "DownstreamHeaderTransform": {
-        "Authorization": "{Authorization}"
-      }
+      "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE"]
     },
     {
       "DownstreamPathTemplate": "/api/location/{everything}",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        { "Host": "ownercarservice", "Port": 8081 }
-      ],
+      "DownstreamHostAndPorts": [{ "Host": "ownercarservice", "Port": 8081 }],
       "UpstreamPathTemplate": "/api/location/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
+      "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE"],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer",
         "AllowedScopes": []
@@ -44,74 +24,58 @@
     {
       "DownstreamPathTemplate": "/api/car/{everything}",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        { "Host": "ownercarservice", "Port": 8081 }
-      ],
+      "DownstreamHostAndPorts": [{ "Host": "ownercarservice", "Port": 8081 }],
       "UpstreamPathTemplate": "/api/car/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
+      "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE"]
     },
     {
       "DownstreamPathTemplate": "/api/maintenance/{everything}",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        { "Host": "ownercarservice", "Port": 8081 }
-      ],
+      "DownstreamHostAndPorts": [{ "Host": "ownercarservice", "Port": 8081 }],
       "UpstreamPathTemplate": "/api/maintenance/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
+      "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE"]
     },
     {
       "DownstreamPathTemplate": "/api/booking/{everything}",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        { "Host": "bookingservice", "Port": 8083 }
-      ],
+      "DownstreamHostAndPorts": [{ "Host": "bookingservice", "Port": 8083 }],
       "UpstreamPathTemplate": "/api/booking/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
+      "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE"]
     },
     {
       "DownstreamPathTemplate": "/api/payment/{everything}",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        { "Host": "bookingservice", "Port": 8083 }
-      ],
+      "DownstreamHostAndPorts": [{ "Host": "bookingservice", "Port": 8083 }],
       "UpstreamPathTemplate": "/api/payment/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
+      "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE"]
     },
     {
       "DownstreamPathTemplate": "/api/review/{everything}",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        { "Host": "bookingservice", "Port": 8083 }
-      ],
+      "DownstreamHostAndPorts": [{ "Host": "bookingservice", "Port": 8083 }],
       "UpstreamPathTemplate": "/api/review/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
+      "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE"]
     },
     {
       "DownstreamPathTemplate": "/api/Staff/{everything}",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        { "Host": "staffservice", "Port": 8084 }
-      ],
+      "DownstreamHostAndPorts": [{ "Host": "staffservice", "Port": 8084 }],
       "UpstreamPathTemplate": "/api/staff/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
+      "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE"]
     },
     {
       "DownstreamPathTemplate": "/api/customer/{everything}",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        { "Host": "customerservice", "Port": 8085 }
-      ],
+      "DownstreamHostAndPorts": [{ "Host": "customerservice", "Port": 8085 }],
       "UpstreamPathTemplate": "/api/customer/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
+      "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE"]
     },
     {
       "DownstreamPathTemplate": "/api/users/{everything}",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        { "Host": "userservice", "Port": 8086 }
-      ],
+      "DownstreamHostAndPorts": [{ "Host": "userservice", "Port": 8086 }],
       "UpstreamPathTemplate": "/api/users/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
+      "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE"]
     }
   ],
   "GlobalConfiguration": {

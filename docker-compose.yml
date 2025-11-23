@@ -14,11 +14,10 @@ services:
     depends_on:
       - ownercarservice
       - kafka
-      - staffservice 
+      - staffservice
       - bookingservice
-      - customerservice  
-      - userservice  
-
+      - customerservice
+      - userservice
 
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
@@ -35,21 +34,21 @@ services:
       - sdcrms-network
 
   authservice:
-      build:
-        context: ./Server/AuthService
-        dockerfile: Dockerfile
-      container_name: authservice-sdcrms
-      ports:
-        - "8089:8089"
-      environment:
-        - ASPNETCORE_ENVIRONMENT=Development
-        - ConnectionStrings__DefaultConnection=server=db;port=3306;database=AuthDB;user=root;password=YourStrong@Password123;
-      depends_on:
-        db:
-          condition: service_healthy  # ← Đợi MySQL healthy
-      networks:
-        - sdcrms-network
-      restart: on-failure
+    build:
+      context: ./Server/AuthService
+      dockerfile: Dockerfile
+    container_name: authservice-sdcrms
+    ports:
+      - "8089:8089"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=server=db;port=3306;database=AuthDB;user=root;password=YourStrong@Password123;
+    depends_on:
+      db:
+        condition: service_healthy # ← Đợi MySQL healthy
+    networks:
+      - sdcrms-network
+    restart: on-failure
   # ==========================
   # User Microservice (SQL Server)
   # ==========================
@@ -65,7 +64,7 @@ services:
       - ConnectionStrings__DefaultConnection=server=db;port=3306;database=UserDB;user=root;password=YourStrong@Password123;
     ports:
       - "8086:8086"
-    networks:            
+    networks:
       - sdcrms-network
 
   # ==========================
@@ -137,21 +136,21 @@ services:
       - sdcrms-network
 
   # ==========================
-  # staffServices Microservice 
+  # staffServices Microservice
   # ==========================
   staffservice:
     build:
-        context: ./Server/staffMicroService
+      context: ./Server/staffMicroService
     ports:
-        - "8004:8084"
+      - "8004:8084"
     environment:
-        - ASPNETCORE_ENVIRONMENT=Development
-        - ASPNETCORE_URLS=http://+:8084
-        - ConnectionStrings__DefaultConnection=Server=sqlserver-staff;Database=StaffDB;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;Encrypt=False;
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8084
+      - ConnectionStrings__DefaultConnection=Server=sqlserver-staff;Database=StaffDB;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;Encrypt=False;
     depends_on:
-        - sqlserver-staff
+      - sqlserver-staff
     networks:
-        - sdcrms-network
+      - sdcrms-network
   # ==========================
   # OwnerCar Consumer (Kafka -> SQL)
   # ==========================
@@ -190,7 +189,15 @@ services:
     networks:
       - sdcrms-network
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-pYourStrong@Password123"]
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-pYourStrong@Password123",
+        ]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -210,7 +217,7 @@ services:
       - sdcrms-network
     volumes:
       - sqlserver-booking-data:/var/opt/mssql
-   
+
   sqlserver-staff:
     image: mcr.microsoft.com/mssql/server:2022-latest
     container_name: sqlserver-staff
@@ -218,13 +225,12 @@ services:
       - SA_PASSWORD=YourStrong!Passw0rd
       - ACCEPT_EULA=Y
     ports:
-        - "1434:1433"
+      - "1434:1433"
     volumes:
-        - ./entrypoint.sh:/entrypoint.sh
+      - ./entrypoint.sh:/entrypoint.sh
     command: /bin/bash /entrypoint.sh
     networks:
-        - sdcrms-network
-
+      - sdcrms-network
 
   sqlserver-customer:
     image: mcr.microsoft.com/mssql/server:2022-latest
@@ -285,7 +291,7 @@ services:
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
     depends_on:
       - zookeeper
     ports:
@@ -353,7 +359,7 @@ services:
       - sdcrms-network
   # ==========================
   # Redis(cache)
-  # ==========================     
+  # ==========================
   redis:
     image: redis:7-alpine
     container_name: redis-sdcrms

@@ -81,6 +81,31 @@ namespace AuthService.Services
                 return BadRequest(new { error = ex.Message });
             }
         }
+    // Đổi role theo email (dùng Postman / admin)
+        [HttpPost("setRole")]
+        public async Task<IActionResult> SetRole([FromBody] SetRoleRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Role))
+            {
+                return BadRequest(new { message = "Email và Role là bắt buộc" });
+            }
+
+            // Tìm user trong AuthDB
+            var user = await _authUserRepository.GetByEmailAsync(request.Email);
+            if (user == null)
+            {
+                return NotFound(new { message = "User không tồn tại trong AuthDB" });
+            }
+
+            user.Role = request.Role;  // ví dụ: "Staff", "Admin", "OwnerCar", "Customer"
+            await _authUserRepository.UpdateAsync(user);
+
+            return Ok(new
+            {
+                email = user.Email,
+                role = user.Role
+            });
+        }
 
         // ✅ Xác thực token gọn nhẹ
         [HttpPost("verifyToken")]

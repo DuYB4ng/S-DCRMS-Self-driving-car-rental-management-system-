@@ -1,68 +1,51 @@
-import { useState } from "react";
+// src/pages/LoginPage.tsx
+import React, { useState } from "react";
+import type { FormEvent } from "react";
+import { useNavigate } from "react-router-dom";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../utils/firebase";
 import "../assets/css/login.css";
-import { useNavigate } from "react-router-dom";
 
-export default function Login() {
+type LoginPageProps = {
+  onLoginSuccess: () => void;
+};
+
+const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const handleLogin = async (e) => {
+  const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
 
     try {
-      // 1. Đăng nhập Firebase
       const userCredential = await signInWithEmailAndPassword(
         auth,
         email,
         password
       );
-
-      const token = await userCredential.user.getIdToken(true);
+      const token = await userCredential.user.getIdToken();
       console.log("Firebase Token:", token);
 
-      // 2. Gửi token sang AuthService để lấy role
-      const roleRes = await fetch(
-        "http://localhost:8000/api/auth/verifyToken",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ idToken: token }),
-        }
-      );
+      const res = await fetch("http://localhost:8000/ownercar/cars", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-      console.log("STATUS:", roleRes.status);
-      const data = await roleRes.json().catch(() => null);
-      console.log("VerifyToken Response:", data);
-
-      if (!roleRes.ok || !data) {
-        throw new Error(data?.error || "Không thể lấy role từ server!");
+      if (!res.ok) {
+        throw new Error(`API error: ${res.status}`);
       }
 
-      // 3. Chuẩn hoá role về lowercase cho chắc
-      const role = (data.role || "").toLowerCase();
-      console.log("User role:", role);
+      const data = await res.json();
+      console.log("Data:", data);
 
-      // (Tuỳ bạn muốn lưu hay không)
-      localStorage.setItem("userRole", role);
-      localStorage.setItem("idToken", token);
-
-      // 4. Điều hướng theo role
-      if (role === "staff" || role === "admin") {
-        // Nhân viên / admin → vào staff panel
-        navigate("/staff", { replace: true });
-      } else {
-        // Customer / owner / role khác → về trang chủ
-        navigate("/", { replace: true });
-      }
-    } catch (err) {
+      onLoginSuccess(); // báo cho App biết là đã login
+      navigate("/"); // chuyển sang Dashboard
+    } catch (err: any) {
       console.error(err);
-      setError(err.message || "Đăng nhập thất bại");
+      setError(err.message ?? "Đăng nhập thất bại");
     }
   };
 
@@ -73,17 +56,12 @@ export default function Login() {
         <div className="form-container sign-up-container">
           <form id="signUpForm">
             <h2>Create Account</h2>
-
-            <input type="text" name="name" placeholder="Name" />
-            <input type="email" name="email" placeholder="Email" />
-            <input type="password" name="password" placeholder="Password" />
-            <input
-              type="password"
-              name="confirmPassword"
-              placeholder="Confirm Password"
-            />
-
+            <input type="text" placeholder="Name" required />
+            <input type="email" placeholder="Email" required />
+            <input type="password" placeholder="Password" required />
+            <input type="password" placeholder="Confirm Password" required />
             <button type="submit">Sign Up</button>
+            <div className="error-message" id="signUpError" />
           </form>
         </div>
 
@@ -91,7 +69,6 @@ export default function Login() {
         <div className="form-container sign-in-container">
           <form onSubmit={handleLogin}>
             <h1>Sign in</h1>
-
             <input
               type="email"
               placeholder="Email"
@@ -99,7 +76,6 @@ export default function Login() {
               onChange={(e) => setEmail(e.target.value)}
               required
             />
-
             <input
               type="password"
               placeholder="Password"
@@ -107,9 +83,8 @@ export default function Login() {
               onChange={(e) => setPassword(e.target.value)}
               required
             />
-
+            <a href="#">Forgot your password?</a>
             <button type="submit">Sign In</button>
-
             {error && <div className="error-message">{error}</div>}
           </form>
         </div>
@@ -119,14 +94,25 @@ export default function Login() {
           <div className="overlay">
             <div className="overlay-panel overlay-left">
               <h1>Welcome Back!</h1>
-              <button className="ghost" onClick={() => setIsSignUp(false)}>
+              <p>
+                To keep connected with us please login with your personal info
+              </p>
+              <button
+                type="button"
+                className="ghost"
+                onClick={() => setIsSignUp(false)}
+              >
                 Sign In
               </button>
             </div>
-
             <div className="overlay-panel overlay-right">
               <h1>Hello, Friend!</h1>
-              <button className="ghost" onClick={() => setIsSignUp(true)}>
+              <p>Enter your personal details and start your journey with us</p>
+              <button
+                type="button"
+                className="ghost"
+                onClick={() => setIsSignUp(true)}
+              >
                 Sign Up
               </button>
             </div>
@@ -135,4 +121,6 @@ export default function Login() {
       </div>
     </div>
   );
-}
+};
+
+export default LoginPage;
