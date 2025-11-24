@@ -12,6 +12,7 @@ namespace OwnerCarService.Services
         Task<CarDTO> ThemXeAsync(CreateCarDTO carDto);
         Task<CarDTO?> CapNhatXeAsync(UpdateCarDTO carDto);
         Task<bool> XoaXeAsync(int carId);
+        Task<IEnumerable<CarDTO>> LayTatCaXeKhongBaoTriAsync();
     }
 
     public class CarService : ICarService
@@ -67,6 +68,12 @@ namespace OwnerCarService.Services
         public async Task<bool> XoaXeAsync(int carId)
         {
             return await _carRepository.XoaXeAsync(carId);
+        }
+
+        public async Task<IEnumerable<CarDTO>> LayTatCaXeKhongBaoTriAsync()
+        {
+            var cars = await _carRepository.LayTatCaXeKhongBaoTriAsync();
+            return _mapper.Map<IEnumerable<CarDTO>>(cars);
         }
     }
 }

@@ -67,6 +67,37 @@ namespace BookingService.Controllers
                 customerId = customer.CustomerId;
             }
 
+                    // 1) Validate thời gian
+            if (bookingDto.EndDate <= bookingDto.StartDate)
+            {
+                return BadRequest(new { message = "Thời gian trả xe phải sau thời gian nhận xe." });
+            }
+
+            // (tùy chọn) dọn pending booking hết hạn nếu bạn đang dùng chức năng này
+            // await RemoveExpiredPendingBookings(); // nếu method này đã có sẵn ở cuối controller
+
+            // 2) Kiểm tra trùng lịch với booking khác
+            var hasOverlapBooking = await _context.Bookings
+                .AnyAsync(b =>
+                    b.CarId == bookingDto.CarId &&
+                    b.Status != BookingStatuses.Cancelled && // bỏ qua booking đã hủy
+                    b.StartDate < bookingDto.EndDate &&
+                    b.EndDate > bookingDto.StartDate);
+
+            if (hasOverlapBooking)
+            {
+                return Conflict(new
+                {
+                    message = "Xe này đã có người đặt trong khoảng thời gian bạn chọn. Vui lòng chọn xe hoặc khung giờ khác."
+                });
+            }
+
+            // 3) (Tùy chọn) Kiểm tra bảo trì nếu muốn làm ở backend luôn
+            //  - Cách đơn giản nhất: khi tạo/sửa Maintenance (Status = true) thì cập nhật luôn trạng thái xe (vd: isAvailable/State = false)
+            //  - Lúc đó Flutter lọc theo isAvailable/State là đủ.
+            //  Nếu muốn gọi thẳng sang OwnerCarService để check Maintenance thì ta sẽ làm thêm HttpClient giống CustomerClient.
+
+            // 4) Nếu không trùng -> tạo booking như cũ
             var bookingModel = await _bookingRepo.createAsync(bookingDto, customerId);
 
             return CreatedAtAction(nameof(GetById),

@@ -6,6 +6,7 @@ class OrderDetailViewModel extends ChangeNotifier {
 
   bool isLoading = false;
   Map<String, dynamic>? orderData;
+  Map<String, dynamic>? carData;
   String? errorMessage;
 
   // 👉 Load lần đầu (khi mở trang)
@@ -36,11 +37,28 @@ class OrderDetailViewModel extends ChangeNotifier {
   // ============================
   Future<void> _fetchOrder(String orderId) async {
     try {
+      // 1️⃣ Lấy thông tin booking
       final res = await api.get("/booking/$orderId");
       orderData = res.data;
       errorMessage = null;
+
+      // 2️⃣ Dựa vào carId trong booking để gọi thêm thông tin xe
+      carData = null; // reset
+      final carId = orderData?["carId"];
+      if (carId != null) {
+        try {
+          final carRes = await api.get("/Car/$carId");
+          carData = carRes.data;
+        } catch (_) {
+          // Nếu lỗi lấy xe thì vẫn hiển thị hóa đơn, chỉ là không có block thông tin xe
+          carData = null;
+        }
+      }
+
+      notifyListeners(); // thông báo UI cập nhật dữ liệu mới
     } catch (e) {
       errorMessage = "Không thể tải đơn hàng.";
+      notifyListeners();
     }
   }
 }
