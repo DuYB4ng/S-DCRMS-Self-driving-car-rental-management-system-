@@ -21,7 +21,9 @@ namespace BookingService.Repositories
 		}
 		public Task<List<Booking>> getAllAsync()
 		{
-			return _context.Bookings.ToListAsync();
+			return _context.Bookings
+				.OrderByDescending(b => b.BookingID)
+				.ToListAsync();
 		}
 		public Task<Booking?> getByIdAsync(int id)
 		{
