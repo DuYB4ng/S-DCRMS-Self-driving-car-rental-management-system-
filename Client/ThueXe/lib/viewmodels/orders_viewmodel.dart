@@ -34,6 +34,29 @@ class OrdersViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// CUSTOMER check-in booking
+  Future<void> checkIn(int bookingId) async {
+    try {
+      // POST /booking/{id}/check-in
+      await api.post("/booking/$bookingId/check-in", {});
+      // Sau khi server cập nhật, load lại danh sách
+      await refreshOrders();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// CUSTOMER check-out booking
+  Future<void> checkOut(int bookingId) async {
+    try {
+      // POST /booking/{id}/check-out
+      await api.post("/booking/$bookingId/check-out", {});
+      await refreshOrders();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   // 👉 Pull-to-refresh khi dùng RefreshIndicator
   Future<void> pullToRefresh() async {
     try {

@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using BookingService.Interfaces;
 using BookingService.Services;
 using Microsoft.AspNetCore.Authorization;
+using BookingService.Constants;
 
 namespace BookingService.Controllers
 {
@@ -98,19 +99,45 @@ namespace BookingService.Controllers
         [HttpPost("{id}/check-in")]
         public async Task<IActionResult> CheckIn(int id)
         {
+            // Lấy booking
             var booking = await _context.Bookings.FindAsync(id);
             if (booking == null)
                 return NotFound(new { message = "Booking not found" });
 
-            // chỉ cho check-in khi đã thanh toán
-            if (booking.Status != "Paid")
-                return BadRequest(new { message = "Booking must be Paid before check-in" });
+            // Lấy firebaseUid từ JWT (giống Create)
+            int customerId;
+            var firebaseUid =
+                User.FindFirst("firebaseUid")?.Value ??
+                User.FindFirst("user_id")?.Value;
+
+            if (string.IsNullOrEmpty(firebaseUid))
+            {
+                // DEV MODE: fallback CustomerId = 1
+                customerId = 1;
+            }
+            else
+            {
+                var customer = await _customerClient.GetByFirebaseUidAsync(firebaseUid);
+                if (customer == null)
+                    return BadRequest(new { message = "Customer profile not found" });
+
+                customerId = customer.CustomerId;
+            }
+
+            // Chỉ chủ booking mới được check-in
+            if (booking.CustomerId != customerId)
+                return Forbid();
+
+            // Chỉ cho check-in khi đã thanh toán
+            if (!string.Equals(booking.Status, BookingStatuses.Paid, StringComparison.OrdinalIgnoreCase))
+                return BadRequest(new { message = $"Booking must be '{BookingStatuses.Paid}' before check-in" });
 
             if (booking.CheckIn)
                 return BadRequest(new { message = "Booking already checked in" });
 
+            // Cập nhật trạng thái check-in
             booking.CheckIn = true;
-            booking.Status = "InProgress";
+            booking.Status = BookingStatuses.InProgress;
 
             await _context.SaveChangesAsync();
             return Ok(booking.ToBookingDto());
@@ -124,6 +151,30 @@ namespace BookingService.Controllers
             if (booking == null)
                 return NotFound(new { message = "Booking not found" });
 
+            // Lấy current customer
+            int customerId;
+            var firebaseUid =
+                User.FindFirst("firebaseUid")?.Value ??
+                User.FindFirst("user_id")?.Value;
+
+            if (string.IsNullOrEmpty(firebaseUid))
+            {
+                customerId = 1; // DEV MODE
+            }
+            else
+            {
+                var customer = await _customerClient.GetByFirebaseUidAsync(firebaseUid);
+                if (customer == null)
+                    return BadRequest(new { message = "Customer profile not found" });
+
+                customerId = customer.CustomerId;
+            }
+
+            // Chỉ chủ booking mới được check-out
+            if (booking.CustomerId != customerId)
+                return Forbid();
+
+            // Phải check-in rồi mới được check-out
             if (!booking.CheckIn)
                 return BadRequest(new { message = "Booking must be checked in before check-out" });
 
@@ -131,11 +182,12 @@ namespace BookingService.Controllers
                 return BadRequest(new { message = "Booking already checked out" });
 
             booking.CheckOut = true;
-            booking.Status = "Completed";
+            booking.Status = BookingStatuses.Completed;
 
             await _context.SaveChangesAsync();
             return Ok(booking.ToBookingDto());
         }
+
 
         // POST: api/booking/{id}/cancel
         [HttpPost("{id}/cancel")]
