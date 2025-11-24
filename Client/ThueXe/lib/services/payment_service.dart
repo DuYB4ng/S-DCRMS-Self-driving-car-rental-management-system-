@@ -30,4 +30,9 @@ class PaymentService {
   Future<Response> getPaymentById(int id) async {
     return await api.get("/payment/$id");
   }
+
+  Future<String> retryVnPay(int bookingId) async {
+    final res = await api.post("/payment/vnpay/retry/$bookingId", {});
+    return res.data["url"] as String;
+  }
 }

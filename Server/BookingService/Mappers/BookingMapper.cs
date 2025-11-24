@@ -16,7 +16,8 @@ namespace BookingService.Mappers
                 CheckOut = booking.CheckOut,
                 Status = booking.Status,
                 CustomerId = booking.CustomerId,
-                CarId = booking.CarId  
+                CarId = booking.CarId,
+                CreatedAt  = booking.CreatedAt
             };
         }
     }

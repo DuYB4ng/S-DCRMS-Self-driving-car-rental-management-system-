@@ -1,10 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
+
 import '../../viewmodels/orders_viewmodel.dart';
 import 'order_detail_view.dart';
 import '../../services/review_service.dart';
+import '../../services/payment_service.dart';
 
 class OrdersView extends StatelessWidget {
+  OrdersView({Key? key}) : super(key: key);
+
+  final ReviewService _reviewService = ReviewService();
+  final PaymentService _paymentService = PaymentService();
+
   @override
   Widget build(BuildContext context) {
     final vm = Provider.of<OrdersViewModel>(context);
@@ -15,24 +23,22 @@ class OrdersView extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text("Lịch sử đơn hàng"),
+        title: const Text("Lịch sử đơn hàng"),
         backgroundColor: Colors.white,
         elevation: 0,
         foregroundColor: Colors.black,
       ),
-
       body: vm.isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator())
           : vm.errorMessage != null
           ? Center(child: Text(vm.errorMessage!))
           : vm.orders.isEmpty
-          ? Center(child: Text("Chưa có đơn hàng"))
+          ? const Center(child: Text("Chưa có đơn hàng"))
           : ListView.builder(
-              padding: EdgeInsets.all(16),
+              padding: const EdgeInsets.all(16),
               itemCount: vm.orders.length,
               itemBuilder: (context, index) {
-                final vm = Provider.of<OrdersViewModel>(context, listen: false);
-                final order = vm.orders[index];
+                final order = vm.orders[index] as Map<String, dynamic>;
 
                 return GestureDetector(
                   onTap: () {
@@ -46,12 +52,12 @@ class OrdersView extends StatelessWidget {
                     );
                   },
                   child: Container(
-                    padding: EdgeInsets.all(16),
-                    margin: EdgeInsets.only(bottom: 16),
+                    padding: const EdgeInsets.all(16),
+                    margin: const EdgeInsets.only(bottom: 16),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
+                      boxShadow: const [
                         BoxShadow(color: Colors.black12, blurRadius: 6),
                       ],
                     ),
@@ -60,17 +66,22 @@ class OrdersView extends StatelessWidget {
                       children: [
                         Text(
                           "Đơn #${order["bookingID"]}",
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        SizedBox(height: 6),
+                        const SizedBox(height: 6),
                         Text("Nhận xe: ${order["startDate"]}"),
                         Text("Trả xe: ${order["endDate"]}"),
-                        SizedBox(height: 6),
+                        const SizedBox(height: 6),
                         _statusTag(order["status"]),
                         const SizedBox(height: 8),
+
+                        // 👉 Nút Thanh toán mới
+                        _buildPayButton(context, order),
+
+                        // các nút khác (Check-in / Check-out / Đánh giá)
                         _buildActionButton(context, vm, order),
                         _buildReviewButton(context, vm, order),
                       ],
@@ -86,12 +97,51 @@ class OrdersView extends StatelessWidget {
     return Align(
       alignment: Alignment.centerRight,
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: Colors.blue),
         ),
-        child: Text(status, style: TextStyle(color: Colors.blue)),
+        child: Text(status, style: const TextStyle(color: Colors.blue)),
+      ),
+    );
+  }
+
+  Widget _buildPayButton(BuildContext context, Map<String, dynamic> order) {
+    final status = (order["status"] ?? "") as String;
+    final bookingId = order["bookingID"] as int?;
+
+    // Chỉ hiện nút khi đơn đang Pending (chưa thanh toán)
+    if (bookingId == null || status != "Pending") {
+      return const SizedBox.shrink();
+    }
+
+    return Align(
+      alignment: Alignment.centerRight,
+      child: ElevatedButton(
+        onPressed: () async {
+          try {
+            // gọi API /payment/vnpay/retry/{bookingId}
+            final url = await _paymentService.retryVnPay(bookingId);
+            final uri = Uri.parse(url);
+
+            final opened = await launchUrl(
+              uri,
+              mode: LaunchMode.externalApplication,
+            );
+
+            if (!opened) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Không mở được trang thanh toán")),
+              );
+            }
+          } catch (e) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text("Lỗi mở lại thanh toán: $e")),
+            );
+          }
+        },
+        child: const Text("Thanh toán"),
       ),
     );
   }
@@ -104,7 +154,6 @@ class OrdersView extends StatelessWidget {
     final status = (order["status"] ?? "") as String;
     final bookingId = order["bookingID"] as int?;
     final checkOut = order["checkOut"] as bool? ?? false;
-    final ReviewService _reviewService = ReviewService();
 
     // Chỉ show nút REVIEW khi:
     // - booking đã Completed
@@ -117,7 +166,6 @@ class OrdersView extends StatelessWidget {
       alignment: Alignment.centerRight,
       child: TextButton(
         onPressed: () async {
-          // mở dialog rating + comment
           final result = await showDialog<_ReviewDialogResult>(
             context: context,
             builder: (context) => const _ReviewDialog(),
@@ -156,8 +204,6 @@ class OrdersView extends StatelessWidget {
     final status = (order["status"] ?? "") as String;
     final bookingId = order["bookingID"] as int?;
 
-    // Tên field checkIn/checkOut trong JSON:
-    // C# property CheckIn -> JSON: "checkIn" (camelCase)
     final checkIn = order["checkIn"] as bool? ?? false;
     final checkOut = order["checkOut"] as bool? ?? false;
 

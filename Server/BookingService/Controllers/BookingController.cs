@@ -26,9 +26,10 @@ namespace BookingService.Controllers
         [HttpGet]
         public async Task<IActionResult> Getall()
         {
+            await CleanupExpiredPendingBookingsAsync();
             var bookings = await _bookingRepo.getAllAsync();
             var dtoBooking = bookings.Select(s => s.ToBookingDto());
-            return Ok(bookings);
+            return Ok(dtoBooking);
         }
 
         [HttpGet("{id}")]
@@ -208,6 +209,23 @@ namespace BookingService.Controllers
 
             await _context.SaveChangesAsync();
             return Ok(booking.ToBookingDto());
+        }
+
+        private async Task CleanupExpiredPendingBookingsAsync()
+        {
+            var now = DateTime.UtcNow;
+            var timeoutMinutes = 15;
+
+            var expired = await _context.Bookings
+                .Where(b => b.Status == "Pending" &&
+                            b.CreatedAt < now.AddMinutes(-timeoutMinutes))
+                .ToListAsync();
+
+            if (expired.Any())
+            {
+                _context.Bookings.RemoveRange(expired);
+                await _context.SaveChangesAsync();
+            }
         }
 
     }

@@ -12,5 +12,6 @@ namespace BookingService.Dtos.Booking
 		public string Status { get; set; } = string.Empty;
 		public int CustomerId { get; set; }
 		public int CarId { get; set; }
+		public DateTime CreatedAt { get; set; }
 	}
 }
