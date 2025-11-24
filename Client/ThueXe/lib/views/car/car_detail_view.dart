@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../../services/booking_service.dart';
 import '../booking/booking_confirm_view.dart';
+import '../../services/review_service.dart';
 
 class CarDetailView extends StatelessWidget {
   final dynamic car;
-
 
   final DateTime receiveDate;
   final DateTime returnDate;
@@ -29,51 +29,53 @@ class CarDetailView extends StatelessWidget {
         totalPrice: price,
       );
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Đặt xe thành công!")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Đặt xe thành công!")));
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Đặt xe thất bại: $e")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Đặt xe thất bại: $e")));
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // Service lấy review theo car
+    final ReviewService _reviewService = ReviewService();
+
     return Scaffold(
       backgroundColor: Colors.white,
-
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
         title: Text(
           car["nameCar"] ?? "Chi tiết xe",
-          style: TextStyle(color: Colors.black),
+          style: const TextStyle(color: Colors.black),
         ),
-        iconTheme: IconThemeData(color: Colors.black),
+        iconTheme: const IconThemeData(color: Colors.black),
       ),
-
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-
             /// ======== ẢNH SLIDER =========
             _imageSlider(car["imageUrls"]),
 
             Padding(
-              padding: EdgeInsets.all(16),
+              padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-
                   /// ======== TÊN XE ========
                   Text(
                     car["nameCar"] ?? "Không rõ tên",
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                  SizedBox(height: 6),
+                  const SizedBox(height: 6),
 
                   /// ======== GIÁ / NGÀY ========
                   Text(
@@ -84,20 +86,19 @@ class CarDetailView extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
 
                   /// ======== TIỀN CỌC ========
                   Text(
                     "Tiền cọc: ${car["deposit"]} VNĐ",
-                    style: TextStyle(fontSize: 16, color: Colors.black54),
+                    style: const TextStyle(fontSize: 16, color: Colors.black54),
                   ),
-                  SizedBox(height: 16),
-
+                  const SizedBox(height: 16),
 
                   /// ======== THÔNG SỐ XE ========
                   Container(
-                    padding: EdgeInsets.all(16),
-                    margin: EdgeInsets.only(bottom: 16),
+                    padding: const EdgeInsets.all(16),
+                    margin: const EdgeInsets.only(bottom: 16),
                     decoration: BoxDecoration(
                       color: Colors.grey.shade100,
                       borderRadius: BorderRadius.circular(12),
@@ -105,11 +106,14 @@ class CarDetailView extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
+                        const Text(
                           "Thông số xe",
-                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                        SizedBox(height: 12),
+                        const SizedBox(height: 12),
 
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -119,25 +123,57 @@ class CarDetailView extends StatelessWidget {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  _specItem(Icons.confirmation_number, "Biển số", car["licensePlate"]),
-                                  _specItem(Icons.event, "Năm SX", "${car["modelYear"]}"),
-                                  _specItem(Icons.people_alt, "Số chỗ", "${car["seat"]}"),
-                                  _specItem(Icons.color_lens, "Màu sắc", car["color"]),
+                                  _specItem(
+                                    Icons.confirmation_number,
+                                    "Biển số",
+                                    car["licensePlate"],
+                                  ),
+                                  _specItem(
+                                    Icons.event,
+                                    "Năm SX",
+                                    "${car["modelYear"]}",
+                                  ),
+                                  _specItem(
+                                    Icons.people_alt,
+                                    "Số chỗ",
+                                    "${car["seat"]}",
+                                  ),
+                                  _specItem(
+                                    Icons.color_lens,
+                                    "Màu sắc",
+                                    car["color"],
+                                  ),
                                 ],
                               ),
                             ),
 
-                            SizedBox(width: 12),
+                            const SizedBox(width: 12),
 
                             /// ======== CỘT PHẢI ========
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  _specItem(Icons.car_rental, "Loại xe", car["typeCar"]),
-                                  _specItem(Icons.settings, "Hộp số", car["transmission"]),
-                                  _specItem(Icons.local_gas_station, "Nhiên liệu", car["fuelType"]),
-                                  _specItem(Icons.speed, "Tiêu hao", "${car["fuelConsumption"]} L/100km"),
+                                  _specItem(
+                                    Icons.car_rental,
+                                    "Loại xe",
+                                    car["typeCar"],
+                                  ),
+                                  _specItem(
+                                    Icons.settings,
+                                    "Hộp số",
+                                    car["transmission"],
+                                  ),
+                                  _specItem(
+                                    Icons.local_gas_station,
+                                    "Nhiên liệu",
+                                    car["fuelType"],
+                                  ),
+                                  _specItem(
+                                    Icons.speed,
+                                    "Tiêu hao",
+                                    "${car["fuelConsumption"]} L/100km",
+                                  ),
                                 ],
                               ),
                             ),
@@ -147,12 +183,11 @@ class CarDetailView extends StatelessWidget {
                     ),
                   ),
 
-
                   /// ======== MÔ TẢ ========
                   Container(
                     width: double.infinity,
-                    padding: EdgeInsets.all(16),
-                    margin: EdgeInsets.only(bottom: 16),
+                    padding: const EdgeInsets.all(16),
+                    margin: const EdgeInsets.only(bottom: 16),
                     decoration: BoxDecoration(
                       color: Colors.grey.shade100,
                       borderRadius: BorderRadius.circular(12),
@@ -160,15 +195,17 @@ class CarDetailView extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
+                        const Text(
                           "Mô tả",
-                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                        SizedBox(height: 8),
-
+                        const SizedBox(height: 8),
                         Text(
                           car["description"] ?? "Không có mô tả",
-                          style: TextStyle(fontSize: 16, height: 1.4),
+                          style: const TextStyle(fontSize: 16, height: 1.4),
                         ),
                       ],
                     ),
@@ -176,8 +213,8 @@ class CarDetailView extends StatelessWidget {
 
                   /// ======== GIẤY TỜ & ĐĂNG KIỂM ========
                   Container(
-                    padding: EdgeInsets.all(16),
-                    margin: EdgeInsets.only(bottom: 16),
+                    padding: const EdgeInsets.all(16),
+                    margin: const EdgeInsets.only(bottom: 16),
                     decoration: BoxDecoration(
                       color: Colors.grey.shade100,
                       borderRadius: BorderRadius.circular(12),
@@ -185,19 +222,112 @@ class CarDetailView extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
+                        const Text(
                           "Giấy tờ & Đăng kiểm",
-                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                        SizedBox(height: 12),
-
-                        _infoRow("Ngày đăng ký",
-                            car["registrationDate"]?.toString().substring(0, 10)),
+                        const SizedBox(height: 12),
+                        _infoRow(
+                          "Ngày đăng ký",
+                          car["registrationDate"]?.toString().substring(0, 10),
+                        ),
                         _infoRow("Nơi đăng ký", car["registrationPlace"]),
-                        _infoRow("Hạn bảo hiểm",
-                            car["insuranceExpiryDate"]?.toString().substring(0, 10)),
-                        _infoRow("Hạn đăng kiểm",
-                            car["inspectionExpiryDate"]?.toString().substring(0, 10)),
+                        _infoRow(
+                          "Hạn bảo hiểm",
+                          car["insuranceExpiryDate"]?.toString().substring(
+                            0,
+                            10,
+                          ),
+                        ),
+                        _infoRow(
+                          "Hạn đăng kiểm",
+                          car["inspectionExpiryDate"]?.toString().substring(
+                            0,
+                            10,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  /// ======== ĐÁNH GIÁ ========
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Đánh giá",
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        FutureBuilder(
+                          future: _reviewService.getReviewsByCar(
+                            car["carID"] as int,
+                          ),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return const Center(
+                                child: CircularProgressIndicator(),
+                              );
+                            }
+
+                            if (snapshot.hasError) {
+                              return Text(
+                                "Lỗi tải đánh giá: ${snapshot.error}",
+                              );
+                            }
+
+                            final res = snapshot.data;
+                            if (res == null) {
+                              return const Text("Không có dữ liệu đánh giá");
+                            }
+
+                            // res.data là danh sách review từ API
+                            final List<dynamic> data =
+                                (res.data as List<dynamic>? ?? []);
+
+                            if (data.isEmpty) {
+                              return const Text("Chưa có đánh giá cho xe này");
+                            }
+
+                            final avgRating =
+                                data
+                                    .map((e) => (e["rating"] as num).toDouble())
+                                    .fold<double>(0, (sum, r) => sum + r) /
+                                data.length;
+
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Trung bình: ${avgRating.toStringAsFixed(1)}⭐ (${data.length} đánh giá)",
+                                ),
+                                const SizedBox(height: 8),
+                                ...data.map((r) {
+                                  return ListTile(
+                                    contentPadding: EdgeInsets.zero,
+                                    title: Text("${r["rating"]}⭐"),
+                                    subtitle: Text(r["comment"] ?? ""),
+                                  );
+                                }),
+                              ],
+                            );
+                          },
+                        ),
                       ],
                     ),
                   ),
@@ -210,7 +340,7 @@ class CarDetailView extends StatelessWidget {
 
       /// ======== NÚT ĐẶT XE ========
       bottomNavigationBar: Container(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         height: 80,
         child: ElevatedButton(
           onPressed: () {
@@ -219,22 +349,19 @@ class CarDetailView extends StatelessWidget {
               MaterialPageRoute(
                 builder: (_) => BookingConfirmView(
                   car: car,
-
-                  /// ✔ KHÔNG CÒN DÙNG widget.receiveDate
                   receiveDate: receiveDate,
                   returnDate: returnDate,
                 ),
               ),
             );
           },
-
           style: ElevatedButton.styleFrom(
-            backgroundColor: Color(0xFF226EA3),
+            backgroundColor: const Color(0xFF226EA3),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
           ),
-          child: Text(
+          child: const Text(
             "Đặt xe ngay",
             style: TextStyle(color: Colors.white, fontSize: 18),
           ),
@@ -273,14 +400,18 @@ class CarDetailView extends StatelessWidget {
   /// ============ THÔNG TIN XE (ROW) ============
   Widget _infoRow(String title, String? value) {
     return Padding(
-      padding: EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(title,
-              style: TextStyle(fontSize: 16, color: Colors.black87)),
-          Text(value ?? "N/A",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+          Text(
+            title,
+            style: const TextStyle(fontSize: 16, color: Colors.black87),
+          ),
+          Text(
+            value ?? "N/A",
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+          ),
         ],
       ),
     );
@@ -289,20 +420,25 @@ class CarDetailView extends StatelessWidget {
 
 Widget _specItem(IconData icon, String title, String value) {
   return Padding(
-    padding: EdgeInsets.only(bottom: 10),
+    padding: const EdgeInsets.only(bottom: 10),
     child: Row(
       children: [
         Icon(icon, size: 20, color: Colors.blueGrey),
-        SizedBox(width: 8),
+        const SizedBox(width: 8),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title,
-                  style: TextStyle(fontSize: 14, color: Colors.black54)),
+              Text(
+                title,
+                style: const TextStyle(fontSize: 14, color: Colors.black54),
+              ),
               Text(
                 value,
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ],
           ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/orders_viewmodel.dart';
 import 'order_detail_view.dart';
+import '../../services/review_service.dart';
 
 class OrdersView extends StatelessWidget {
   @override
@@ -71,6 +72,7 @@ class OrdersView extends StatelessWidget {
                         _statusTag(order["status"]),
                         const SizedBox(height: 8),
                         _buildActionButton(context, vm, order),
+                        _buildReviewButton(context, vm, order),
                       ],
                     ),
                   ),
@@ -90,6 +92,58 @@ class OrdersView extends StatelessWidget {
           border: Border.all(color: Colors.blue),
         ),
         child: Text(status, style: TextStyle(color: Colors.blue)),
+      ),
+    );
+  }
+
+  Widget _buildReviewButton(
+    BuildContext context,
+    OrdersViewModel vm,
+    Map<String, dynamic> order,
+  ) {
+    final status = (order["status"] ?? "") as String;
+    final bookingId = order["bookingID"] as int?;
+    final checkOut = order["checkOut"] as bool? ?? false;
+    final ReviewService _reviewService = ReviewService();
+
+    // Chỉ show nút REVIEW khi:
+    // - booking đã Completed
+    // - đã CheckOut = true
+    if (bookingId == null || status != "Completed" || !checkOut) {
+      return const SizedBox.shrink();
+    }
+
+    return Align(
+      alignment: Alignment.centerRight,
+      child: TextButton(
+        onPressed: () async {
+          // mở dialog rating + comment
+          final result = await showDialog<_ReviewDialogResult>(
+            context: context,
+            builder: (context) => const _ReviewDialog(),
+          );
+
+          if (result == null) return;
+
+          try {
+            await _reviewService.createReview(
+              bookingId: bookingId,
+              rating: result.rating,
+              comment: result.comment,
+            );
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("Gửi đánh giá thành công")),
+            );
+
+            await vm.refreshOrders();
+          } catch (e) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text("Gửi đánh giá thất bại: $e")),
+            );
+          }
+        },
+        child: const Text("Đánh giá"),
       ),
     );
   }
@@ -155,5 +209,78 @@ class OrdersView extends StatelessWidget {
 
     // 3️⃣ Các trạng thái khác -> không hiện nút
     return const SizedBox.shrink();
+  }
+}
+
+class _ReviewDialogResult {
+  final int rating;
+  final String comment;
+  _ReviewDialogResult(this.rating, this.comment);
+}
+
+class _ReviewDialog extends StatefulWidget {
+  const _ReviewDialog({super.key});
+
+  @override
+  State<_ReviewDialog> createState() => _ReviewDialogState();
+}
+
+class _ReviewDialogState extends State<_ReviewDialog> {
+  int _rating = 5;
+  final TextEditingController _commentController = TextEditingController();
+
+  @override
+  void dispose() {
+    _commentController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text("Đánh giá chuyến thuê"),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text("Chọn số sao:"),
+          DropdownButton<int>(
+            value: _rating,
+            items: List.generate(5, (i) {
+              final v = i + 1;
+              return DropdownMenuItem(value: v, child: Text("$v sao"));
+            }),
+            onChanged: (v) {
+              if (v != null) {
+                setState(() {
+                  _rating = v;
+                });
+              }
+            },
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _commentController,
+            maxLines: 3,
+            decoration: const InputDecoration(
+              labelText: "Nhận xét",
+              border: OutlineInputBorder(),
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text("Hủy"),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            final comment = _commentController.text.trim();
+            Navigator.pop(context, _ReviewDialogResult(_rating, comment));
+          },
+          child: const Text("Gửi"),
+        ),
+      ],
+    );
   }
 }

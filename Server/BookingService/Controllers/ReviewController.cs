@@ -48,11 +48,38 @@ namespace Controllers
         [HttpPost]
         public async Task<IActionResult> TaoReview([FromBody] CreateReviewRequestDto reviewDto)
         {
+            // 1. Lấy Booking tương ứng với review
+            var booking = await _context.Bookings
+                .Include(b => b.Reviews)
+                .FirstOrDefaultAsync(b => b.BookingID == reviewDto.BookingID);
+
+            if (booking == null)
+            {
+                return BadRequest(new { message = "Booking not found" });
+            }
+
+            // 2. Chỉ cho review nếu booking đã check-out xong
+            if (!booking.CheckOut)
+            {
+                return BadRequest(new { message = "Booking must be checked out before reviewing" });
+            }
+
+            // 3. Nếu muốn mỗi booking chỉ 1 review:
+            if (booking.Reviews.Any())
+            {
+                return BadRequest(new { message = "This booking has already been reviewed" });
+            }
+
+            // 4. Tạo review như cũ
             var reviewModel = reviewDto.ToReviewModel();
 
             await _reviewRepo.CreateAsync(reviewModel);
 
-            return CreatedAtAction(nameof(GetID), new { id = reviewModel.ReviewID }, reviewModel.toReviewDto());
+            return CreatedAtAction(
+                nameof(GetID),
+                new { id = reviewModel.ReviewID },
+                reviewModel.toReviewDto()
+            );
         }
 
         // PUT: api/review/{id}
@@ -80,6 +107,28 @@ namespace Controllers
             }
 
             return NoContent();
+        }
+
+        // GET: api/review/car/5
+        [HttpGet("car/{carId}")]
+        public async Task<IActionResult> GetByCar(int carId)
+        {
+            var reviews = await _context.Reviews
+                .Include(r => r.Booking)
+                .Where(r => r.Booking.CarId == carId && r.Booking.CheckOut)
+                .Select(r => new
+                {
+                    r.ReviewID,
+                    r.Rating,
+                    r.Comment,
+                    bookingId = r.BookingID,
+                    carId = r.Booking.CarId,
+                    startDate = r.Booking.StartDate,
+                    endDate = r.Booking.EndDate,
+                })
+                .ToListAsync();
+
+            return Ok(reviews);
         }
     }
 }
