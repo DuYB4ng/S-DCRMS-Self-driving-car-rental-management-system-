@@ -10,14 +10,11 @@ class BookingService {
     required DateTime returnDate,
     required int totalPrice,
   }) async {
-    return await api.post(
-      "/Booking",
-      {
-        "carID": carId,
-        "receiveDate": receiveDate.toIso8601String(),
-        "returnDate": returnDate.toIso8601String(),
-        "totalPrice": totalPrice,
-      },
-    );
+    return await api.post("/Booking", {
+      "startDate": receiveDate.toIso8601String(),
+      "endDate": returnDate.toIso8601String(),
+      "carId": carId,
+      "totalPrice": totalPrice,
+    });
   }
 }

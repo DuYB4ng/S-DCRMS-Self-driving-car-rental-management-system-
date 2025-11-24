@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'home_view.dart';
 import '../profile/profile_view.dart';
 import '../orders/orders_view.dart';
+import 'package:provider/provider.dart';
+import '../../viewmodels/orders_viewmodel.dart';
 
 class HomeNavigation extends StatefulWidget {
   @override
@@ -17,17 +19,18 @@ class _HomeNavigationState extends State<HomeNavigation> {
   void initState() {
     super.initState();
 
-    pages = [
-      HomeView(),
-      OrdersView(),
-      ProfileView(onMenuTap: _changeTab),
-    ];
+    pages = [HomeView(), OrdersView(), ProfileView(onMenuTap: _changeTab)];
   }
 
   void _changeTab(int index) {
     setState(() {
       _currentIndex = index;
     });
+
+    if (index == 1) {
+      final vm = Provider.of<OrdersViewModel>(context, listen: false);
+      vm.refreshOrders();
+    }
   }
 
   @override
@@ -42,7 +45,10 @@ class _HomeNavigationState extends State<HomeNavigation> {
         onTap: _changeTab,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: "Trang chủ"),
-          BottomNavigationBarItem(icon: Icon(Icons.list_alt), label: "Đơn hàng"),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.list_alt),
+            label: "Đơn hàng",
+          ),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: "Tài khoản"),
         ],
       ),
