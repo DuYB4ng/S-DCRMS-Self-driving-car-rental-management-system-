@@ -18,7 +18,6 @@ const Header = ({ onMenuClick }) => {
   const userMenuRef = useRef(null);
   const navigate = useNavigate();
 
-
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -75,6 +74,18 @@ const Header = ({ onMenuClick }) => {
     localStorage.removeItem("adminUser");
     navigate("/login");
   };
+
+  // Lấy thông tin user từ localStorage
+  let userName = "";
+  let userRole = "";
+  try {
+    const userStr = localStorage.getItem("adminUser");
+    if (userStr) {
+      const user = JSON.parse(userStr);
+      userName = user.email || "";
+      userRole = user.role || "";
+    }
+  } catch {}
 
   return (
     <header className="bg-[#2E7D9A] shadow-lg sticky top-0 z-30">
@@ -207,9 +218,17 @@ const Header = ({ onMenuClick }) => {
               </div>
               <div className="hidden md:block">
                 <p className="text-white text-sm font-bold leading-tight">
-                  Admin
+                  {userName || "Tài khoản"}
                 </p>
-                <p className="text-white/80 text-xs">Administrator</p>
+                <p className="text-white/80 text-xs">
+                  {userRole === "Admin"
+                    ? "Administrator"
+                    : userRole === "Staff"
+                    ? "Nhân viên"
+                    : userRole === "User"
+                    ? "Khách hàng"
+                    : userRole}
+                </p>
               </div>
             </button>
 
@@ -217,8 +236,18 @@ const Header = ({ onMenuClick }) => {
             {showUserMenu && (
               <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-2xl overflow-hidden z-50 animate-fade-in-up">
                 <div className="p-4 bg-gradient-to-r from-[#2E7D9A] to-[#3498DB]">
-                  <p className="text-white font-bold text-sm">Admin</p>
-                  <p className="text-white/80 text-xs">Administrator</p>
+                  <p className="text-white font-bold text-sm">
+                    {userName || "Tài khoản"}
+                  </p>
+                  <p className="text-white/80 text-xs">
+                    {userRole === "Admin"
+                      ? "Administrator"
+                      : userRole === "Staff"
+                      ? "Nhân viên"
+                      : userRole === "User"
+                      ? "Khách hàng"
+                      : userRole}
+                  </p>
                 </div>
                 <div className="p-2">
                   <button

@@ -26,7 +26,12 @@ const Sidebar = ({ isOpen, onClose }) => {
     if (userStr) {
       try {
         const user = JSON.parse(userStr);
-        setUserRole(user.role || "Staff"); // Default Staff nếu không có role
+        // Cho phép cả "User" và "Staff" dùng chung giao diện staff
+        if (user.role === "User" || user.role === "Staff") {
+          setUserRole("Staff");
+        } else {
+          setUserRole(user.role || "Staff");
+        }
       } catch {
         setUserRole("Staff");
       }
