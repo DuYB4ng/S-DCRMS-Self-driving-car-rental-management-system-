@@ -1,19 +1,20 @@
+using AuthService.Data;
 using AuthService.Repositories;
-using Microsoft.EntityFrameworkCore;
+using AuthService.Services;
 using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
-using AuthService.Data;
-using AuthService.Services; 
+using Microsoft.EntityFrameworkCore;
+using Pomelo.EntityFrameworkCore.MySql;
+using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Chỉ khởi tạo Firebase nếu chưa khởi tạo và file tồn tại
 if (File.Exists("firebase-adminsdk.json") && FirebaseApp.DefaultInstance == null)
 {
-    FirebaseApp.Create(new AppOptions
-    {
-        Credential = GoogleCredential.FromFile("firebase-adminsdk.json")
-    });
+    FirebaseApp.Create(
+        new AppOptions { Credential = GoogleCredential.FromFile("firebase-adminsdk.json") }
+    );
 }
 
 // Đăng ký DbContext
@@ -23,10 +24,14 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
     var serverVersion = new MySqlServerVersion(new Version(8, 0, 36)); // ví dụ MySQL 8.0.36
 
-    options.UseMySql(connectionString, serverVersion, mySqlOptions =>
-    {
-        mySqlOptions.EnableRetryOnFailure(5, TimeSpan.FromSeconds(10), null);
-    });
+    options.UseMySql(
+        connectionString,
+        serverVersion,
+        mySqlOptions =>
+        {
+            mySqlOptions.EnableRetryOnFailure(5, TimeSpan.FromSeconds(10), null);
+        }
+    );
 });
 
 // Đăng ký Repository

@@ -1,8 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
+using Pomelo.EntityFrameworkCore.MySql;
+using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
+using SDCRMS;
+using SDCRMS.Interfaces;
 using SDCRMS.Models;
 using SDCRMS.Repositories;
-using SDCRMS.Interfaces;
-using SDCRMS;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,7 +24,6 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<IStaffRepository, StaffRepository>();
 
 var app = builder.Build();
-
 
 // ✅ Thử kết nối SQL Server nhiều lần trước khi khởi chạy API
 using (var scope = app.Services.CreateScope())

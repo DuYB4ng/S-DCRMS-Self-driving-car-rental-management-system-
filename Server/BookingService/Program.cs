@@ -1,12 +1,13 @@
 ﻿using System;
-using Microsoft.EntityFrameworkCore;
+using BookingService.Interfaces;
 using BookingService.Models;
 using BookingService.Repositories;
-using BookingService.Interfaces;
 using BookingService.Services;
 using BookingService.VnPay;
+using Microsoft.EntityFrameworkCore;
+using Pomelo.EntityFrameworkCore.MySql;
+using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 using Redis.Shared.Extensions;
-
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,9 +24,10 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 // Cấu hình Redis Shared (đăng ký IRedisCacheService, interceptor, v.v.)
 builder.Services.AddRedisShared(builder.Configuration);
-//Đăng kí Repositores 
+
+//Đăng kí Repositores
 //builder.Services.AddScoped<IBookingRepository, BookingRepository>();
-builder.Services.AddProxiedService<IBookingRepository, BookingRepository>(); 
+builder.Services.AddProxiedService<IBookingRepository, BookingRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
 

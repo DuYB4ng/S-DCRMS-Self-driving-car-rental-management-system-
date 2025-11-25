@@ -25,6 +25,7 @@ namespace UserService.Services
         {
             return await _userRepository.GetAllAsync();
         }
+
         public async Task<User?> GetByFirebaseUidAsync(string firebaseUid)
         {
             return await _userRepository.GetByFirebaseUidAsync(firebaseUid);

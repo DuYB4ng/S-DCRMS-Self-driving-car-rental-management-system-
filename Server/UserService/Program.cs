@@ -1,9 +1,13 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+using Pomelo.EntityFrameworkCore.MySql;
+using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
+using UserService.Data;
 using UserService.Models;
 using UserService.Repositories;
 using UserService.Services;
-using UserService.Data;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // ----------------- Đăng ký dịch vụ -----------------
@@ -16,12 +20,15 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
     var serverVersion = new MySqlServerVersion(new Version(8, 0, 36)); // ví dụ MySQL 8.0.36
 
-    options.UseMySql(connectionString, serverVersion, mySqlOptions =>
-    {
-        mySqlOptions.EnableRetryOnFailure(5, TimeSpan.FromSeconds(10), null);
-    });
+    options.UseMySql(
+        connectionString,
+        serverVersion,
+        mySqlOptions =>
+        {
+            mySqlOptions.EnableRetryOnFailure(5, TimeSpan.FromSeconds(10), null);
+        }
+    );
 });
-
 
 // Đăng ký AutoMapper
 // builder.Services.AddAutoMapper(cfg =>
@@ -32,14 +39,17 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // ----------------- Cấu hình CORS -----------------
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowFrontend",
+    options.AddPolicy(
+        "AllowFrontend",
         policy =>
         {
-            policy.WithOrigins("http://localhost:5173")
+            policy
+                .WithOrigins("http://localhost:5173")
                 .AllowAnyHeader()
                 .AllowAnyMethod()
                 .AllowCredentials();
-        });
+        }
+    );
 });
 
 // Repositories
