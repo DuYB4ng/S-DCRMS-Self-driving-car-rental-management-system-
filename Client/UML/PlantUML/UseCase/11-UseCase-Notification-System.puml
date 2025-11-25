@@ -1,0 +1,261 @@
+@startuml UseCase-Notification-System
+!theme plain
+title Sơ Đồ Use Case Chi Tiết - Hệ Thống Thông Báo
+
+actor "Người Dùng" as User #B4D7FF
+actor "Hệ Thống" as System #E0E0E0
+actor "Admin" as Admin #FFB4B4
+actor "Staff" as Staff #C4FFB4
+actor "Push Service" as PushService #E0E0E0
+actor "Email Service" as EmailService #E0E0E0
+actor "SMS Service" as SMSService #E0E0E0
+
+rectangle "Hệ Thống Thông Báo" {
+    
+    package "1. Tạo Thông Báo" #E6F3FF {
+        usecase UC1 as "Trigger Event"
+        usecase UC2 as "Tạo Notification"
+        usecase UC3 as "Chọn Template"
+        usecase UC4 as "Chuẩn Bị Nội Dung"
+        usecase UC5 as "Xác Định Người Nhận"
+        usecase UC6 as "Lên Lịch Gửi"
+    }
+    
+    package "2. Phân Loại Thông Báo" #D4EDFF {
+        usecase UC7 as "Booking Notification"
+        usecase UC8 as "Payment Notification"
+        usecase UC9 as "Review Notification"
+        usecase UC10 as "Promotion Notification"
+        usecase UC11 as "System Alert"
+        usecase UC12 as "Security Notification"
+    }
+    
+    package "3. Chọn Kênh Gửi" #B3E5FC {
+        usecase UC13 as "Kiểm Tra User Preferences"
+        usecase UC14 as "Gửi Push Notification
+        ---
+        extension point:
+        Priority Delivery"
+        usecase UC15 as "Gửi Email"
+        usecase UC16 as "Gửi SMS
+        ---
+        extension point:
+        Critical Alert"
+        usecase UC17 as "In-App Notification"
+        usecase UC14A as "Smart Channel Selection
+        ---
+        extension point:
+        AI Optimization"
+    }
+    
+    package "4. Xử Lý Gửi" #81D4FA {
+        usecase UC18 as "Thêm Vào Queue"
+        usecase UC19 as "Kiểm Tra Rate Limit"
+        usecase UC20 as "Gửi Thông Báo"
+        usecase UC21 as "Xác Nhận Đã Giao"
+        usecase UC22 as "Retry Nếu Thất Bại"
+    }
+    
+    package "5. Người Dùng Tương Tác" #4FC3F7 {
+        usecase UC23 as "Nhận Thông Báo"
+        usecase UC24 as "Đọc Thông Báo"
+        usecase UC25 as "Click Nút Hành Động"
+        usecase UC26 as "Lưu Trữ"
+        usecase UC27 as "Xóa Thông Báo"
+        usecase UC28 as "Đánh Dấu Tất Cả Đã Đọc"
+    }
+    
+    package "6. Quản Lý Cài Đặt" #29B6F6 {
+        usecase UC29 as "Xem Cài Đặt Thông Báo"
+        usecase UC30 as "Bật/Tắt Push"
+        usecase UC31 as "Bật/Tắt Email"
+        usecase UC32 as "Bật/Tắt SMS"
+        usecase UC33 as "Chọn Loại Thông Báo"
+        usecase UC34 as "Đặt Quiet Hours"
+    }
+    
+    package "7. Theo Dõi & Phân Tích" #03A9F4 {
+        usecase UC35 as "Theo Dõi Delivery Rate"
+        usecase UC36 as "Theo Dõi Open Rate"
+        usecase UC37 as "Theo Dõi Click Rate"
+        usecase UC38 as "Phân Tích Engagement"
+        usecase UC39 as "Xuất Báo Cáo"
+    }
+    
+    package "8. Admin Tools" #00BCD4 {
+        usecase UC40 as "Tạo Broadcast"
+        usecase UC41 as "Gửi Thông Báo Hàng Loạt"
+        usecase UC42 as "Tạo Template Mới"
+        usecase UC43 as "Test Notification"
+        usecase UC44 as "Xem Queue Status"
+    }
+    
+    package "Xử Lý Đặc Biệt" #FFE082 {
+        usecase UCX1 as "Handle Failed Delivery"
+        usecase UCX2 as "Unsubscribe"
+        usecase UCX3 as "Report Spam"
+        usecase UCX4 as "Priority Notification"
+        usecase UCX5 as "Scheduled Campaign"
+    }
+}
+
+' Tạo thông báo
+System --> UC1
+UC1 ..> UC2 : <<include>>
+UC2 ..> UC3 : <<include>>
+UC3 ..> UC4 : <<include>>
+UC4 ..> UC5 : <<include>>
+UC5 ..> UC6 : <<extend>>
+
+' Phân loại
+UC2 ..> UC7 : <<extend>>
+UC2 ..> UC8 : <<extend>>
+UC2 ..> UC9 : <<extend>>
+UC2 ..> UC10 : <<extend>>
+UC2 ..> UC11 : <<extend>>
+UC2 ..> UC12 : <<extend>>
+
+' Chọn kênh
+UC6 ..> UC13 : <<include>>
+UC13 ..> UC14 : <<extend>>
+UC13 ..> UC15 : <<extend>>
+UC13 ..> UC16 : <<extend>>
+UC13 ..> UC17 : <<include>>
+UC13 ..> UC14A : <<extend>>
+
+' Xử lý gửi
+UC14 ..> UC18 : <<include>>
+UC15 ..> UC18 : <<include>>
+UC16 ..> UC18 : <<include>>
+UC18 ..> UC19 : <<include>>
+UC19 ..> UC20 : <<include>>
+UC20 ..> PushService : <<integrate>>
+UC20 ..> EmailService : <<integrate>>
+UC20 ..> SMSService : <<integrate>>
+UC20 ..> UC21 : <<include>>
+UC20 ..> UC22 : <<extend>>
+
+' Người dùng tương tác
+User --> UC23
+UC23 ..> UC24 : <<extend>>
+UC24 ..> UC25 : <<extend>>
+User --> UC26
+User --> UC27
+User --> UC28
+
+' Quản lý cài đặt
+User --> UC29
+UC29 ..> UC30 : <<include>>
+UC29 ..> UC31 : <<include>>
+UC29 ..> UC32 : <<include>>
+User --> UC33
+User --> UC34
+
+' Theo dõi & phân tích
+Admin --> UC35
+Admin --> UC36
+Admin --> UC37
+Staff --> UC38
+Admin --> UC39
+
+' Admin tools
+Admin --> UC40
+UC40 ..> UC41 : <<include>>
+Admin --> UC42
+Admin --> UC43
+Staff --> UC44
+
+' Xử lý đặc biệt
+UC22 ..> UCX1 : <<include>>
+User --> UCX2
+User --> UCX3
+System --> UCX4
+Admin --> UCX5
+
+note right of UC1
+  **Trigger Events:**
+  - Booking created
+  - Payment completed
+  - Check-in reminder
+  - Review request
+  - Promotion available
+end note
+
+note right of UC13
+  **User Preferences:**
+  - Kênh ưa thích
+  - Loại thông báo
+  - Quiet hours
+  - Ngôn ngữ
+end note
+
+note right of UC19
+  **Rate Limit:**
+  - Push: 100/phút
+  - Email: 50/phút
+  - SMS: 20/phút
+end note
+
+note right of UC22
+  **Retry Logic:**
+  - Lần 1: Ngay lập tức
+  - Lần 2: 5 phút
+  - Lần 3: 30 phút
+  - Max: 3 lần
+end note
+
+note right of UC38
+  **Engagement Metrics:**
+  - Delivery rate
+  - Open rate
+  - Click-through rate
+  - Conversion rate
+end note
+
+note right of UCX4
+  **Priority Levels:**
+  - Critical (ngay lập tức)
+  - High (trong 5 phút)
+  - Normal (trong 15 phút)
+  - Low (trong 1 giờ)
+end note
+
+note right of UC14A
+  **Condition:**
+  - Thông báo quan trọng
+  - User có nhiều kênh
+  **Extension Point:**
+  - AI chọn kênh tốt nhất:
+    * Push nếu online
+    * SMS nếu offline > 1h
+    * Email cho thông báo chi tiết
+  **Business Rule:**
+  - Dựa vào open rate lịch sử
+  - Dựa vào thời gian online
+end note
+
+note right of UC14
+  **Precondition:**
+  - User bật push notification
+  - Device token hợp lệ
+  **Extension Point:**
+  - Critical → Gửi tất cả kênh
+  - High → Push + In-app
+  - Normal → Chỉ push
+end note
+
+note right of UC16
+  **Condition:**
+  - Thông báo critical
+  - Push thất bại
+  **Extension Point:**
+  - SMS cho:
+    * Booking confirmation
+    * Payment issues
+    * Security alerts
+    * Emergency
+  **Postcondition:**
+  - Tính phí SMS
+end note
+
+@enduml

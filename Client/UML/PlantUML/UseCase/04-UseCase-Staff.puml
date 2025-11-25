@@ -1,0 +1,124 @@
+@startuml UseCase-Staff
+!theme plain
+title Sơ Đồ Use Case - Chức Năng Nhân Viên
+
+actor "Nhân Viên" as Staff #C4FFB4
+actor "Dịch Vụ Thông Báo" as NotificationService #E0E0E0
+actor "Cổng Thanh Toán" as PaymentGateway #E0E0E0
+actor "Hệ Thống GPS" as GPSService #E0E0E0
+
+rectangle "Hệ Thống SDCRMS - Nhân Viên" {
+    
+    package "Quản Lý Tài Khoản" #E8F5E9 {
+        usecase UC19 as "Quản Lý Tài Khoản Người Dùng"
+        usecase UC49 as "Xác Minh & Khóa/Mở Tài Khoản"
+        usecase UC104 as "Duyệt Tài Liệu Chủ Xe"
+    }
+    
+    package "Quản Lý Đặt Xe & Hỗ Trợ" #C8E6C9 {
+        usecase UC21 as "Giám Sát & Xác Nhận Đặt Xe"
+        usecase UC22 as "Xử Lý Phản Hồi & Khiếu Nại"
+        usecase UC55 as "Hỗ Trợ Khách Hàng"
+        usecase UC105 as "Giải Quyết Tranh Chấp"
+        usecase UC106 as "Quản Lý Hủy & Hoàn Tiền"
+    }
+    
+    package "Quản Lý Xe & Bảo Trì" #81C784 {
+        usecase UC56 as "Quản Lý Trạng Thái Xe & Bảo Trì"
+        usecase UC58 as "Xử Lý Sự Cố Xe"
+        usecase UC107 as "Theo Dõi GPS & Kiểm Tra Xe"
+    }
+    
+    package "Báo Cáo & Thống Kê" #A5D6A7 {
+        usecase UC23 as "Gửi Thông Báo Hệ Thống"
+        usecase UC24 as "Tạo Báo Cáo & Thống Kê"
+        usecase UC108 as "Phân Tích Hiệu Suất"
+    }
+    
+    package "Quản Lý Thanh Toán" #66BB6A {
+        usecase UC62 as "Xử Lý Thanh Toán & Hoàn Tiền"
+        usecase UC109 as "Kiểm Tra & Xác Minh Giao Dịch"
+    }
+    
+    package "Giám Sát & Kiểm Duyệt" #4CAF50 {
+        usecase UC110 as "Giám Sát Hoạt Động Hệ Thống"
+        usecase UC111 as "Kiểm Duyệt Nội Dung & Đánh Giá"
+    }
+    
+    package "Chức Năng Chung" #F5F5F5 {
+        usecase UC34 as "Đăng Nhập/Đăng Xuất"
+        usecase UC35 as "Cập Nhật Hồ Sơ"
+        usecase UC36 as "Đổi Mật Khẩu"
+    }
+}
+
+' Staff Relationships
+Staff --> UC19
+Staff --> UC49
+Staff --> UC104
+Staff --> UC21
+Staff --> UC22
+Staff --> UC55
+Staff --> UC105
+Staff --> UC106
+Staff --> UC56
+Staff --> UC58
+Staff --> UC107
+Staff --> UC23
+Staff --> UC24
+Staff --> UC108
+Staff --> UC62
+Staff --> UC109
+Staff --> UC110
+Staff --> UC111
+Staff --> UC34
+Staff --> UC35
+Staff --> UC36
+
+' External Systems Integration
+UC23 ..> NotificationService : <<tích hợp>>
+UC62 ..> NotificationService : <<tích hợp>>
+UC62 ..> PaymentGateway : <<tích hợp>>
+UC107 ..> GPSService : <<tích hợp>>
+
+' Include Relationships
+UC19 ..> UC49 : <<include>>
+UC21 ..> UC22 : <<include>>
+UC22 ..> UC55 : <<include>>
+UC56 ..> UC58 : <<include>>
+UC24 ..> UC108 : <<include>>
+UC62 ..> UC109 : <<include>>
+UC19 ..> UC104 : <<include>>
+UC22 ..> UC105 : <<include>>
+
+' Extend Relationships
+UC49 ..> UC19 : <<extend>>
+UC58 ..> UC56 : <<extend>>
+UC105 ..> UC22 : <<extend>>
+UC106 ..> UC62 : <<extend>>
+UC111 ..> UC110 : <<extend>>
+
+' Dependencies
+UC21 --> UC23 : kích hoạt
+UC58 --> UC23 : thông báo
+UC62 --> UC23 : xác nhận
+UC105 --> UC106 : dẫn đến
+UC107 --> UC56 : hỗ trợ
+UC108 --> UC110 : cung cấp số liệu
+
+note right of Staff
+  Nhân viên có thể:
+  - Quản lý & duyệt tài khoản
+  - Giám sát & xác nhận đặt xe
+  - Xử lý khiếu nại & tranh chấp
+  - Hỗ trợ khách hàng 24/7
+  - Quản lý hủy & hoàn tiền
+  - Theo dõi GPS & kiểm tra xe
+  - Xử lý sự cố và bảo trì
+  - Xác minh giao dịch thanh toán
+  - Tạo báo cáo & phân tích
+  - Giám sát hệ thống
+  - Kiểm duyệt nội dung
+end note
+
+@enduml

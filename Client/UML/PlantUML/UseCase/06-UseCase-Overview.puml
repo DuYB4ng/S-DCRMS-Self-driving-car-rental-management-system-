@@ -1,0 +1,74 @@
+@startuml UseCase-Overview
+!theme plain
+title Tổng Quan Hệ Thống SDCRMS\n(Sơ Đồ Use Case Tổng Quát)
+
+actor "Chủ Xe" as CarOwner #FFE5B4
+actor "Khách Hàng" as Customer #B4D7FF
+actor "Nhân Viên" as Staff #C4FFB4
+actor "Quản Trị" as Admin #FFB4B4
+
+rectangle "Hệ Thống SDCRMS" {
+    
+    package "Module Chủ Xe" #FFFACD {
+        usecase CO as "Quản lý xe\nThu nhập\nBảo trì"
+    }
+    
+    package "Module Khách Hàng" #E6F3FF {
+        usecase CU as "Tìm kiếm\nĐặt xe\nThanh toán"
+    }
+    
+    package "Module Nhân Viên" #E8F5E9 {
+        usecase ST as "Quản lý người dùng\nGiám sát đặt xe\nBáo cáo"
+    }
+    
+    package "Module Quản Trị" #FFEBEE {
+        usecase AD as "Quản trị hệ thống\nGiám sát\nBảo mật"
+    }
+    
+    package "Hệ Thống Bên Ngoài" #F5F5F5 {
+        usecase PAY as "Cổng Thanh Toán"
+        usecase NOTIF as "Dịch Vụ Thông Báo"
+        usecase AI as "AI Chatbot"
+    }
+}
+
+' Actor to Module Relationships
+CarOwner --> CO
+Customer --> CU
+Staff --> ST
+Admin --> AD
+
+' Module to External System Relationships
+CO ..> PAY : <<integrate>>
+CO ..> NOTIF : <<integrate>>
+
+CU ..> PAY : <<integrate>>
+CU ..> NOTIF : <<integrate>>
+CU ..> AI : <<integrate>>
+
+ST ..> NOTIF : <<integrate>>
+
+AD ..> PAY : <<integrate>>
+
+' Notes
+note right of CarOwner
+  Đăng ký xe và
+  quản lý cho thuê
+end note
+
+note right of Customer
+  Tìm kiếm và
+  thuê xe tự lái
+end note
+
+note right of Staff
+  Hỗ trợ và
+  giám sát hệ thống
+end note
+
+note right of Admin
+  Quản trị và
+  bảo mật toàn hệ thống
+end note
+
+@enduml

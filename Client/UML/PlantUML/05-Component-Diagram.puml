@@ -1,0 +1,123 @@
+@startuml Component-SDCRMS
+!theme plain
+
+title Sơ Đồ Component - Kiến Trúc Hệ Thống SDCRMS
+
+package "Lớp Client" {
+    package "Mobile Apps - Flutter" {
+        component [Customer Mobile App] as CustomerApp
+        component [Car Owner Mobile App] as OwnerApp
+    }
+    
+    package "Web Apps - React" {
+        component [Staff Web App] as StaffWeb
+        component [Admin Web App] as AdminWeb
+    }
+}
+
+package "Lớp API Gateway" {
+    component [API Gateway\nKong/NGINX] as Gateway
+}
+
+package "Lớp Ứng Dụng - .NET Core" {
+    package "Core Services" {
+        component [Authentication Service] as AuthService
+        component [User Management Service] as UserService
+        component [Car Management Service] as CarService
+        component [Booking Service] as BookingService
+        component [Payment Service] as PaymentService
+    }
+    
+    package "Business Services" {
+        component [Notification Service] as NotificationService
+        component [Review Service] as ReviewService
+        component [Report Service] as ReportService
+        component [Fraud Detection Service] as FraudService
+        component [Compliance Service] as ComplianceService
+    }
+    
+    package "Support Services" {
+        component [File Storage Service] as FileService
+        component [Search Service] as SearchService
+        component [Cache Service] as CacheService
+        component [Logging Service] as LogService
+    }
+}
+
+package "Lớp Dữ Liệu" {
+    database "Main Database\nSQL Server" as MainDB
+    database "Analytics Database\nSQL Server" as AnalyticsDB
+    database "Log Database\nMongoDB" as LogDB
+    database "Redis Cache" as Redis
+    database "Elasticsearch" as Elastic
+}
+
+package "Dịch Vụ Bên Ngoài" {
+    component [Payment Gateway\nVNPay/Momo] as PaymentGateway
+    component [SMS Provider\nTwilio] as SMSService
+    component [Email Provider\nSendGrid] as EmailService
+    component [Cloud Storage\nAWS S3] as CloudStorage
+    component [Map Service\nGoogle Maps] as MapService
+    component [AI/ML Service\nAzure ML] as AIService
+}
+
+' Client to Gateway
+CustomerApp --> Gateway : HTTPS/REST
+OwnerApp --> Gateway : HTTPS/REST
+StaffWeb --> Gateway : HTTPS/REST
+AdminWeb --> Gateway : HTTPS/REST
+
+' Gateway to Services
+Gateway --> AuthService
+Gateway --> UserService
+Gateway --> CarService
+Gateway --> BookingService
+Gateway --> PaymentService
+Gateway --> NotificationService
+Gateway --> ReviewService
+Gateway --> ReportService
+Gateway --> FraudService
+Gateway --> ComplianceService
+
+' Core Services to Database
+AuthService --> MainDB
+UserService --> MainDB
+CarService --> MainDB
+BookingService --> MainDB
+PaymentService --> MainDB
+ReviewService --> MainDB
+
+' Business Services to Database
+ReportService --> AnalyticsDB
+FraudService --> MainDB
+ComplianceService --> MainDB
+
+' Support Services
+FileService --> CloudStorage
+SearchService --> Elastic
+CacheService --> Redis
+LogService --> LogDB
+
+' Services using Support Services
+AuthService ..> CacheService : uses
+UserService ..> CacheService : uses
+CarService ..> SearchService : uses
+CarService ..> FileService : uses
+BookingService ..> NotificationService : uses
+PaymentService ..> NotificationService : uses
+FraudService ..> AIService : uses
+
+' External Services Integration
+PaymentService --> PaymentGateway
+NotificationService --> SMSService
+NotificationService --> EmailService
+CarService --> MapService
+
+' All Services to Logging
+AuthService ..> LogService
+UserService ..> LogService
+CarService ..> LogService
+BookingService ..> LogService
+PaymentService ..> LogService
+
+@enduml

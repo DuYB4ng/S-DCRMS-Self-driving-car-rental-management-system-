@@ -1,0 +1,207 @@
+@startuml UseCase-Car-Management
+!theme plain
+title Sơ Đồ Use Case Chi Tiết - Quản Lý Xe
+
+actor "Chủ Xe" as CarOwner #FFE5B4
+actor "Admin" as Admin #FFB4B4
+actor "Hệ Thống" as System #E0E0E0
+actor "Dịch Vụ Thông Báo" as NotificationService #E0E0E0
+
+rectangle "Quản Lý Xe" {
+    
+    package "1. Đăng Ký Xe Mới" #FFFACD {
+        usecase UC1 as "Tạo Hồ Sơ Xe"
+        usecase UC2 as "Nhập Thông Tin Cơ Bản"
+        usecase UC3 as "Tải Lên Giấy Tờ"
+        usecase UC4 as "Tải Lên Hình Ảnh Xe"
+        usecase UC5 as "Đặt Giá Thuê"
+        usecase UC6 as "Thiết Lập Lịch Khả Dụng"
+        usecase UC7 as "Gửi Yêu Cầu Xét Duyệt"
+    }
+    
+    package "2. Xét Duyệt Xe" #FFE4B5 {
+        usecase UC8 as "Admin Xem Yêu Cầu"
+        usecase UC9 as "Kiểm Tra Giấy Tờ"
+        usecase UC10 as "Xác Minh VIN"
+        usecase UC11 as "Kiểm Tra Biển Số"
+        usecase UC12 as "Xác Minh Hình Ảnh
+        ---
+        extension point:
+        AI Auto-Verify"
+        usecase UC13 as "Phê Duyệt/Từ Chối
+        ---
+        extension point:
+        Auto-Publish"
+        usecase UC14 as "Yêu Cầu Bổ Sung"
+        usecase UC12A as "AI Kiểm Tra Hình Ảnh
+        ---
+        extension point:
+        Quality Check"
+    }
+    
+    package "3. Quản Lý Listing" #FFF8DC {
+        usecase UC15 as "Xuất Bản Xe"
+        usecase UC16 as "Cập Nhật Thông Tin"
+        usecase UC17 as "Thay Đổi Giá"
+        usecase UC18 as "Cập Nhật Lịch"
+        usecase UC19 as "Tạm Ngưng Listing"
+        usecase UC20 as "Kích Hoạt Lại"
+        usecase UC21 as "Xóa Xe"
+    }
+    
+    package "4. Theo Dõi Trạng Thái" #FFE4E1 {
+        usecase UC22 as "Xem Trạng Thái Xe"
+        usecase UC23 as "Theo Dõi Booking"
+        usecase UC24 as "Xem GPS Khi Đang Thuê"
+        usecase UC25 as "Nhận Cảnh Báo"
+        usecase UC26 as "Xem Lịch Sử Sử Dụng"
+    }
+    
+    package "5. Bảo Dưỡng & Sửa Chữa" #FFF0F5 {
+        usecase UC27 as "Tạo Lịch Bảo Dưỡng"
+        usecase UC28 as "Đánh Dấu Đang Sửa Chữa"
+        usecase UC29 as "Cập Nhật Tiến Độ Sửa"
+        usecase UC30 as "Hoàn Tất Bảo Dưỡng"
+        usecase UC31 as "Lưu Hồ Sơ Bảo Trì"
+    }
+    
+    package "6. Báo Cáo & Thống Kê" #FAFAD2 {
+        usecase UC32 as "Xem Doanh Thu Xe"
+        usecase UC33 as "Xem Tỷ Lệ Sử Dụng"
+        usecase UC34 as "Xem Đánh Giá Xe"
+        usecase UC35 as "Xuất Báo Cáo"
+        usecase UC36 as "So Sánh Hiệu Suất"
+    }
+    
+    package "Xử Lý Đặc Biệt" #FFE082 {
+        usecase UCX1 as "Báo Mất Xe"
+        usecase UCX2 as "Báo Tai Nạn"
+        usecase UCX3 as "Xử Lý Hư Hỏng"
+        usecase UCX4 as "Loại Bỏ Xe"
+        usecase UCX5 as "Phục Hồi Xe"
+    }
+}
+
+' Quy trình đăng ký xe
+CarOwner --> UC1
+UC1 ..> UC2 : <<include>>
+UC2 ..> UC3 : <<include>>
+UC3 ..> UC4 : <<include>>
+UC4 ..> UC5 : <<include>>
+UC5 ..> UC6 : <<include>>
+UC6 ..> UC7 : <<include>>
+
+' Xét duyệt
+UC7 ..> UC8 : <<include>>
+Admin --> UC8
+UC8 ..> UC9 : <<include>>
+UC9 ..> UC10 : <<include>>
+UC10 ..> UC11 : <<include>>
+UC11 ..> UC12 : <<include>>
+UC12 ..> UC13 : <<include>>
+UC13 ..> UC14 : <<extend>>
+UC13 ..> NotificationService : <<integrate>>
+UC12 ..> UC12A : <<extend>>
+
+' Quản lý listing
+UC13 ..> UC15 : <<include>>
+CarOwner --> UC16
+CarOwner --> UC17
+CarOwner --> UC18
+CarOwner --> UC19
+CarOwner --> UC20
+CarOwner --> UC21
+
+' Theo dõi
+CarOwner --> UC22
+UC22 ..> UC23 : <<include>>
+CarOwner --> UC24
+System --> UC25
+UC25 ..> NotificationService : <<integrate>>
+CarOwner --> UC26
+
+' Bảo dưỡng
+CarOwner --> UC27
+UC27 ..> UC28 : <<include>>
+CarOwner --> UC29
+UC29 ..> UC30 : <<include>>
+UC30 ..> UC31 : <<include>>
+
+' Báo cáo
+CarOwner --> UC32
+CarOwner --> UC33
+CarOwner --> UC34
+CarOwner --> UC35
+CarOwner --> UC36
+
+' Xử lý đặc biệt
+CarOwner --> UCX1
+CarOwner --> UCX2
+CarOwner --> UCX3
+UCX3 ..> UC28 : <<include>>
+Admin --> UCX4
+UCX5 ..> UC30 : <<include>>
+
+note right of UC3
+  Giấy tờ yêu cầu:
+  - Giấy đăng ký xe
+  - Bảo hiểm
+  - Giấy kiểm định
+  - CMND chủ xe
+end note
+
+note right of UC10
+  Xác minh:
+  - VIN hợp lệ
+  - Không trùng trong hệ thống
+  - Không trong danh sách đen
+end note
+
+note right of UC24
+  GPS tracking khi xe đang thuê:
+  - Vị trí real-time
+  - Tốc độ
+  - Vi phạm vùng
+end note
+
+note right of UC27
+  Lịch bảo dưỡng:
+  - Định kỳ (3-6 tháng)
+  - Theo km (5000 km)
+  - Block lịch tự động
+end note
+
+note right of UC12A
+  **Condition:**
+  - Chất lượng hình ảnh > 80%
+  - Đủ góc chụp (6 góc)
+  **Extension Point:**
+  - AI kiểm tra:
+    * Không có watermark
+    * Không photoshop
+    * Không trùng hình cũ
+  **Postcondition:**
+  - Nếu pass → Auto-approve
+  - Nếu fail → Manual review
+end note
+
+note right of UC13
+  **Precondition:**
+  - Tất cả giấy tờ hợp lệ
+  - VIN không trùng
+  **Extension Point:**
+  - Nếu chủ xe Pro → Auto-publish
+  - Nếu chủ xe mới → Manual review
+  **Business Rule:**
+  - SLA: 48h cho quyết định
+end note
+
+note right of UCX1
+  Quy trình khẩn cấp:
+  1. Thông báo cảnh sát
+  2. Lock account khách
+  3. Điều tra
+  4. Xử lý bảo hiểm
+end note
+
+@enduml

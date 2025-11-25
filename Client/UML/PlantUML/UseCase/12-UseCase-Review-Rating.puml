@@ -1,0 +1,250 @@
+@startuml UseCase-Review-Rating
+!theme plain
+title Sơ Đồ Use Case Chi Tiết - Đánh Giá & Xếp Hạng
+
+actor "Khách Hàng" as Customer #B4D7FF
+actor "Chủ Xe" as CarOwner #FFE5B4
+actor "Admin" as Admin #FFB4B4
+actor "Hệ Thống" as System #E0E0E0
+actor "AI Service" as AIService #E0E0E0
+actor "Dịch Vụ Thông Báo" as NotificationService #E0E0E0
+
+rectangle "Hệ Thống Đánh Giá" {
+    
+    package "1. Tạo Đánh Giá" #E6F3FF {
+        usecase UC1 as "Nhận Yêu Cầu Review"
+        usecase UC2 as "Mở Form Đánh Giá"
+        usecase UC3 as "Chọn Số Sao (1-5)
+        ---
+        extension point:
+        Bonus Rewards"
+        usecase UC4 as "Viết Bình Luận"
+        usecase UC5 as "Tải Lên Hình Ảnh"
+        usecase UC6 as "Đánh Giá Chi Tiết"
+        usecase UC7 as "Gửi Review"
+        usecase UC7A as "Tặng Voucher
+        ---
+        extension point:
+        5 Star Reward"
+    }
+    
+    package "2. Kiểm Duyệt Tự Động" #D4EDFF {
+        usecase UC8 as "AI Phân Tích Nội Dung"
+        usecase UC9 as "Phát Hiện Ngôn Từ Xấu"
+        usecase UC10 as "Phát Hiện Spam"
+        usecase UC11 as "Kiểm Tra Fake Review"
+        usecase UC12 as "Sentiment Analysis"
+        usecase UC13 as "Tự Động Chấp Nhận"
+    }
+    
+    package "3. Kiểm Duyệt Thủ Công" #B3E5FC {
+        usecase UC14 as "Đánh Dấu Cần Review"
+        usecase UC15 as "Admin Xem Review"
+        usecase UC16 as "Xác Minh Nội Dung"
+        usecase UC17 as "Chấp Nhận Review"
+        usecase UC18 as "Từ Chối Review"
+        usecase UC19 as "Yêu Cầu Chỉnh Sửa"
+    }
+    
+    package "4. Xuất Bản & Hiển Thị" #81D4FA {
+        usecase UC20 as "Xuất Bản Review"
+        usecase UC21 as "Cập Nhật Rating Xe"
+        usecase UC22 as "Thông Báo Chủ Xe"
+        usecase UC23 as "Hiển Thị Trên Listing"
+        usecase UC24 as "Tính Overall Rating"
+    }
+    
+    package "5. Phản Hồi" #4FC3F7 {
+        usecase UC25 as "Chủ Xe Xem Review"
+        usecase UC26 as "Viết Phản Hồi"
+        usecase UC27 as "AI Kiểm Tra Phản Hồi"
+        usecase UC28 as "Xuất Bản Phản Hồi"
+        usecase UC29 as "Thông Báo Khách Hàng"
+    }
+    
+    package "6. Báo Cáo & Tranh Chấp" #29B6F6 {
+        usecase UC30 as "Báo Cáo Review Vi Phạm"
+        usecase UC31 as "Tạo Dispute Ticket"
+        usecase UC32 as "Admin Điều Tra"
+        usecase UC33 as "Yêu Cầu Bằng Chứng"
+        usecase UC34 as "Đưa Ra Quyết Định"
+        usecase UC35 as "Ẩn/Xóa Review"
+    }
+    
+    package "7. Quản Lý Review" #03A9F4 {
+        usecase UC36 as "Xem Tất Cả Review"
+        usecase UC37 as "Lọc & Tìm Kiếm"
+        usecase UC38 as "Sắp Xếp Review"
+        usecase UC39 as "Chỉnh Sửa Review (24h)"
+        usecase UC40 as "Xóa Review"
+        usecase UC41 as "Xem Lịch Sử Chỉnh Sửa"
+    }
+    
+    package "8. Phân Tích & Thống Kê" #00BCD4 {
+        usecase UC42 as "Xem Rating Trung Bình"
+        usecase UC43 as "Phân Tích Theo Thời Gian"
+        usecase UC44 as "Top Positive/Negative"
+        usecase UC45 as "Word Cloud"
+        usecase UC46 as "Xuất Báo Cáo Review"
+    }
+    
+    package "Tính Năng Đặc Biệt" #FFE082 {
+        usecase UCX1 as "Verified Review Badge"
+        usecase UCX2 as "Helpful Vote"
+        usecase UCX3 as "Feature Review"
+        usecase UCX4 as "Review Rewards"
+        usecase UCX5 as "Auto-Translate"
+    }
+}
+
+' Tạo đánh giá
+Customer --> UC1
+UC1 ..> UC2 : <<include>>
+UC2 ..> UC3 : <<include>>
+UC3 ..> UC4 : <<include>>
+UC4 ..> UC5 : <<extend>>
+UC5 ..> UC6 : <<extend>>
+UC6 ..> UC7 : <<include>>
+UC3 ..> UC7A : <<extend>>
+
+' Kiểm duyệt tự động
+UC7 ..> UC8 : <<include>>
+UC8 ..> AIService : <<integrate>>
+UC8 ..> UC9 : <<include>>
+UC9 ..> UC10 : <<include>>
+UC10 ..> UC11 : <<include>>
+UC11 ..> UC12 : <<include>>
+UC12 ..> UC13 : <<extend>>
+
+' Kiểm duyệt thủ công
+UC12 ..> UC14 : <<extend>>
+UC14 ..> UC15 : <<include>>
+Admin --> UC15
+UC15 ..> UC16 : <<include>>
+UC16 ..> UC17 : <<extend>>
+UC16 ..> UC18 : <<extend>>
+UC16 ..> UC19 : <<extend>>
+
+' Xuất bản
+UC13 ..> UC20 : <<include>>
+UC17 ..> UC20 : <<include>>
+UC20 ..> UC21 : <<include>>
+UC21 ..> UC22 : <<include>>
+UC22 ..> NotificationService : <<integrate>>
+UC22 ..> UC23 : <<include>>
+UC23 ..> UC24 : <<include>>
+
+' Phản hồi
+CarOwner --> UC25
+UC25 ..> UC26 : <<include>>
+UC26 ..> UC27 : <<include>>
+UC27 ..> AIService : <<integrate>>
+UC27 ..> UC28 : <<include>>
+UC28 ..> UC29 : <<include>>
+UC29 ..> NotificationService : <<integrate>>
+
+' Báo cáo & tranh chấp
+Customer --> UC30
+CarOwner --> UC30
+UC30 ..> UC31 : <<include>>
+UC31 ..> UC32 : <<include>>
+Admin --> UC32
+UC32 ..> UC33 : <<include>>
+UC33 ..> UC34 : <<include>>
+UC34 ..> UC35 : <<extend>>
+
+' Quản lý
+Customer --> UC36
+CarOwner --> UC36
+Admin --> UC37
+Admin --> UC38
+Customer --> UC39
+Customer --> UC40
+Admin --> UC41
+
+' Phân tích
+CarOwner --> UC42
+Admin --> UC43
+Admin --> UC44
+Admin --> UC45
+CarOwner --> UC46
+Admin --> UC46
+
+' Đặc biệt
+System --> UCX1
+Customer --> UCX2
+Admin --> UCX3
+System --> UCX4
+System --> UCX5
+
+note right of UC6
+  **Đánh Giá Chi Tiết:**
+  - Độ sạch sẽ (1-5★)
+  - Độ chính xác mô tả (1-5★)
+  - Giao tiếp với chủ xe (1-5★)
+  - Tình trạng xe (1-5★)
+  - Giá trị đồng tiền (1-5★)
+end note
+
+note right of UC8
+  **AI Checks:**
+  - Toxic language
+  - Spam patterns
+  - Fake indicators
+  - Sentiment score
+  - Language detection
+end note
+
+note right of UC24
+  **Rating Calculation:**
+  - Overall = Trung bình tất cả
+  - Weight gần đây hơn
+  - Verified reviews +10%
+  - Loại bỏ outliers
+end note
+
+note right of UC34
+  **Quyết Định:**
+  - Giữ nguyên review
+  - Ẩn tạm thời
+  - Xóa vĩnh viễn
+  - Yêu cầu chỉnh sửa
+  - Cảnh cáo user
+end note
+
+note right of UCX1
+  **Verified Badge:**
+  - Đã hoàn thành booking
+  - Có bằng chứng thuê
+  - Tài khoản xác thực
+end note
+
+note right of UCX4
+  **Review Rewards:**
+  - +10 điểm cho review
+  - +20 điểm nếu có ảnh
+  - +50 điểm cho review chi tiết
+end note
+
+note right of UC7A
+  **Condition:**
+  - Khách đánh giá 5 sao
+  - Review có nội dung (>50 từ)
+  **Extension Point:**
+  - Tặng voucher giảm 10%
+  - +200 điểm thưởng
+  - Ưu tiên hiển thị review
+  **Postcondition:**
+  - Voucher có giá trị 30 ngày
+end note
+
+note right of UC3
+  **Precondition:**
+  - Đã hoàn thành booking
+  - Check-out thành công
+  **Extension Point:**
+  - 5 sao → Trigger voucher
+  - 1-2 sao → Trigger support ticket
+end note
+
+@enduml

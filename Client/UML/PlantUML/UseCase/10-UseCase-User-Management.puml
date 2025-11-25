@@ -1,0 +1,243 @@
+@startuml UseCase-User-Management
+!theme plain
+title Sơ Đồ Use Case Chi Tiết - Quản Lý Người Dùng
+
+actor "Người Dùng" as User #B4D7FF
+actor "Admin" as Admin #FFB4B4
+actor "Staff" as Staff #C4FFB4
+actor "Hệ Thống" as System #E0E0E0
+actor "Dịch Vụ Email" as EmailService #E0E0E0
+actor "Dịch Vụ SMS" as SMSService #E0E0E0
+
+rectangle "Quản Lý Người Dùng" {
+    
+    package "1. Đăng Ký & Xác Thực" #E6F3FF {
+        usecase UC1 as "Đăng Ký Tài Khoản"
+        usecase UC2 as "Nhập Thông Tin Cá Nhân"
+        usecase UC3 as "Đặt Mật Khẩu"
+        usecase UC4 as "Gửi OTP Email"
+        usecase UC5 as "Gửi OTP SMS"
+        usecase UC6 as "Xác Thực OTP"
+        usecase UC7 as "Kích Hoạt Tài Khoản"
+    }
+    
+    package "2. Đăng Nhập & Bảo Mật" #D4EDFF {
+        usecase UC8 as "Đăng Nhập"
+        usecase UC9 as "Xác Thực 2FA"
+        usecase UC10 as "Quên Mật Khẩu"
+        usecase UC11 as "Đặt Lại Mật Khẩu"
+        usecase UC12 as "Đổi Mật Khẩu"
+        usecase UC13 as "Quản Lý Session"
+        usecase UC14 as "Đăng Xuất"
+    }
+    
+    package "3. Quản Lý Hồ Sơ" #B3E5FC {
+        usecase UC15 as "Xem Hồ Sơ"
+        usecase UC16 as "Cập Nhật Thông Tin"
+        usecase UC17 as "Tải Lên Avatar"
+        usecase UC18 as "Xác Minh Bằng Lái Xe"
+        usecase UC19 as "Liên Kết Tài Khoản Ngân Hàng"
+        usecase UC20 as "Cài Đặt Thông Báo"
+    }
+    
+    package "4. Xác Minh Danh Tính (KYC)" #81D4FA {
+        usecase UC21 as "Tải Lên CMND/CCCD"
+        usecase UC22 as "Chụp Selfie Xác Minh"
+        usecase UC23 as "AI Face Matching
+        ---
+        extension point:
+        Liveness Detection"
+        usecase UC24 as "Admin Xác Minh Thủ Công"
+        usecase UC25 as "Cập Nhật Trạng Thái KYC
+        ---
+        extension point:
+        Auto-Upgrade"
+        usecase UC25A as "Tự Động Nâng Cấp VIP
+        ---
+        extension point:
+        Loyalty Program"
+    }
+    
+    package "5. Quản Lý Quyền & Vai Trò" #4FC3F7 {
+        usecase UC26 as "Xem Vai Trò Người Dùng"
+        usecase UC27 as "Thay Đổi Vai Trò"
+        usecase UC28 as "Cấp Quyền Đặc Biệt"
+        usecase UC29 as "Thu Hồi Quyền"
+        usecase UC30 as "Xem Lịch Sử Quyền"
+    }
+    
+    package "6. Theo Dõi & Giám Sát" #29B6F6 {
+        usecase UC31 as "Xem Hoạt Động Người Dùng"
+        usecase UC32 as "Theo Dõi Login History"
+        usecase UC33 as "Phát Hiện Hành Vi Bất Thường"
+        usecase UC34 as "Tạo Cảnh Báo Bảo Mật"
+        usecase UC35 as "Xem Audit Log"
+    }
+    
+    package "7. Xử Lý Vi Phạm" #03A9F4 {
+        usecase UC36 as "Nhận Báo Cáo Vi Phạm"
+        usecase UC37 as "Điều Tra Vi Phạm"
+        usecase UC38 as "Gửi Cảnh Báo"
+        usecase UC39 as "Tạm Ngưng Tài Khoản"
+        usecase UC40 as "Cấm Vĩnh Viễn"
+    }
+    
+    package "8. Xóa & Lưu Trữ" #00BCD4 {
+        usecase UC41 as "Yêu Cầu Xóa Tài Khoản"
+        usecase UC42 as "Xác Nhận Xóa"
+        usecase UC43 as "Xóa Dữ Liệu Cá Nhân (GDPR)"
+        usecase UC44 as "Lưu Trữ Transaction Log"
+        usecase UC45 as "Hoàn Tất Xóa"
+    }
+    
+    package "Tính Năng Đặc Biệt" #FFE082 {
+        usecase UCX1 as "Nâng Cấp Lên VIP"
+        usecase UCX2 as "Chương Trình Thưởng"
+        usecase UCX3 as "Giới Thiệu Bạn Bè"
+        usecase UCX4 as "Hỗ Trợ Đa Ngôn Ngữ"
+        usecase UCX5 as "Chế Độ Tối"
+    }
+}
+
+' Đăng ký & xác thực
+User --> UC1
+UC1 ..> UC2 : <<include>>
+UC2 ..> UC3 : <<include>>
+UC3 ..> UC4 : <<include>>
+UC4 ..> EmailService : <<integrate>>
+UC4 ..> UC5 : <<include>>
+UC5 ..> SMSService : <<integrate>>
+UC5 ..> UC6 : <<include>>
+User --> UC6
+UC6 ..> UC7 : <<include>>
+
+' Đăng nhập
+User --> UC8
+UC8 ..> UC9 : <<extend>>
+User --> UC10
+UC10 ..> UC11 : <<include>>
+UC11 ..> EmailService : <<integrate>>
+User --> UC12
+System --> UC13
+User --> UC14
+
+' Quản lý hồ sơ
+User --> UC15
+User --> UC16
+User --> UC17
+User --> UC18
+User --> UC19
+User --> UC20
+
+' KYC
+User --> UC21
+User --> UC22
+UC22 ..> UC23 : <<include>>
+UC23 ..> UC24 : <<extend>>
+Admin --> UC24
+UC24 ..> UC25 : <<include>>
+UC25 ..> UC25A : <<extend>>
+
+' Quyền & vai trò
+Admin --> UC26
+Admin --> UC27
+Admin --> UC28
+Admin --> UC29
+Admin --> UC30
+
+' Theo dõi
+Staff --> UC31
+Staff --> UC32
+System --> UC33
+UC33 ..> UC34 : <<include>>
+Admin --> UC35
+
+' Vi phạm
+Staff --> UC36
+Staff --> UC37
+UC37 ..> UC38 : <<include>>
+Admin --> UC39
+Admin --> UC40
+
+' Xóa & lưu trữ
+User --> UC41
+UC41 ..> UC42 : <<include>>
+UC42 ..> UC43 : <<include>>
+UC43 ..> UC44 : <<include>>
+UC44 ..> UC45 : <<include>>
+
+' Đặc biệt
+User --> UCX1
+User --> UCX2
+User --> UCX3
+User --> UCX4
+User --> UCX5
+
+note right of UC3
+  Yêu cầu mật khẩu:
+  - Tối thiểu 8 ký tự
+  - Chữ hoa, chữ thường
+  - Số và ký tự đặc biệt
+  - Không trùng 5 mật khẩu gần nhất
+end note
+
+note right of UC23
+  AI Face Matching:
+  - So sánh CMND vs Selfie
+  - Liveness detection
+  - Độ chính xác > 95%
+end note
+
+note right of UC33
+  Hành vi bất thường:
+  - Login từ nhiều IP
+  - Nhiều booking cùng lúc
+  - Thay đổi thông tin liên tục
+  - Giao dịch bất thường
+end note
+
+note right of UC43
+  GDPR Compliance:
+  - Xóa PII
+  - Ẩn danh dữ liệu
+  - Giữ transaction log
+  - Báo cáo xóa
+end note
+
+note right of UCX1
+  Yêu cầu VIP:
+  - 20+ booking thành công
+  - Chi tiêu > $5,000
+  - Đánh giá > 4.5★
+  - Không vi phạm
+end note
+
+note right of UC23
+  **Precondition:**
+  - Đã tải CMND và Selfie
+  **Extension Point:**
+  - Liveness detection:
+    * Nhập mắt
+    * Xoay đầu
+    * Mỉm cười
+  **Business Rule:**
+  - Độ chính xác > 95%
+  - Nếu < 95% → Manual review
+end note
+
+note right of UC25A
+  **Condition:**
+  - KYC thành công
+  - 20+ booking hoàn thành
+  - Tổng chi tiêu > $5,000
+  - Đánh giá TB > 4.5★
+  **Extension Point:**
+  - Tự động nâng VIP
+  - Gửi email chúc mừng
+  - Mở khóa đặc quyền VIP
+  **Postcondition:**
+  - Commission giảm 8% → 5%
+  - Priority support
+end note
+
+@enduml

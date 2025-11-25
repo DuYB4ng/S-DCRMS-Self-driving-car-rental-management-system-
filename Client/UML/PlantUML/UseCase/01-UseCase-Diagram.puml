@@ -1,0 +1,137 @@
+@startuml UseCase-SDCRMS
+!theme plain
+title Sơ Đồ Use Case - SDCRMS\n(Hệ Thống Quản Lý Cho Thuê Xe Tự Lái)
+
+' Định nghĩa Actors
+actor "Chủ Xe" as CarOwner #FFE5B4
+actor "Khách Hàng" as Customer #B4D7FF
+actor "Nhân Viên" as Staff #C4FFB4
+actor "Quản Trị" as Admin #FFB4B4
+actor "Cổng Thanh Toán" as PaymentGateway #E0E0E0
+actor "Dịch Vụ Thông Báo" as NotificationService #E0E0E0
+actor "AI Chatbot" as AIService #E0E0E0
+
+rectangle "Hệ Thống SDCRMS" {
+    
+    package "Chức Năng Chủ Xe" #FFFACD {
+        usecase UC1 as "Register & List Cars"
+        usecase UC2 as "Manage Car Availability"
+        usecase UC3 as "Manage Pricing & Calendar"
+        usecase UC4 as "Respond to Inquiries"
+        usecase UC5 as "Track Car Usage"
+        usecase UC6 as "Manage Maintenance"
+        usecase UC7 as "Manage Payments"
+        usecase UC8 as "View Rental History"
+        usecase UC9 as "Receive Notifications"
+    }
+    
+    package "Chức Năng Khách Hàng" #E6F3FF {
+        usecase UC10 as "Search Cars"
+        usecase UC11 as "View Car Details"
+        usecase UC12 as "Book Car"
+        usecase UC13 as "Digital Check-in/Check-out"
+        usecase UC14 as "Make Payment"
+        usecase UC15 as "Rate & Review"
+        usecase UC16 as "View Booking History"
+        usecase UC17 as "View Invoices"
+        usecase UC18 as "Receive Notifications"
+    }
+    
+    package "Chức Năng Nhân Viên" #E8F5E9 {
+        usecase UC19 as "Manage Car Owner Accounts"
+        usecase UC20 as "Manage Customer Accounts"
+        usecase UC21 as "Monitor Bookings"
+        usecase UC22 as "Handle Feedback"
+        usecase UC23 as "Send Notifications"
+        usecase UC24 as "Generate Reports"
+        usecase UC25 as "View Statistics"
+    }
+    
+    package "Chức Năng Quản Trị" #FFEBEE {
+        usecase UC26 as "Manage Staff Accounts"
+        usecase UC27 as "Oversee System Operations"
+        usecase UC28 as "Monitor Transactions"
+        usecase UC29 as "Manage Compliance Policies"
+        usecase UC30 as "Fraud Detection"
+        usecase UC31 as "Revenue Dashboard"
+        usecase UC32 as "System Configuration"
+        usecase UC33 as "User Role Management"
+    }
+    
+    package "Chức Năng Chung" #F5F5F5 {
+        usecase UC34 as "Login/Logout"
+        usecase UC35 as "Update Profile"
+        usecase UC36 as "Change Password"
+        usecase UC37 as "View Notifications"
+    }
+}
+
+' Car Owner - Core Functions
+CarOwner --> UC1
+CarOwner --> UC2
+CarOwner --> UC3
+CarOwner --> UC6
+CarOwner --> UC7
+CarOwner --> UC8
+
+' Customer - Core Functions
+Customer --> UC10
+Customer --> UC11
+Customer --> UC12
+Customer --> UC13
+Customer --> UC14
+Customer --> UC15
+Customer --> UC16
+
+' Staff - Core Functions
+Staff --> UC19
+Staff --> UC20
+Staff --> UC21
+Staff --> UC22
+Staff --> UC23
+Staff --> UC24
+
+' Admin - Core Functions
+Admin --> UC26
+Admin --> UC27
+Admin --> UC28
+Admin --> UC29
+Admin --> UC30
+Admin --> UC31
+Admin --> UC32
+Admin --> UC33
+
+' Common Functions (All Users)
+CarOwner --> UC34
+Customer --> UC34
+Staff --> UC34
+Admin --> UC34
+
+CarOwner --> UC35
+Customer --> UC35
+Staff --> UC35
+Admin --> UC35
+
+' Notification Receivers
+UC9 ..> CarOwner : notifies
+UC18 ..> Customer : notifies
+
+' External Systems Integration
+UC14 ..> PaymentGateway : <<integrate>>
+UC7 ..> PaymentGateway : <<integrate>>
+
+UC9 ..> NotificationService : <<integrate>>
+UC18 ..> NotificationService : <<integrate>>
+UC23 ..> NotificationService : <<integrate>>
+
+UC10 ..> AIService : <<integrate>>
+UC12 ..> AIService : <<integrate>>
+
+' Include Relationships
+UC12 ..> UC14 : <<include>>
+UC8 ..> UC7 : <<include>>
+UC16 ..> UC17 : <<include>>
+UC24 ..> UC25 : <<include>>
+UC31 ..> UC28 : <<include>>
+
+@enduml
