@@ -15,4 +15,4 @@ async function setRole(email, role) {
   }
 }
 
-setRole("triuu1212@gmail.com", "Admin");
+setRole("trieunguyenhoang1212@gmail.com", "Staff");
