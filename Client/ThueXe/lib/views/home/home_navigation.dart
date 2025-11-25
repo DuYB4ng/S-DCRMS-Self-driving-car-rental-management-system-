@@ -6,6 +6,8 @@ import 'package:provider/provider.dart';
 import '../../viewmodels/orders_viewmodel.dart';
 
 class HomeNavigation extends StatefulWidget {
+  const HomeNavigation({super.key});
+
   @override
   _HomeNavigationState createState() => _HomeNavigationState();
 }

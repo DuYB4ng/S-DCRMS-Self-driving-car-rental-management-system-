@@ -8,6 +8,8 @@ class RegisterView extends StatelessWidget {
   final passController = TextEditingController();
   final rePassController = TextEditingController();
 
+  RegisterView({super.key});
+
   @override
   Widget build(BuildContext context) {
     final vm = Provider.of<RegisterViewModel>(context);

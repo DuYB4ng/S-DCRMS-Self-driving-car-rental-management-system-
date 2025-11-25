@@ -11,11 +11,11 @@ class BookingConfirmView extends StatefulWidget {
   final DateTime returnDate;
 
   const BookingConfirmView({
-    Key? key,
+    super.key,
     required this.car,
     required this.receiveDate,
     required this.returnDate,
-  }) : super(key: key);
+  });
 
   @override
   State<BookingConfirmView> createState() => _BookingConfirmViewState();

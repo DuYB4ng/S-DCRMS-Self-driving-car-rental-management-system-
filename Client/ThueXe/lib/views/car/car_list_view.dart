@@ -10,7 +10,7 @@ class CarListView extends StatefulWidget {
   final DateTime returnDate;
   final TimeOfDay returnTime;
 
-  CarListView({
+  const CarListView({super.key, 
     required this.city,
     required this.receiveDate,
     required this.receiveTime,

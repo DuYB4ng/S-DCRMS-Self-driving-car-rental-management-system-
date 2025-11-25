@@ -7,6 +7,8 @@ class LoginView extends StatelessWidget {
   final emailController = TextEditingController();
   final passController = TextEditingController();
 
+  LoginView({super.key});
+
   @override
   Widget build(BuildContext context) {
     final vm = Provider.of<LoginViewModel>(context);

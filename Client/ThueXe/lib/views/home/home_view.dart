@@ -4,6 +4,8 @@ import '../../viewmodels/home_viewmodel.dart';
 import '../car/car_list_view.dart';
 
 class HomeView extends StatelessWidget {
+  const HomeView({super.key});
+
   @override
   Widget build(BuildContext context) {
     final vm = Provider.of<HomeViewModel>(context);
@@ -69,7 +71,7 @@ class HomeView extends StatelessWidget {
                         SizedBox(height: 8),
                         DropdownButtonFormField<String>(
                           decoration: _inputDecoration(),
-                          value: vm.selectedCity,
+                          initialValue: vm.selectedCity,
                           items: [
                             "Hồ Chí Minh",
                             "Hà Nội",
