@@ -8,7 +8,7 @@ class AuthService {
   /// Trả về firebaseUid (uid) nếu thành công, null nếu thất bại
   Future<String?> register({
     required String email,
-    required String phone,
+    required String displayName,
     required String password,
   }) async {
     try {
@@ -16,7 +16,7 @@ class AuthService {
         "email": email,
         "password": password,
         "confirmPassword": password,
-        "displayName": phone, // tạm thời dùng số điện thoại làm displayName
+        "displayName": displayName,
       });
 
       final data = response.data;

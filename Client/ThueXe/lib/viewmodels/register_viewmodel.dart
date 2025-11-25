@@ -12,14 +12,16 @@ class RegisterViewModel extends ChangeNotifier {
 
   Future<bool> register(
     String email,
-    String phone,
+    String displayName, // 👈 đổi tên tham số
     String pass,
     String rePass,
   ) async {
     errorMessage = null;
 
-    // ===== Validate cơ bản =====
-    if (email.isEmpty || phone.isEmpty || pass.isEmpty || rePass.isEmpty) {
+    if (email.isEmpty ||
+        displayName.isEmpty ||
+        pass.isEmpty ||
+        rePass.isEmpty) {
       errorMessage = "Vui lòng nhập đầy đủ thông tin";
       notifyListeners();
       return false;
@@ -34,10 +36,10 @@ class RegisterViewModel extends ChangeNotifier {
     isLoading = true;
     notifyListeners();
 
-    // ===== 1. Gọi AuthService (backend) để đăng ký =====
+    // 1. Gọi AuthService để đăng ký
     final uid = await _authService.register(
       email: email,
-      phone: phone,
+      displayName: displayName, // 👈 truyền tên hiển thị
       password: pass,
     );
 
@@ -48,11 +50,10 @@ class RegisterViewModel extends ChangeNotifier {
       return false;
     }
 
-    // ===== 2. Tạo Customer tương ứng trong CustomerService =====
+    // 2. Tạo customer
     try {
       await _customerService.createCustomer(firebaseUid: uid);
     } catch (e) {
-      // Không bắt user đăng ký lại chỉ vì lỗi đồng bộ customer
       print("Create customer failed: $e");
     }
 

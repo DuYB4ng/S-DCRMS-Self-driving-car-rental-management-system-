@@ -118,45 +118,53 @@ namespace BookingService.Controllers
 
         // POST: api/booking/{id}/check-in
         [HttpPost("{id}/check-in")]
-        public async Task<IActionResult> CheckIn(int id)
+        // [Authorize] // sau này bật auth thì mở dòng này
+        [AllowAnonymous] // tạm dev
+        public async Task<IActionResult> CheckIn(
+            int id,
+            [FromQuery] string? firebaseUid // dev mode: cho phép nhận từ query
+        )
         {
-            // Lấy booking
+            // 1. Lấy booking
             var booking = await _context.Bookings.FindAsync(id);
             if (booking == null)
                 return NotFound(new { message = "Booking not found" });
 
-            // Lấy firebaseUid từ JWT (giống Create)
-            int customerId;
-            var firebaseUid =
-                User.FindFirst("firebaseUid")?.Value ??
-                User.FindFirst("user_id")?.Value;
+            // 2. Xác định firebaseUid
+            string? uid = firebaseUid;
 
-            if (string.IsNullOrEmpty(firebaseUid))
+            // Nếu không truyền qua query, thử lấy từ JWT claim
+            if (string.IsNullOrEmpty(uid))
             {
-                // DEV MODE: fallback CustomerId = 1
-                customerId = 1;
-            }
-            else
-            {
-                var customer = await _customerClient.GetByFirebaseUidAsync(firebaseUid);
-                if (customer == null)
-                    return BadRequest(new { message = "Customer profile not found" });
-
-                customerId = customer.CustomerId;
+                uid = User.FindFirst("firebaseUid")?.Value
+                ?? User.FindFirst("user_id")?.Value;
             }
 
-            // Chỉ chủ booking mới được check-in
+            if (string.IsNullOrEmpty(uid))
+            {
+                // Không có cách nào lấy được uid -> dev mode báo lỗi rõ ràng
+                return BadRequest("firebaseUid is required (query or JWT).");
+            }
+
+            // 3. Lấy customer theo firebaseUid
+            var customer = await _customerClient.GetByFirebaseUidAsync(uid);
+            if (customer == null)
+                return BadRequest(new { message = "Customer profile not found" });
+
+            int customerId = customer.CustomerId;
+
+            // 4. Chỉ chủ booking mới được check-in
             if (booking.CustomerId != customerId)
                 return Forbid();
 
-            // Chỉ cho check-in khi đã thanh toán
+            // 5. Chỉ cho check-in khi đã thanh toán
             if (!string.Equals(booking.Status, BookingStatuses.Paid, StringComparison.OrdinalIgnoreCase))
                 return BadRequest(new { message = $"Booking must be '{BookingStatuses.Paid}' before check-in" });
 
             if (booking.CheckIn)
                 return BadRequest(new { message = "Booking already checked in" });
 
-            // Cập nhật trạng thái check-in
+            // 6. Cập nhật trạng thái check-in
             booking.CheckIn = true;
             booking.Status = BookingStatuses.InProgress;
 
@@ -164,44 +172,53 @@ namespace BookingService.Controllers
             return Ok(booking.ToBookingDto());
         }
 
+
         // POST: api/booking/{id}/check-out
         [HttpPost("{id}/check-out")]
-        public async Task<IActionResult> CheckOut(int id)
+        // [Authorize] // sau này bật auth
+        [AllowAnonymous]
+        public async Task<IActionResult> CheckOut(
+            int id,
+            [FromQuery] string? firebaseUid // dev mode
+        )
         {
             var booking = await _context.Bookings.FindAsync(id);
             if (booking == null)
                 return NotFound(new { message = "Booking not found" });
 
-            // Lấy current customer
-            int customerId;
-            var firebaseUid =
-                User.FindFirst("firebaseUid")?.Value ??
-                User.FindFirst("user_id")?.Value;
+            // 1. Xác định firebaseUid
+            string? uid = firebaseUid;
 
-            if (string.IsNullOrEmpty(firebaseUid))
+            if (string.IsNullOrEmpty(uid))
             {
-                customerId = 1; // DEV MODE
-            }
-            else
-            {
-                var customer = await _customerClient.GetByFirebaseUidAsync(firebaseUid);
-                if (customer == null)
-                    return BadRequest(new { message = "Customer profile not found" });
-
-                customerId = customer.CustomerId;
+                uid = User.FindFirst("firebaseUid")?.Value
+                ?? User.FindFirst("user_id")?.Value;
             }
 
-            // Chỉ chủ booking mới được check-out
+            if (string.IsNullOrEmpty(uid))
+            {
+                return BadRequest("firebaseUid is required (query or JWT).");
+            }
+
+            // 2. Lấy customer theo firebaseUid
+            var customer = await _customerClient.GetByFirebaseUidAsync(uid);
+            if (customer == null)
+                return BadRequest(new { message = "Customer profile not found" });
+
+            int customerId = customer.CustomerId;
+
+            // 3. Chỉ chủ booking mới được check-out
             if (booking.CustomerId != customerId)
                 return Forbid();
 
-            // Phải check-in rồi mới được check-out
+            // 4. Phải check-in rồi mới được check-out
             if (!booking.CheckIn)
                 return BadRequest(new { message = "Booking must be checked in before check-out" });
 
             if (booking.CheckOut)
                 return BadRequest(new { message = "Booking already checked out" });
 
+            // 5. Cập nhật trạng thái
             booking.CheckOut = true;
             booking.Status = BookingStatuses.Completed;
 

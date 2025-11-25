@@ -4,7 +4,7 @@ import '../viewmodels/register_viewmodel.dart';
 
 class RegisterView extends StatelessWidget {
   final emailController = TextEditingController();
-  final phoneController = TextEditingController();
+  final displayNameController = TextEditingController();
   final passController = TextEditingController();
   final rePassController = TextEditingController();
 
@@ -22,7 +22,6 @@ class RegisterView extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-
               SizedBox(height: 40),
 
               // LOGO
@@ -31,21 +30,17 @@ class RegisterView extends StatelessWidget {
                 child: Center(
                   child: Image.asset(
                     "assets/images/logo.png",
-                    height: 120,  // giảm 1 chút để nhìn gọn hơn
+                    height: 120, // giảm 1 chút để nhìn gọn hơn
                   ),
                 ),
               ),
-
 
               SizedBox(height: 18),
 
               Text(
                 "Đăng Ký Và Bắt Đầu \n Một Hành Trình Tươi Đẹp ",
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 15,
-                  color: Colors.black87,
-                ),
+                style: TextStyle(fontSize: 15, color: Colors.black87),
               ),
 
               SizedBox(height: 30),
@@ -55,27 +50,38 @@ class RegisterView extends StatelessWidget {
 
               SizedBox(height: 12),
 
-              /// Phone
-              _inputField("Số điện thoại", "Nhập số điện thoại", phoneController),
+              /// Display
+              _inputField(
+                "Tên hiển thị",
+                "Nhập tên hiển thị",
+                displayNameController,
+              ),
 
               SizedBox(height: 12),
 
               /// Password
-              _inputField("Nhập mật khẩu", "Nhập mật khẩu", passController, isPass: true),
+              _inputField(
+                "Nhập mật khẩu",
+                "Nhập mật khẩu",
+                passController,
+                isPass: true,
+              ),
 
               SizedBox(height: 12),
 
               /// Re-enter password
-              _inputField("Nhập lại mật khẩu", "Nhập lại mật khẩu", rePassController, isPass: true),
+              _inputField(
+                "Nhập lại mật khẩu",
+                "Nhập lại mật khẩu",
+                rePassController,
+                isPass: true,
+              ),
 
               SizedBox(height: 20),
 
               /// Error Message
               if (vm.errorMessage != null)
-                Text(
-                  vm.errorMessage!,
-                  style: TextStyle(color: Colors.red),
-                ),
+                Text(vm.errorMessage!, style: TextStyle(color: Colors.red)),
 
               SizedBox(height: 20),
 
@@ -93,19 +99,21 @@ class RegisterView extends StatelessWidget {
                   onPressed: vm.isLoading
                       ? null
                       : () => vm.register(
-                    emailController.text.trim(),
-                    phoneController.text.trim(),
-                    passController.text.trim(),
-                    rePassController.text.trim(),
-                  ),
+                          emailController.text.trim(),
+                          displayNameController.text.trim(),
+                          passController.text.trim(),
+                          rePassController.text.trim(),
+                        ),
                   child: vm.isLoading
                       ? CircularProgressIndicator(color: Colors.white)
-                      : Text("Đăng ký",
-                    style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),),
+                      : Text(
+                          "Đăng ký",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                 ),
               ),
 
@@ -131,7 +139,6 @@ class RegisterView extends StatelessWidget {
                 ],
               ),
 
-
               SizedBox(height: 40),
             ],
           ),
@@ -141,13 +148,19 @@ class RegisterView extends StatelessWidget {
   }
 
   /// Custom input widget
-  Widget _inputField(String label, String hint, TextEditingController controller,
-      {bool isPass = false}) {
+  Widget _inputField(
+    String label,
+    String hint,
+    TextEditingController controller, {
+    bool isPass = false,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label,
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+        Text(
+          label,
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+        ),
         SizedBox(height: 6),
         TextField(
           controller: controller,
