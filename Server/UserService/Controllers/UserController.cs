@@ -1,9 +1,9 @@
+using Microsoft.AspNetCore.Mvc;
+using UserService.Models;
+using UserService.Services;
+
 namespace UserService.Controllers
 {
-    using Microsoft.AspNetCore.Mvc;
-    using UserService.Models;
-    using UserService.Services;
-
     [ApiController]
     [Route("api/users")]
     public class UserController : ControllerBase
@@ -13,6 +13,11 @@ namespace UserService.Controllers
         public UserController(IUserService userService)
         {
             _userService = userService;
+        }
+
+        public class PromoteUserDto
+        {
+            public string? Role { get; set; }
         }
 
         [HttpGet]
@@ -88,11 +93,139 @@ namespace UserService.Controllers
             };
 
             var createdUser = await _userService.CreateUserAsync(user);
+
+            // Nếu user có role Admin, tự động đồng bộ sang AdminService
+            if ((user.Role?.Trim().ToLower() ?? "") == "admin")
+            {
+                try
+                {
+                    var httpClient =
+                        HttpContext.RequestServices.GetService(typeof(IHttpClientFactory))
+                        as IHttpClientFactory;
+                    var configuration =
+                        HttpContext.RequestServices.GetService(typeof(IConfiguration))
+                        as IConfiguration;
+                    var adminServiceUrl =
+                        configuration?["ServiceUrls:AdminService"]
+                        ?? "http://adminservice:8081/api/admin";
+                    var adminData = new
+                    {
+                        userId = createdUser.ID,
+                        email = string.IsNullOrWhiteSpace(user.Email)
+                            ? $"admin{createdUser.ID}@example.com"
+                            : user.Email,
+                        firstName = string.IsNullOrWhiteSpace(user.FirstName)
+                            ? "Admin"
+                            : user.FirstName,
+                        lastName = string.IsNullOrWhiteSpace(user.LastName)
+                            ? "User"
+                            : user.LastName,
+                        phoneNumber = string.IsNullOrWhiteSpace(user.PhoneNumber)
+                            ? "0000000000"
+                            : user.PhoneNumber,
+                        sex = string.IsNullOrWhiteSpace(user.Sex) ? "Male" : user.Sex,
+                        birthday = user.Birthday == DateTime.MinValue
+                            ? DateTime.Now
+                            : user.Birthday,
+                        address = string.IsNullOrWhiteSpace(user.Address) ? "N/A" : user.Address,
+                        password = "Admin@123",
+                    };
+                    var json = System.Text.Json.JsonSerializer.Serialize(adminData);
+                    var content = new System.Net.Http.StringContent(
+                        json,
+                        System.Text.Encoding.UTF8,
+                        "application/json"
+                    );
+                    var response = await httpClient
+                        .CreateClient()
+                        .PostAsync(adminServiceUrl, content);
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        var resp = await response.Content.ReadAsStringAsync();
+                        Console.WriteLine($"[SyncUser] AdminService response: {resp}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[SyncUser] Error: {ex.Message}");
+                }
+            }
             return CreatedAtAction(
                 nameof(GetByFirebaseUid),
                 new { firebaseUid = createdUser.FirebaseUid },
                 createdUser
             );
+        }
+
+        [HttpPost("{id}/promote")]
+        public async Task<IActionResult> PromoteUser(int id, [FromBody] PromoteUserDto dto)
+        {
+            var users = await _userService.GetAllAsync();
+            var user = users.FirstOrDefault(u => u.ID == id);
+            if (user == null)
+                return NotFound();
+
+            user.Role = dto.Role;
+            await _userService.UpdateUserAsync(user);
+
+            // Nếu role mới là Admin, đồng bộ sang AdminService
+            if (dto.Role?.Trim().ToLower() == "admin")
+            {
+                try
+                {
+                    var httpClient =
+                        HttpContext.RequestServices.GetService(typeof(IHttpClientFactory))
+                        as IHttpClientFactory;
+                    var configuration =
+                        HttpContext.RequestServices.GetService(typeof(IConfiguration))
+                        as IConfiguration;
+                    var adminServiceUrl =
+                        configuration["ServiceUrls:AdminService"]
+                        ?? "http://adminservice:8081/api/admin";
+                    var adminData = new
+                    {
+                        userId = user.ID,
+                        email = string.IsNullOrWhiteSpace(user.Email)
+                            ? $"admin{user.ID}@example.com"
+                            : user.Email,
+                        firstName = string.IsNullOrWhiteSpace(user.FirstName)
+                            ? "Admin"
+                            : user.FirstName,
+                        lastName = string.IsNullOrWhiteSpace(user.LastName)
+                            ? "User"
+                            : user.LastName,
+                        phoneNumber = string.IsNullOrWhiteSpace(user.PhoneNumber)
+                            ? "0000000000"
+                            : user.PhoneNumber,
+                        sex = string.IsNullOrWhiteSpace(user.Sex) ? "Male" : user.Sex,
+                        birthday = user.Birthday == DateTime.MinValue
+                            ? DateTime.Now
+                            : user.Birthday,
+                        address = string.IsNullOrWhiteSpace(user.Address) ? "N/A" : user.Address,
+                        password = "Admin@123",
+                    };
+                    var json = System.Text.Json.JsonSerializer.Serialize(adminData);
+                    var content = new System.Net.Http.StringContent(
+                        json,
+                        System.Text.Encoding.UTF8,
+                        "application/json"
+                    );
+                    var response = await httpClient
+                        .CreateClient()
+                        .PostAsync(adminServiceUrl, content);
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        var resp = await response.Content.ReadAsStringAsync();
+                        Console.WriteLine($"[PromoteUser] AdminService response: {resp}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[PromoteUser] Error: {ex.Message}");
+                }
+            }
+
+            return Ok(user);
         }
     }
 }

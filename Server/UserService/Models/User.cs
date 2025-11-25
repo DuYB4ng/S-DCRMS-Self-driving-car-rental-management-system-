@@ -6,6 +6,7 @@ namespace UserService.Models
     public class User
     {
         public int ID { get; set; }
+
         [Required]
         public string FirebaseUid { get; set; }
 
