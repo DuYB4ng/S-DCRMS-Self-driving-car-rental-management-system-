@@ -1,35 +1,90 @@
-import React, { useMemo, useState } from "react";
-// Nếu sau này dùng API thật thì mở comment dòng dưới
-// import axiosClient from "../api/axiosClient";
+import React, { useEffect, useMemo, useState } from "react";
+import axiosClient from "../../api/axiosClient";
+import { useNavigate } from "react-router-dom";
 
 const PAGE_SIZE = 5;
 
 const OwnersPage = () => {
-  const [owners, setOwners] = useState([
-    { id: 1, name: "Nguyễn Văn A", phone: "0901 234 567", cars: 3 },
-    { id: 2, name: "Trần Thị B", phone: "0902 345 678", cars: 5 },
-    // Có thể thêm dữ liệu mẫu nếu muốn test phân trang
-  ]);
+  const [owners, setOwners] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [form, setForm] = useState({ name: "", phone: "", cars: "" });
-  const [error, setError] = useState("");
+  const [editingOwner, setEditingOwner] = useState(null); // null = tạo mới
+  const [form, setForm] = useState({
+    firebaseUid: "",
+    drivingLicence: "",
+    licenceIssueDate: "",
+    licenceExpiryDate: "",
+    isActive: true,
+  });
 
-  // Lọc theo tên hoặc SĐT
+  const [error, setError] = useState("");
+  const [globalError, setGlobalError] = useState("");
+
+  const navigate = useNavigate();
+
+  // ----- Helpers -----
+  const toInputDate = (value) => {
+    if (!value) return "";
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return "";
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  };
+
+  const formatDate = (value) => {
+    if (!value) return "";
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return "";
+    return d.toLocaleDateString("vi-VN");
+  };
+
+  const getOwnerId = (o) => o.ownerCarId ?? o.OwnerCarId;
+
+  // ----- Load danh sách chủ xe -----
+  const fetchOwners = async () => {
+    setLoading(true);
+    setGlobalError("");
+
+    try {
+      // Nếu baseURL có /api thì sửa path thành "/ownercar"
+      const res = await axiosClient.get("/ownercar");
+      const data = Array.isArray(res.data) ? res.data : [];
+      setOwners(data);
+    } catch (err) {
+      console.error(err);
+      setGlobalError("Không thể tải danh sách chủ xe. Vui lòng thử lại sau.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchOwners();
+  }, []);
+
+  // ----- Tìm kiếm + phân trang -----
   const filteredOwners = useMemo(() => {
     const keyword = search.trim().toLowerCase();
     if (!keyword) return owners;
-    return owners.filter(
-      (o) =>
-        o.name.toLowerCase().includes(keyword) ||
-        o.phone.replace(/\s/g, "").includes(keyword.replace(/\s/g, ""))
-    );
+
+    return owners.filter((o) => {
+      const firebaseUid = (o.firebaseUid ?? o.FirebaseUid ?? "").toLowerCase();
+      const drivingLicence = (
+        o.drivingLicence ??
+        o.DrivingLicence ??
+        ""
+      ).toLowerCase();
+
+      return firebaseUid.includes(keyword) || drivingLicence.includes(keyword);
+    });
   }, [owners, search]);
 
-  // Phân trang
   const totalPages = Math.max(1, Math.ceil(filteredOwners.length / PAGE_SIZE));
 
   const pageData = useMemo(() => {
@@ -38,8 +93,37 @@ const OwnersPage = () => {
     return filteredOwners.slice(start, start + PAGE_SIZE);
   }, [filteredOwners, page, totalPages]);
 
-  const openModal = () => {
-    setForm({ name: "", phone: "", cars: "" });
+  // ----- Mở/đóng modal -----
+  const openCreateModal = () => {
+    setEditingOwner(null);
+    setForm({
+      firebaseUid: "",
+      drivingLicence: "",
+      licenceIssueDate: "",
+      licenceExpiryDate: "",
+      isActive: true,
+    });
+    setError("");
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (owner) => {
+    const firebaseUid = owner.firebaseUid ?? owner.FirebaseUid ?? "";
+    const drivingLicence = owner.drivingLicence ?? owner.DrivingLicence ?? "";
+    const licenceIssueDate =
+      owner.licenceIssueDate ?? owner.LicenceIssueDate ?? "";
+    const licenceExpiryDate =
+      owner.licenceExpiryDate ?? owner.LicenceExpiryDate ?? "";
+    const isActive = owner.isActive ?? owner.IsActive ?? true;
+
+    setEditingOwner(owner);
+    setForm({
+      firebaseUid,
+      drivingLicence,
+      licenceIssueDate: toInputDate(licenceIssueDate),
+      licenceExpiryDate: toInputDate(licenceExpiryDate),
+      isActive,
+    });
     setError("");
     setIsModalOpen(true);
   };
@@ -48,46 +132,138 @@ const OwnersPage = () => {
     setIsModalOpen(false);
   };
 
+  // ----- Submit form: Tạo / Cập nhật chủ xe -----
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
-    if (!form.name || !form.phone || !form.cars) {
-      setError("Vui lòng nhập đầy đủ thông tin.");
+    const isEdit = !!editingOwner;
+    const {
+      firebaseUid,
+      drivingLicence,
+      licenceIssueDate,
+      licenceExpiryDate,
+      isActive,
+    } = form;
+
+    if (!drivingLicence.trim() || !licenceIssueDate || !licenceExpiryDate) {
+      setError("Vui lòng nhập đầy đủ thông tin GPLX và ngày cấp/hết hạn.");
       return;
     }
 
-    const carsNumber = Number(form.cars);
-    if (Number.isNaN(carsNumber) || carsNumber < 0) {
-      setError("Số lượng xe phải là số không âm.");
+    if (!isEdit && !firebaseUid.trim()) {
+      setError("Vui lòng nhập Firebase UID cho chủ xe mới.");
+      return;
+    }
+
+    const issue = new Date(licenceIssueDate);
+    const expiry = new Date(licenceExpiryDate);
+    if (issue > expiry) {
+      setError("Ngày cấp không được lớn hơn ngày hết hạn.");
       return;
     }
 
     try {
-      // Nếu sau này gọi API thật:
-      // const res = await axiosClient.post<Owner>("/staff/owners", {
-      //   name: form.name,
-      //   phone: form.phone,
-      //   cars: carsNumber,
-      // });
-      // const newOwner = res.data;
+      if (isEdit) {
+        // Cập nhật chủ xe: PUT /api/ownercar/{ownerId}
+        const ownerId = getOwnerId(editingOwner);
+        if (!ownerId) {
+          setError("Không xác định được ID chủ xe.");
+          return;
+        }
 
-      const newOwner = {
-        id: owners.length ? owners[owners.length - 1].id + 1 : 1,
-        name: form.name,
-        phone: form.phone,
-        cars: carsNumber,
-      };
+        const payload = {
+          DrivingLicence: drivingLicence.trim(),
+          LicenceIssueDate: licenceIssueDate,
+          LicenceExpiryDate: licenceExpiryDate,
+          IsActive: !!isActive,
+        };
 
-      setOwners((prev) => [...prev, newOwner]);
+        const res = await axiosClient.put(`/ownercar/${ownerId}`, payload);
+
+        const updated = res?.data;
+
+        setOwners((prev) =>
+          prev.map((o) =>
+            getOwnerId(o) === ownerId
+              ? updated ?? {
+                  ...o,
+                  DrivingLicence: payload.DrivingLicence,
+                  LicenceIssueDate: payload.LicenceIssueDate,
+                  LicenceExpiryDate: payload.LicenceExpiryDate,
+                  IsActive: payload.IsActive,
+                }
+              : o
+          )
+        );
+      } else {
+        // Tạo chủ xe: POST /api/ownercar
+        const payload = {
+          firebaseUid: firebaseUid.trim(),
+          DrivingLicence: drivingLicence.trim(),
+          LicenceIssueDate: licenceIssueDate,
+          LicenceExpiryDate: licenceExpiryDate,
+        };
+
+        const res = await axiosClient.post("/ownercar", payload);
+        const created = res?.data;
+
+        const fallback = {
+          OwnerCarId:
+            owners.length > 0
+              ? (getOwnerId(owners[owners.length - 1]) ?? 0) + 1
+              : 1,
+          firebaseUid: payload.firebaseUid,
+          DrivingLicence: payload.DrivingLicence,
+          LicenceIssueDate: payload.LicenceIssueDate,
+          LicenceExpiryDate: payload.LicenceExpiryDate,
+          Cars: [],
+          IsActive: true,
+          CreatedAt: new Date().toISOString(),
+        };
+
+        const newOwner = created ?? fallback;
+
+        const newList = [...owners, newOwner];
+        setOwners(newList);
+
+        const newTotalPages = Math.max(
+          1,
+          Math.ceil(newList.length / PAGE_SIZE)
+        );
+        setPage(newTotalPages);
+      }
+
       setIsModalOpen(false);
-      setPage(totalPages); // nhảy về trang cuối để thấy record mới
     } catch (err) {
       console.error(err);
-      setError("Không thể tạo chủ xe. Vui lòng thử lại.");
+      setError("Không thể lưu thông tin chủ xe. Vui lòng thử lại.");
     }
   };
 
+  // ----- Xoá chủ xe -----
+  const handleDeleteOwner = async (owner) => {
+    const ownerId = getOwnerId(owner);
+    if (!ownerId) return;
+
+    const ok = window.confirm("Bạn có chắc muốn xoá chủ xe này?");
+    if (!ok) return;
+
+    try {
+      await axiosClient.delete(`/ownercar/${ownerId}`);
+
+      const updated = owners.filter((o) => getOwnerId(o) !== ownerId);
+      setOwners(updated);
+
+      const newTotal = Math.max(1, Math.ceil(updated.length / PAGE_SIZE));
+      if (page > newTotal) setPage(newTotal);
+    } catch (err) {
+      console.error(err);
+      alert("Xoá chủ xe thất bại. Vui lòng thử lại.");
+    }
+  };
+
+  // ----- Styles -----
   const styles = {
     page: {
       padding: "24px 32px",
@@ -96,7 +272,7 @@ const OwnersPage = () => {
       boxSizing: "border-box",
     },
     card: {
-      maxWidth: 900,
+      maxWidth: 1100,
       margin: "0 auto",
       backgroundColor: "#ffffff",
       borderRadius: 16,
@@ -126,7 +302,7 @@ const OwnersPage = () => {
       padding: "8px 12px",
       fontSize: 14,
       outline: "none",
-      minWidth: 200,
+      minWidth: 260,
     },
     addButton: {
       background: "linear-gradient(135deg, #0ea5e9, #2563eb)",
@@ -145,17 +321,67 @@ const OwnersPage = () => {
     },
     th: {
       textAlign: "left",
-      fontSize: 14,
+      fontSize: 13,
       fontWeight: 600,
       padding: "10px 12px",
       borderBottom: "2px solid #e5e7eb",
       color: "#111827",
+      whiteSpace: "nowrap",
     },
     td: {
-      fontSize: 14,
+      fontSize: 13,
       padding: "10px 12px",
       borderBottom: "1px solid #f3f4f6",
       color: "#111827",
+      verticalAlign: "middle",
+    },
+    badgeActive: {
+      display: "inline-block",
+      padding: "2px 8px",
+      borderRadius: 999,
+      fontSize: 12,
+      fontWeight: 600,
+      backgroundColor: "#dcfce7",
+      color: "#166534",
+    },
+    badgeInactive: {
+      display: "inline-block",
+      padding: "2px 8px",
+      borderRadius: 999,
+      fontSize: 12,
+      fontWeight: 600,
+      backgroundColor: "#fee2e2",
+      color: "#b91c1c",
+    },
+    actionButtons: {
+      display: "flex",
+      gap: 6,
+    },
+    smallBtn: {
+      padding: "4px 8px",
+      borderRadius: 6,
+      border: "1px solid #d1d5db",
+      backgroundColor: "#fff",
+      cursor: "pointer",
+      fontSize: 12,
+    },
+    dangerBtn: {
+      borderColor: "#fecaca",
+      color: "#b91c1c",
+      backgroundColor: "#fef2f2",
+    },
+    primaryOutlineBtn: {
+      borderColor: "#bfdbfe",
+      color: "#1d4ed8",
+      backgroundColor: "#eff6ff",
+    },
+    globalError: {
+      color: "#b91c1c",
+      backgroundColor: "#fee2e2",
+      padding: "8px 12px",
+      borderRadius: 8,
+      fontSize: 13,
+      marginBottom: 8,
     },
     paginationRow: {
       marginTop: 12,
@@ -194,7 +420,7 @@ const OwnersPage = () => {
       backgroundColor: "#fff",
       borderRadius: 16,
       padding: 20,
-      width: 360,
+      width: 420,
       boxShadow: "0 12px 30px rgba(15, 23, 42, 0.25)",
     },
     modalTitle: {
@@ -255,79 +481,157 @@ const OwnersPage = () => {
           <div style={styles.actionsRow}>
             <input
               style={styles.searchInput}
-              placeholder="Tìm theo tên hoặc SĐT..."
+              placeholder="Tìm theo Firebase UID hoặc số GPLX..."
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
                 setPage(1);
               }}
             />
-            <button type="button" style={styles.addButton} onClick={openModal}>
+            <button
+              type="button"
+              style={styles.addButton}
+              onClick={openCreateModal}
+            >
               + Thêm chủ xe
             </button>
           </div>
         </div>
 
-        <table style={styles.table}>
-          <thead>
-            <tr>
-              <th style={styles.th}>Tên chủ xe</th>
-              <th style={styles.th}>SĐT</th>
-              <th style={styles.th}>Số lượng xe</th>
-            </tr>
-          </thead>
-          <tbody>
-            {pageData.map((o) => (
-              <tr key={o.id}>
-                <td style={styles.td}>{o.name}</td>
-                <td style={styles.td}>{o.phone}</td>
-                <td style={styles.td}>{o.cars}</td>
-              </tr>
-            ))}
-            {pageData.length === 0 && (
-              <tr>
-                <td style={styles.td} colSpan={3}>
-                  Không có chủ xe nào phù hợp.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+        {globalError && <div style={styles.globalError}>{globalError}</div>}
+        {loading && <div>Đang tải danh sách chủ xe...</div>}
 
-        {/* Phân trang */}
-        <div style={styles.paginationRow}>
-          <span>
-            Tổng: <b>{filteredOwners.length}</b> chủ xe – Trang {page}/
-            {totalPages}
-          </span>
-          <div style={styles.paginationButtons}>
-            <button
-              type="button"
-              style={{
-                ...styles.paginationBtn,
-                ...(page === 1 ? styles.paginationBtnDisabled : {}),
-              }}
-              disabled={page === 1}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-            >
-              « Trước
-            </button>
-            <button
-              type="button"
-              style={{
-                ...styles.paginationBtn,
-                ...(page === totalPages ? styles.paginationBtnDisabled : {}),
-              }}
-              disabled={page === totalPages}
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            >
-              Sau »
-            </button>
-          </div>
-        </div>
+        {!loading && (
+          <>
+            <table style={styles.table}>
+              <thead>
+                <tr>
+                  <th style={styles.th}>ID</th>
+                  <th style={styles.th}>Firebase UID</th>
+                  <th style={styles.th}>Số GPLX</th>
+                  <th style={styles.th}>Ngày cấp</th>
+                  <th style={styles.th}>Ngày hết hạn</th>
+                  <th style={styles.th}>Trạng thái</th>
+                  <th style={styles.th}>Hành động</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pageData.map((o) => {
+                  const ownerId = getOwnerId(o);
+                  const firebaseUid = o.firebaseUid ?? o.FirebaseUid ?? "";
+                  const drivingLicence =
+                    o.drivingLicence ?? o.DrivingLicence ?? "";
+                  const licenceIssueDate =
+                    o.licenceIssueDate ?? o.LicenceIssueDate;
+                  const licenceExpiryDate =
+                    o.licenceExpiryDate ?? o.LicenceExpiryDate;
+                  const isActive = o.isActive ?? o.IsActive ?? true;
+
+                  return (
+                    <tr key={ownerId}>
+                      <td style={styles.td}>{ownerId}</td>
+                      <td style={styles.td}>
+                        <span
+                          style={{
+                            fontFamily: "monospace",
+                            fontSize: 12,
+                            wordBreak: "break-all",
+                          }}
+                        >
+                          {firebaseUid}
+                        </span>
+                      </td>
+                      <td style={styles.td}>{drivingLicence}</td>
+                      <td style={styles.td}>{formatDate(licenceIssueDate)}</td>
+                      <td style={styles.td}>{formatDate(licenceExpiryDate)}</td>
+                      <td style={styles.td}>
+                        {isActive ? (
+                          <span style={styles.badgeActive}>Hoạt động</span>
+                        ) : (
+                          <span style={styles.badgeInactive}>Vô hiệu hóa</span>
+                        )}
+                      </td>
+                      <td style={styles.td}>
+                        <div style={styles.actionButtons}>
+                          <button
+                            type="button"
+                            style={{
+                              ...styles.smallBtn,
+                              ...styles.primaryOutlineBtn,
+                            }}
+                            onClick={() =>
+                              navigate(`/staff/owners/${ownerId}/cars`)
+                            }
+                          >
+                            Xe
+                          </button>
+                          <button
+                            type="button"
+                            style={styles.smallBtn}
+                            onClick={() => openEditModal(o)}
+                          >
+                            Sửa
+                          </button>
+                          <button
+                            type="button"
+                            style={{ ...styles.smallBtn, ...styles.dangerBtn }}
+                            onClick={() => handleDeleteOwner(o)}
+                          >
+                            Xoá
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+                {pageData.length === 0 && (
+                  <tr>
+                    <td style={styles.td} colSpan={7}>
+                      Không có chủ xe nào phù hợp.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+
+            {/* Phân trang */}
+            <div style={styles.paginationRow}>
+              <span>
+                Tổng: <b>{filteredOwners.length}</b> chủ xe – Trang {page}/
+                {totalPages}
+              </span>
+              <div style={styles.paginationButtons}>
+                <button
+                  type="button"
+                  style={{
+                    ...styles.paginationBtn,
+                    ...(page === 1 ? styles.paginationBtnDisabled : {}),
+                  }}
+                  disabled={page === 1}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                >
+                  « Trước
+                </button>
+                <button
+                  type="button"
+                  style={{
+                    ...styles.paginationBtn,
+                    ...(page === totalPages
+                      ? styles.paginationBtnDisabled
+                      : {}),
+                  }}
+                  disabled={page === totalPages}
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                >
+                  Sau »
+                </button>
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
-      {/* Modal thêm chủ xe */}
+      {/* Modal thêm / sửa chủ xe */}
       {isModalOpen && (
         <div style={styles.modalBackdrop} onClick={closeModal}>
           <div
@@ -336,43 +640,103 @@ const OwnersPage = () => {
               e.stopPropagation();
             }}
           >
-            <h2 style={styles.modalTitle}>Thêm chủ xe mới</h2>
+            <h2 style={styles.modalTitle}>
+              {editingOwner ? "Cập nhật chủ xe" : "Thêm chủ xe mới"}
+            </h2>
             <form onSubmit={handleSubmit}>
+              {!editingOwner && (
+                <div style={styles.modalField}>
+                  <label>Firebase UID</label>
+                  <input
+                    style={styles.modalInput}
+                    value={form.firebaseUid}
+                    onChange={(e) =>
+                      setForm((f) => ({
+                        ...f,
+                        firebaseUid: e.target.value,
+                      }))
+                    }
+                    placeholder="UID của user trong Firebase / UserService"
+                    required
+                  />
+                </div>
+              )}
+
+              {editingOwner && (
+                <div style={styles.modalField}>
+                  <label>Firebase UID</label>
+                  <input
+                    style={styles.modalInput}
+                    value={form.firebaseUid}
+                    disabled
+                  />
+                </div>
+              )}
+
               <div style={styles.modalField}>
-                <label>Họ tên</label>
+                <label>Số giấy phép lái xe</label>
                 <input
                   style={styles.modalInput}
-                  value={form.name}
+                  value={form.drivingLicence}
                   onChange={(e) =>
-                    setForm((f) => ({ ...f, name: e.target.value }))
+                    setForm((f) => ({
+                      ...f,
+                      drivingLicence: e.target.value,
+                    }))
                   }
                   required
                 />
               </div>
+
               <div style={styles.modalField}>
-                <label>Số điện thoại</label>
+                <label>Ngày cấp</label>
                 <input
                   style={styles.modalInput}
-                  value={form.phone}
+                  type="date"
+                  value={form.licenceIssueDate}
                   onChange={(e) =>
-                    setForm((f) => ({ ...f, phone: e.target.value }))
+                    setForm((f) => ({
+                      ...f,
+                      licenceIssueDate: e.target.value,
+                    }))
                   }
                   required
                 />
               </div>
+
               <div style={styles.modalField}>
-                <label>Số lượng xe</label>
+                <label>Ngày hết hạn</label>
                 <input
                   style={styles.modalInput}
-                  type="number"
-                  min={0}
-                  value={form.cars}
+                  type="date"
+                  value={form.licenceExpiryDate}
                   onChange={(e) =>
-                    setForm((f) => ({ ...f, cars: e.target.value }))
+                    setForm((f) => ({
+                      ...f,
+                      licenceExpiryDate: e.target.value,
+                    }))
                   }
                   required
                 />
               </div>
+
+              {editingOwner && (
+                <div style={styles.modalField}>
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={form.isActive}
+                      onChange={(e) =>
+                        setForm((f) => ({
+                          ...f,
+                          isActive: e.target.checked,
+                        }))
+                      }
+                    />{" "}
+                    Chủ xe đang hoạt động
+                  </label>
+                </div>
+              )}
 
               {error && <div style={styles.errorText}>{error}</div>}
 

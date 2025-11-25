@@ -33,7 +33,7 @@ const CarManagementPage = () => {
   // Fetch cars
   const fetchCars = async () => {
     try {
-      const response = await axios.get("http://localhost:8001/api/car");
+      const response = await axios.get("http://localhost:8000/api/car");
       const mappedCars = response.data.map((c) => ({
         id: c.carID,
         name: c.nameCar,
@@ -67,14 +67,56 @@ const CarManagementPage = () => {
   }, []);
 
   // Add car
+  // Add car
   const handleAddCar = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("http://localhost:8001/api/car", newCar);
+      const createDTO = {
+        // Basic info
+        NameCar: newCar.NameCar,
+        LicensePlate: newCar.LicensePlate,
+        ModelYear: newCar.ModelYear,
+        Seat: parseInt(newCar.Seat),
+        TypeCar: newCar.TypeCar,
+        Transmission: newCar.Transmission || "Automatic",
+        FuelType: newCar.FuelType || "Gasoline",
+        FuelConsumption: parseFloat(newCar.FuelConsumption) || 0,
+        Color: newCar.Color || "",
+
+        // Pricing
+        PricePerDay: parseFloat(newCar.Price),
+        Deposit: parseFloat(newCar.Deposit) || 0,
+
+        // Location & availability
+        Location: newCar.Location || "",
+        IsActive: newCar.State,
+
+        // Ownership & registration
+        OwnershipType: newCar.OwnershipType || "Personal",
+        RegistrationDate: newCar.RegistrationDate || new Date().toISOString(),
+        RegistrationPlace: newCar.RegistrationPlace || "",
+        InsuranceExpiryDate:
+          newCar.InsuranceExpiryDate || new Date().toISOString(),
+        InspectionExpiryDate:
+          newCar.InspectionExpiryDate || new Date().toISOString(),
+
+        // Display
+        Description: newCar.Description || "",
+        ImageUrls: newCar.UrlImage
+          ? [newCar.UrlImage]
+          : ["image/default-car.png"],
+
+        // Relation
+        OwnerCarID: newCar.OwnerID, // đang có sẵn trong state của bạn
+      };
+
+      await axios.post("http://localhost:8001/api/car", createDTO);
+
       setShowAddModal(false);
       resetNewCar();
       fetchCars();
     } catch (error) {
+      console.error(error.response?.data || error.message);
       alert("Không thể thêm xe mới.");
     }
   };
@@ -351,13 +393,7 @@ const CarManagementPage = () => {
                   >
                     <EyeIcon className="w-5 h-5" />
                   </button>
-                  <button
-                    onClick={() => handleEditCar(car)}
-                    className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition"
-                    title="Chỉnh sửa"
-                  >
-                    <EditIcon className="w-5 h-5" />
-                  </button>
+
                   <button
                     onClick={() => handleDeleteCar(car.id)}
                     className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"

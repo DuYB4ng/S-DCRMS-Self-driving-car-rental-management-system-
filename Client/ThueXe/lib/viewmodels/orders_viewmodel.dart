@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../services/booking_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class OrdersViewModel extends ChangeNotifier {
   // Dùng BookingService để lấy danh sách booking của customer
@@ -8,6 +9,7 @@ class OrdersViewModel extends ChangeNotifier {
 
   // Vẫn giữ ApiService cho các action check-in / check-out
   final ApiService api = ApiService();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   bool isLoading = false;
   List<dynamic> orders = [];
@@ -43,9 +45,21 @@ class OrdersViewModel extends ChangeNotifier {
   /// CUSTOMER check-in booking
   Future<void> checkIn(int bookingId) async {
     try {
-      // POST /booking/{id}/check-in
-      await api.post("/booking/$bookingId/check-in", {});
-      // Sau khi server cập nhật, load lại danh sách
+      final user = _auth.currentUser;
+      if (user == null) {
+        throw Exception("User not logged in");
+      }
+
+      final uid = user.uid;
+
+      await api.post(
+        "/booking/$bookingId/check-in",
+        {},
+        queryParameters: {
+          "firebaseUid": uid, // 👈 gửi uid lên query
+        },
+      );
+
       await refreshOrders();
     } catch (e) {
       rethrow;
@@ -55,16 +69,24 @@ class OrdersViewModel extends ChangeNotifier {
   /// CUSTOMER check-out booking
   Future<void> checkOut(int bookingId) async {
     try {
-      // POST /booking/{id}/check-out
-      await api.post("/booking/$bookingId/check-out", {});
+      final user = _auth.currentUser;
+      if (user == null) {
+        throw Exception("User not logged in");
+      }
+
+      final uid = user.uid;
+
+      await api.post(
+        "/booking/$bookingId/check-out",
+        {},
+        queryParameters: {
+          "firebaseUid": uid, // 👈 gửi uid lên query
+        },
+      );
+
       await refreshOrders();
     } catch (e) {
       rethrow;
     }
-  }
-
-  // 👉 Pull-to-refresh khi dùng RefreshIndicator
-  Future<void> pullToRefresh() async {
-    await refreshOrders();
   }
 }

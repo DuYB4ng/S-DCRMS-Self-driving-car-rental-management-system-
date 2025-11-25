@@ -9,13 +9,14 @@ function App() {
 
   // Nếu đang ở trang login, không hiển thị sidebar/header
   const isLoginPage = location.pathname === "/login";
+
   // Nếu đang ở staff route, không hiển thị sidebar admin/header
   const isStaffPage = location.pathname.startsWith("/staff");
 
-  if (isLoginPage) {
-    return <Outlet />;
-  }
-  if (isStaffPage) {
+  // Nếu đang ở ownercar route, cũng không hiển thị sidebar admin/header
+  const isOwnerCarPage = location.pathname.startsWith("/ownercar");
+
+  if (isLoginPage || isStaffPage || isOwnerCarPage) {
     return <Outlet />;
   }
 

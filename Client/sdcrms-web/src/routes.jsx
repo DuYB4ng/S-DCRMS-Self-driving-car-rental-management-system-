@@ -2,7 +2,7 @@ import React from "react";
 import { createBrowserRouter } from "react-router-dom";
 import App from "./App";
 import ProtectedRoute from "./components/ProtectedRoute";
-
+const OwnerRoutes = React.lazy(() => import("./pages/OwnerCar/OwnerRoutes"));
 // Lazy load pages to avoid initial load issues
 const AdminDashboardPage = React.lazy(() =>
   import("./pages/Admin/DashboardPage")
@@ -70,6 +70,16 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: "ownercar/*",
+        element: (
+          <ProtectedRoute>
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <OwnerRoutes />
+            </React.Suspense>
+          </ProtectedRoute>
+        ),
+      },
+      {
         path: "admin",
         element: (
           <ProtectedRoute requiredRole="Admin">
@@ -80,7 +90,7 @@ export const router = createBrowserRouter([
       {
         path: "car-management",
         element: (
-          <ProtectedRoute requiredRole="Admin">
+          <ProtectedRoute>
             <CarManagementPage />
           </ProtectedRoute>
         ),

@@ -1,6 +1,6 @@
 import axiosClient from "./axiosClient";
 
-const API_BASE = "/OwnerCar";
+const API_BASE = "/ownercar";
 
 export const getAllOwnerCars = async () => {
   const res = await axiosClient.get(API_BASE);

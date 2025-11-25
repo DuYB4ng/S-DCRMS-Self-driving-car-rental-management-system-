@@ -1,28 +1,86 @@
-import { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import axiosClient from "../../api/axiosClient";
 
 const PAGE_SIZE = 5;
 
 const CustomersPage = () => {
-  const [customers, setCustomers] = useState([
-    { id: 1, name: "Lê Văn C", phone: "0912 345 678", rentals: 2 },
-    { id: 2, name: "Phạm Thị D", phone: "0987 654 321", rentals: 5 },
-  ]);
+  const [customers, setCustomers] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [form, setForm] = useState({ name: "", phone: "", rentals: "" });
-  const [error, setError] = useState("");
+  const [editingCustomer, setEditingCustomer] = useState(null); // null = tạo mới
+  const [form, setForm] = useState({
+    firebaseUid: "",
+    drivingLicense: "",
+    licenseIssueDate: "",
+    licenseExpiryDate: "",
+  });
 
+  const [error, setError] = useState("");
+  const [globalError, setGlobalError] = useState("");
+
+  // ----- Helpers -----
+  const toInputDate = (value) => {
+    if (!value) return "";
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return "";
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  };
+
+  const formatDate = (value) => {
+    if (!value) return "";
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return "";
+    return d.toLocaleDateString("vi-VN");
+  };
+
+  const getCustomerId = (c) => c.customerId ?? c.CustomerId;
+
+  // ----- Load danh sách customer -----
+  const fetchCustomers = async () => {
+    setLoading(true);
+    setGlobalError("");
+
+    try {
+      // Nếu baseURL = http://localhost:8000/api thì đổi path thành "/customer"
+      const res = await axiosClient.get("/customer");
+      const data = Array.isArray(res.data) ? res.data : [];
+      setCustomers(data);
+    } catch (err) {
+      console.error(err);
+      setGlobalError(
+        "Không thể tải danh sách khách hàng. Vui lòng thử lại sau."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCustomers();
+  }, []);
+
+  // ----- Tìm kiếm + phân trang -----
   const filteredCustomers = useMemo(() => {
     const keyword = search.trim().toLowerCase();
     if (!keyword) return customers;
-    return customers.filter(
-      (c) =>
-        c.name.toLowerCase().includes(keyword) ||
-        c.phone.replace(/\s/g, "").includes(keyword.replace(/\s/g, ""))
-    );
+
+    return customers.filter((c) => {
+      const firebaseUid = (c.firebaseUid ?? c.FirebaseUid ?? "").toLowerCase();
+      const drivingLicense = (
+        c.drivingLicense ??
+        c.DrivingLicense ??
+        ""
+      ).toLowerCase();
+
+      return firebaseUid.includes(keyword) || drivingLicense.includes(keyword);
+    });
   }, [customers, search]);
 
   const totalPages = Math.max(
@@ -36,57 +94,168 @@ const CustomersPage = () => {
     return filteredCustomers.slice(start, start + PAGE_SIZE);
   }, [filteredCustomers, page, totalPages]);
 
-  const openModal = () => {
-    setForm({ name: "", phone: "", rentals: "" });
+  // ----- Modal -----
+  const openCreateModal = () => {
+    setEditingCustomer(null);
+    setForm({
+      firebaseUid: "",
+      drivingLicense: "",
+      licenseIssueDate: "",
+      licenseExpiryDate: "",
+    });
+    setError("");
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (customer) => {
+    const firebaseUid = customer.firebaseUid ?? customer.FirebaseUid ?? "";
+    const drivingLicense =
+      customer.drivingLicense ?? customer.DrivingLicense ?? "";
+    const licenseIssueDate =
+      customer.licenseIssueDate ?? customer.LicenseIssueDate ?? "";
+    const licenseExpiryDate =
+      customer.licenseExpiryDate ?? customer.LicenseExpiryDate ?? "";
+
+    setEditingCustomer(customer);
+    setForm({
+      firebaseUid,
+      drivingLicense,
+      licenseIssueDate: toInputDate(licenseIssueDate),
+      licenseExpiryDate: toInputDate(licenseExpiryDate),
+    });
     setError("");
     setIsModalOpen(true);
   };
 
   const closeModal = () => {
-    setIsModalOpen(false);tôi
+    setIsModalOpen(false);
   };
 
+  // ----- Submit: Tạo / Cập nhật -----
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
-    if (!form.name || !form.phone || !form.rentals) {
-      setError("Vui lòng nhập đầy đủ thông tin.");
+    const isEdit = !!editingCustomer;
+    const { firebaseUid, drivingLicense, licenseIssueDate, licenseExpiryDate } =
+      form;
+
+    if (!drivingLicense.trim() || !licenseIssueDate || !licenseExpiryDate) {
+      setError("Vui lòng nhập đầy đủ thông tin GPLX và ngày cấp/hết hạn.");
       return;
     }
 
-    const rentalsNumber = Number(form.rentals);
-    if (Number.isNaN(rentalsNumber) || rentalsNumber < 0) {
-      setError("Số lần thuê phải là số không âm.");
+    if (!isEdit && !firebaseUid.trim()) {
+      setError("Vui lòng nhập Firebase UID cho khách hàng mới.");
+      return;
+    }
+
+    const issue = new Date(licenseIssueDate);
+    const expiry = new Date(licenseExpiryDate);
+    if (issue > expiry) {
+      setError("Ngày cấp không được lớn hơn ngày hết hạn.");
       return;
     }
 
     try {
-      // Nếu dùng API:
-      // const res = await axiosClient.post("/staff/customers", {
-      //   name: form.name,
-      //   phone: form.phone,
-      //   rentals: rentalsNumber,
-      // });
-      // const newCustomer = res.data;
+      if (isEdit) {
+        // PUT /api/customer/{id}
+        const customerId = getCustomerId(editingCustomer);
+        if (!customerId) {
+          setError("Không xác định được ID khách hàng.");
+          return;
+        }
 
-      const newCustomer = {
-        id: customers.length ? customers[customers.length - 1].id + 1 : 1,
-        name: form.name,
-        phone: form.phone,
-        rentals: rentalsNumber,
-      };
+        const payload = {
+          customerId,
+          FirebaseUid: firebaseUid.trim(),
+          DrivingLicense: drivingLicense.trim(),
+          LicenseIssueDate: licenseIssueDate,
+          LicenseExpiryDate: licenseExpiryDate,
+        };
 
-      setCustomers((prev) => [...prev, newCustomer]);
+        const res = await axiosClient.put(`/customer/${customerId}`, payload);
+
+        const updated = res?.data;
+
+        setCustomers((prev) =>
+          prev.map((c) =>
+            getCustomerId(c) === customerId
+              ? updated ?? {
+                  ...c,
+                  FirebaseUid: payload.FirebaseUid,
+                  DrivingLicense: payload.DrivingLicense,
+                  LicenseIssueDate: payload.LicenseIssueDate,
+                  LicenseExpiryDate: payload.LicenseExpiryDate,
+                }
+              : c
+          )
+        );
+      } else {
+        // POST /api/customer
+        const payload = {
+          FirebaseUid: firebaseUid.trim(),
+          DrivingLicense: drivingLicense.trim(),
+          LicenseIssueDate: licenseIssueDate,
+          LicenseExpiryDate: licenseExpiryDate,
+        };
+
+        const res = await axiosClient.post("/customer", payload);
+        const created = res?.data;
+
+        const fallback = {
+          CustomerId:
+            customers.length > 0
+              ? (getCustomerId(customers[customers.length - 1]) ?? 0) + 1
+              : 1,
+          FirebaseUid: payload.FirebaseUid,
+          DrivingLicense: payload.DrivingLicense,
+          LicenseIssueDate: payload.LicenseIssueDate,
+          LicenseExpiryDate: payload.LicenseExpiryDate,
+        };
+
+        const newCustomer = created ?? fallback;
+
+        const newList = [...customers, newCustomer];
+        setCustomers(newList);
+
+        const newTotalPages = Math.max(
+          1,
+          Math.ceil(newList.length / PAGE_SIZE)
+        );
+        setPage(newTotalPages);
+      }
+
       setIsModalOpen(false);
-      setPage(totalPages);
     } catch (err) {
       console.error(err);
-      setError("Không thể tạo khách hàng. Vui lòng thử lại.");
+      setError("Không thể lưu thông tin khách hàng. Vui lòng thử lại.");
     }
   };
 
-  // Styles tái sử dụng giống OwnersPage
+  // ----- Xoá khách hàng -----
+  const handleDeleteCustomer = async (customer) => {
+    const customerId = getCustomerId(customer);
+    if (!customerId) return;
+
+    const ok = window.confirm("Bạn có chắc muốn xoá khách hàng này?");
+    if (!ok) return;
+
+    try {
+      await axiosClient.delete(`/customer/${customerId}`);
+
+      const updated = customers.filter((c) => getCustomerId(c) !== customerId);
+      setCustomers(updated);
+
+      const newTotal = Math.max(1, Math.ceil(updated.length / PAGE_SIZE));
+      if (page > newTotal) setPage(newTotal);
+    } catch (err) {
+      console.error(err);
+      alert("Xoá khách hàng thất bại. Vui lòng thử lại.");
+    }
+  };
+
+  // ----- Styles -----
   const styles = {
     page: {
       padding: "24px 32px",
@@ -95,7 +264,7 @@ const CustomersPage = () => {
       boxSizing: "border-box",
     },
     card: {
-      maxWidth: 900,
+      maxWidth: 1100,
       margin: "0 auto",
       backgroundColor: "#ffffff",
       borderRadius: 16,
@@ -125,7 +294,7 @@ const CustomersPage = () => {
       padding: "8px 12px",
       fontSize: 14,
       outline: "none",
-      minWidth: 200,
+      minWidth: 260,
     },
     addButton: {
       background: "linear-gradient(135deg, #0ea5e9, #2563eb)",
@@ -144,17 +313,58 @@ const CustomersPage = () => {
     },
     th: {
       textAlign: "left",
-      fontSize: 14,
+      fontSize: 13,
       fontWeight: 600,
       padding: "10px 12px",
       borderBottom: "2px solid #e5e7eb",
       color: "#111827",
+      whiteSpace: "nowrap",
     },
     td: {
-      fontSize: 14,
+      fontSize: 13,
       padding: "10px 12px",
       borderBottom: "1px solid #f3f4f6",
       color: "#111827",
+      verticalAlign: "middle",
+    },
+    badge: {
+      display: "inline-block",
+      padding: "2px 8px",
+      borderRadius: 999,
+      fontSize: 12,
+      fontWeight: 600,
+      backgroundColor: "#eff6ff",
+      color: "#1d4ed8",
+    },
+    actionButtons: {
+      display: "flex",
+      gap: 6,
+    },
+    smallBtn: {
+      padding: "4px 8px",
+      borderRadius: 6,
+      border: "1px solid #d1d5db",
+      backgroundColor: "#fff",
+      cursor: "pointer",
+      fontSize: 12,
+    },
+    dangerBtn: {
+      borderColor: "#fecaca",
+      color: "#b91c1c",
+      backgroundColor: "#fef2f2",
+    },
+    primaryOutlineBtn: {
+      borderColor: "#bfdbfe",
+      color: "#1d4ed8",
+      backgroundColor: "#eff6ff",
+    },
+    globalError: {
+      color: "#b91c1c",
+      backgroundColor: "#fee2e2",
+      padding: "8px 12px",
+      borderRadius: 8,
+      fontSize: 13,
+      marginBottom: 8,
     },
     paginationRow: {
       marginTop: 12,
@@ -193,7 +403,7 @@ const CustomersPage = () => {
       backgroundColor: "#fff",
       borderRadius: 16,
       padding: 20,
-      width: 360,
+      width: 420,
       boxShadow: "0 12px 30px rgba(15, 23, 42, 0.25)",
     },
     modalTitle: {
@@ -254,77 +464,139 @@ const CustomersPage = () => {
           <div style={styles.actionsRow}>
             <input
               style={styles.searchInput}
-              placeholder="Tìm theo tên hoặc SĐT..."
+              placeholder="Tìm theo Firebase UID hoặc số GPLX..."
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
                 setPage(1);
               }}
             />
-            <button type="button" style={styles.addButton} onClick={openModal}>
+            <button
+              type="button"
+              style={styles.addButton}
+              onClick={openCreateModal}
+            >
               + Thêm khách hàng
             </button>
           </div>
         </div>
 
-        <table style={styles.table}>
-          <thead>
-            <tr>
-              <th style={styles.th}>Tên khách</th>
-              <th style={styles.th}>SĐT</th>
-              <th style={styles.th}>Số lần thuê</th>
-            </tr>
-          </thead>
-          <tbody>
-            {pageData.map((c) => (
-              <tr key={c.id}>
-                <td style={styles.td}>{c.name}</td>
-                <td style={styles.td}>{c.phone}</td>
-                <td style={styles.td}>{c.rentals}</td>
-              </tr>
-            ))}
-            {pageData.length === 0 && (
-              <tr>
-                <td style={styles.td} colSpan={3}>
-                  Không có khách hàng nào phù hợp.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+        {globalError && <div style={styles.globalError}>{globalError}</div>}
+        {loading && <div>Đang tải danh sách khách hàng...</div>}
 
-        <div style={styles.paginationRow}>
-          <span>
-            Tổng: <b>{filteredCustomers.length}</b> khách – Trang {page}/
-            {totalPages}
-          </span>
-          <div style={styles.paginationButtons}>
-            <button
-              type="button"
-              style={{
-                ...styles.paginationBtn,
-                ...(page === 1 ? styles.paginationBtnDisabled : {}),
-              }}
-              disabled={page === 1}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-            >
-              « Trước
-            </button>
-            <button
-              type="button"
-              style={{
-                ...styles.paginationBtn,
-                ...(page === totalPages ? styles.paginationBtnDisabled : {}),
-              }}
-              disabled={page === totalPages}
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            >
-              Sau »
-            </button>
-          </div>
-        </div>
+        {!loading && (
+          <>
+            <table style={styles.table}>
+              <thead>
+                <tr>
+                  <th style={styles.th}>ID</th>
+                  <th style={styles.th}>Firebase UID</th>
+                  <th style={styles.th}>Số GPLX</th>
+                  <th style={styles.th}>Ngày cấp</th>
+                  <th style={styles.th}>Ngày hết hạn</th>
+                  <th style={styles.th}>Hành động</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pageData.map((c) => {
+                  const customerId = getCustomerId(c);
+                  const firebaseUid = c.firebaseUid ?? c.FirebaseUid ?? "";
+                  const drivingLicense =
+                    c.drivingLicense ?? c.DrivingLicense ?? "";
+                  const licenseIssueDate =
+                    c.licenseIssueDate ?? c.LicenseIssueDate;
+                  const licenseExpiryDate =
+                    c.licenseExpiryDate ?? c.LicenseExpiryDate;
+
+                  return (
+                    <tr key={customerId}>
+                      <td style={styles.td}>{customerId}</td>
+                      <td style={styles.td}>
+                        <span
+                          style={{
+                            fontFamily: "monospace",
+                            fontSize: 12,
+                            wordBreak: "break-all",
+                          }}
+                        >
+                          {firebaseUid}
+                        </span>
+                      </td>
+                      <td style={styles.td}>{drivingLicense}</td>
+                      <td style={styles.td}>{formatDate(licenseIssueDate)}</td>
+                      <td style={styles.td}>{formatDate(licenseExpiryDate)}</td>
+                      <td style={styles.td}>
+                        <div style={styles.actionButtons}>
+                          <button
+                            type="button"
+                            style={{
+                              ...styles.smallBtn,
+                              ...styles.primaryOutlineBtn,
+                            }}
+                            onClick={() => openEditModal(c)}
+                          >
+                            Sửa
+                          </button>
+                          <button
+                            type="button"
+                            style={{ ...styles.smallBtn, ...styles.dangerBtn }}
+                            onClick={() => handleDeleteCustomer(c)}
+                          >
+                            Xoá
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+                {pageData.length === 0 && (
+                  <tr>
+                    <td style={styles.td} colSpan={6}>
+                      Không có khách hàng nào phù hợp.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+
+            {/* Phân trang */}
+            <div style={styles.paginationRow}>
+              <span>
+                Tổng: <b>{filteredCustomers.length}</b> khách hàng – Trang{" "}
+                {page}/{totalPages}
+              </span>
+              <div style={styles.paginationButtons}>
+                <button
+                  type="button"
+                  style={{
+                    ...styles.paginationBtn,
+                    ...(page === 1 ? styles.paginationBtnDisabled : {}),
+                  }}
+                  disabled={page === 1}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                >
+                  « Trước
+                </button>
+                <button
+                  type="button"
+                  style={{
+                    ...styles.paginationBtn,
+                    ...(page === totalPages
+                      ? styles.paginationBtnDisabled
+                      : {}),
+                  }}
+                  disabled={page === totalPages}
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                >
+                  Sau »
+                </button>
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
+      {/* Modal thêm / sửa khách hàng */}
       {isModalOpen && (
         <div style={styles.modalBackdrop} onClick={closeModal}>
           <div
@@ -333,39 +605,81 @@ const CustomersPage = () => {
               e.stopPropagation();
             }}
           >
-            <h2 style={styles.modalTitle}>Thêm khách hàng mới</h2>
+            <h2 style={styles.modalTitle}>
+              {editingCustomer ? "Cập nhật khách hàng" : "Thêm khách hàng mới"}
+            </h2>
             <form onSubmit={handleSubmit}>
+              {!editingCustomer && (
+                <div style={styles.modalField}>
+                  <label>Firebase UID</label>
+                  <input
+                    style={styles.modalInput}
+                    value={form.firebaseUid}
+                    onChange={(e) =>
+                      setForm((f) => ({
+                        ...f,
+                        firebaseUid: e.target.value,
+                      }))
+                    }
+                    placeholder="UID của user trong Firebase / UserService"
+                    required
+                  />
+                </div>
+              )}
+
+              {editingCustomer && (
+                <div style={styles.modalField}>
+                  <label>Firebase UID</label>
+                  <input
+                    style={styles.modalInput}
+                    value={form.firebaseUid}
+                    disabled
+                  />
+                </div>
+              )}
+
               <div style={styles.modalField}>
-                <label>Họ tên</label>
+                <label>Số giấy phép lái xe</label>
                 <input
                   style={styles.modalInput}
-                  value={form.name}
+                  value={form.drivingLicense}
                   onChange={(e) =>
-                    setForm((f) => ({ ...f, name: e.target.value }))
+                    setForm((f) => ({
+                      ...f,
+                      drivingLicense: e.target.value,
+                    }))
                   }
                   required
                 />
               </div>
+
               <div style={styles.modalField}>
-                <label>Số điện thoại</label>
+                <label>Ngày cấp</label>
                 <input
                   style={styles.modalInput}
-                  value={form.phone}
+                  type="date"
+                  value={form.licenseIssueDate}
                   onChange={(e) =>
-                    setForm((f) => ({ ...f, phone: e.target.value }))
+                    setForm((f) => ({
+                      ...f,
+                      licenseIssueDate: e.target.value,
+                    }))
                   }
                   required
                 />
               </div>
+
               <div style={styles.modalField}>
-                <label>Số lần thuê</label>
+                <label>Ngày hết hạn</label>
                 <input
                   style={styles.modalInput}
-                  type="number"
-                  min={0}
-                  value={form.rentals}
+                  type="date"
+                  value={form.licenseExpiryDate}
                   onChange={(e) =>
-                    setForm((f) => ({ ...f, rentals: e.target.value }))
+                    setForm((f) => ({
+                      ...f,
+                      licenseExpiryDate: e.target.value,
+                    }))
                   }
                   required
                 />
