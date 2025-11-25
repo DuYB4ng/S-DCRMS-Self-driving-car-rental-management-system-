@@ -1,27 +1,30 @@
-import React from "react";
-import { Link, Outlet } from "react-router-dom";
+import React, { useState } from "react";
+import { Outlet, useLocation } from "react-router-dom";
+import Sidebar from "./components/Sidebar";
+import Header from "./components/Header";
 
 function App() {
-  return (
-    <div>
-      {/* Thanh điều hướng đơn giản */}
-      <nav className="bg-gray-800 text-white p-4 flex gap-4">
-        <Link to="/booking" className="hover:underline">
-          Booking
-        </Link>
-        <Link to="/owner" className="hover:underline">
-          Quản lý chủ xe
-        </Link>
-        <Link to="/login" className="hover:underline ml-auto">
-          Đăng nhập
-        </Link>
-      </nav>
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const location = useLocation();
 
-      {/* Khu vực render nội dung page */}
-      <main className="p-6">
-        {/* Các route con sẽ hiển thị ở đây */}
-        <Outlet />
-      </main>
+  // Nếu đang ở trang login, không hiển thị sidebar/header
+  const isLoginPage = location.pathname === "/login";
+
+  if (isLoginPage) {
+    return <Outlet />;
+  }
+
+  return (
+    <div className="flex h-screen bg-gray-50">
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Header onMenuClick={() => setSidebarOpen(true)} />
+
+        <main className="flex-1 overflow-y-auto">
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 }
