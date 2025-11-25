@@ -100,8 +100,8 @@ services:
   # ==========================
   bookingservice:
     build:
-      context: ./Server/BookingService
-      dockerfile: Dockerfile
+      context: ./Server
+      dockerfile: BookingService/Dockerfile
     container_name: bookingservice
     ports:
       - "8083:8083"

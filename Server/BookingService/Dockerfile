@@ -2,11 +2,19 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-COPY BookingService.csproj ./
-RUN dotnet restore
+# 1) Copy csproj cho BookingService và Redis.Shared
+COPY BookingService/BookingService.csproj BookingService/
+COPY Redis.Shared/Redis.Shared.csproj Redis.Shared/
 
-COPY . ./
-RUN dotnet publish "BookingService.csproj" -c Release -o /app/publish
+# 2) Restore theo csproj của BookingService (nó sẽ tự kéo luôn Redis.Shared)
+RUN dotnet restore BookingService/BookingService.csproj
+
+# 3) Copy toàn bộ source (folder Server) vào container
+COPY . .
+
+# 4) Publish
+WORKDIR /src/BookingService
+RUN dotnet publish -c Release -o /app/publish
 
 # ===== Stage 2: runtime =====
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime

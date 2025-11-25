@@ -5,6 +5,7 @@ using BookingService.Repositories;
 using BookingService.Interfaces;
 using BookingService.Services;
 using BookingService.VnPay;
+using Redis.Shared.Extensions;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,8 +20,12 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
+
+// Cấu hình Redis Shared (đăng ký IRedisCacheService, interceptor, v.v.)
+builder.Services.AddRedisShared(builder.Configuration);
 //Đăng kí Repositores 
-builder.Services.AddScoped<IBookingRepository, BookingRepository>();
+//builder.Services.AddScoped<IBookingRepository, BookingRepository>();
+builder.Services.AddProxiedService<IBookingRepository, BookingRepository>(); 
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
 
