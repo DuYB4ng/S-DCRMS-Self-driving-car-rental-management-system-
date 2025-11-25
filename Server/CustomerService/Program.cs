@@ -1,8 +1,10 @@
 using System;
-using Microsoft.EntityFrameworkCore;
+using CustomerService.Interfaces;
 using CustomerService.Models;
 using CustomerService.Repositories;
-using CustomerService.Interfaces;
+using Microsoft.EntityFrameworkCore;
+using Pomelo.EntityFrameworkCore.MySql;
+using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,7 +18,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
-//Đăng kí Repositores 
+
+//Đăng kí Repositores
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 
 var app = builder.Build();
