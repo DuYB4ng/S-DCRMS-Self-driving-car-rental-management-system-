@@ -3,6 +3,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../services/booking_service.dart';
 import '../../services/payment_service.dart';
+import 'package:dio/dio.dart';
 
 class BookingConfirmView extends StatefulWidget {
   final dynamic car;
@@ -10,11 +11,11 @@ class BookingConfirmView extends StatefulWidget {
   final DateTime returnDate;
 
   const BookingConfirmView({
-    Key? key,
+    super.key,
     required this.car,
     required this.receiveDate,
     required this.returnDate,
-  }) : super(key: key);
+  });
 
   @override
   State<BookingConfirmView> createState() => _BookingConfirmViewState();
@@ -254,6 +255,40 @@ class _BookingConfirmViewState extends State<BookingConfirmView>
       if (!opened) {
         throw Exception("Không mở được VNPay");
       }
+    } on DioException catch (e) {
+      if (!mounted) return;
+
+      final statusCode = e.response?.statusCode;
+      final data = e.response?.data;
+      String? backendMessage;
+
+      if (data is Map && data["message"] != null) {
+        backendMessage = data["message"].toString();
+      }
+
+      if (statusCode == 409) {
+        // Lỗi trùng lịch / xe đang bảo trì (theo logic BE)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              backendMessage ??
+                  "Xe không khả dụng trong khoảng thời gian này (trùng lịch đặt hoặc đang bảo trì).",
+            ),
+          ),
+        );
+        return; // dừng, không chuyển sang bước thanh toán
+      }
+
+      // Các lỗi khác từ BE
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            backendMessage != null
+                ? "Không thể đặt xe: $backendMessage"
+                : "Có lỗi xảy ra khi đặt xe: ${e.message}",
+          ),
+        ),
+      );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

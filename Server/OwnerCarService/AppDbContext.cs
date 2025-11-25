@@ -1,13 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using OwnerCarService.Models;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using OwnerCarService.Models;
 
 public class AppDbContext : DbContext
 {
     public AppDbContext(DbContextOptions<AppDbContext> options)
-        : base(options)
-    {
-    }
+        : base(options) { }
 
     public DbSet<Car> Cars { get; set; }
     public DbSet<OwnerCar> OwnerCars { get; set; }
@@ -17,13 +15,15 @@ public class AppDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.Entity<Maintenance>()
+        modelBuilder
+            .Entity<Maintenance>()
             .HasOne(e => e.Car)
             .WithMany(e => e.Maintenances)
             .HasForeignKey(e => e.CarID)
             .OnDelete(DeleteBehavior.Cascade);
 
-        modelBuilder.Entity<Car>()
+        modelBuilder
+            .Entity<Car>()
             .HasOne(e => e.OwnerCar)
             .WithMany(e => e.Cars)
             .HasForeignKey(e => e.OwnerCarID)

@@ -1,0 +1,149 @@
+@startuml Class-SDCRMS
+!theme plain
+title Sơ Đồ Class - SDCRMS\n(Hệ Thống Quản Lý Cho Thuê Xe Tự Lái)
+
+' User Hierarchy
+abstract class Users {
+    +int UserID
+    +UserRole Role
+    +string PhoneNumber
+    +string LastName
+    +string FirstName
+    +string Email
+    +string Password
+    +string Sex
+    +DateTime Birthday
+    +DateTime JoinDate
+    +string Address
+}
+
+class Customer {
+    +int CustomerID
+    +string DrivingLisence
+    +DateTime LisenceIssueDate
+    +DateTime LisenceExpiryDate
+}
+
+class OwnerCar {
+}
+
+class Staff {
+    --
+    -quanLyTaiKhoanKhachHang()
+    -theoDoiHoatDongDatXePhanHoi()
+    -guiThongBao()
+    -baoCaoThongKe()
+}
+
+class Admin {
+}
+
+' Car Related Classes
+class Car {
+    +int CarID
+    +int OwnerID
+    +string NameCar
+    +string LicensePlate
+    +DateTime ModelYear
+    +bool State
+    +string Seat
+    +string TypeCar
+    +decimal Price
+    +string UrlImage
+}
+
+class Maintenance {
+    +int MaintenanceID
+    +int CarID
+    +DateTime MaintenanceDate
+    +string Description
+    +decimal Cost
+    +bool Status
+}
+
+' Booking Related Classes
+class Booking {
+    +int BookingID
+    +int CustomerID
+    +int CarID
+    +DateTime StartDate
+    +DateTime EndDate
+    +bool CheckIn
+    +bool CheckOut
+}
+
+class Payment {
+    +int PaymentID
+    +int BookingID
+    +DateTime PaymentDate
+    +decimal Amount
+    +string Method
+    +string Status
+}
+
+class Review {
+    +int ReviewID
+    +int BookingID
+    +int Rating
+    +string Comment
+    +DateTime ReviewDate
+}
+
+' Notification System
+class Notification {
+    +int NotificationID
+    +int UserID
+    +string Message
+    +DateTime CreatedAt
+    +string Title
+    +bool Read
+    +string LinkURL
+}
+
+' Enumerations
+enum UserRole {
+    Customer = 1
+    Staff = 2
+    Admin = 3
+}
+
+' Inheritance Relationships
+Users <|-- Customer
+Users <|-- OwnerCar
+Users <|-- Staff
+Users <|-- Admin
+
+' Relationships (explicit UML types)
+' Generalization (Inheritance)
+Users <|-- Customer
+Users <|-- OwnerCar
+Users <|-- Staff
+Users <|-- Admin
+
+' Association (simple links)
+Customer "1" -- "0..*" Booking : makes
+Customer "1" -- "0..*" Review : writes
+Car "1" -- "0..*" Booking : "booked in"
+Car "1" -- "0..*" Review : receives
+
+' Aggregation (whole-part, part can exist independently)
+OwnerCar "1" o-- "1..*" Car : owns
+Users "1" o-- "0..*" Notification : receives
+
+' Composition (strong ownership, part's lifecycle tied to whole)
+Car "1" *-- "0..*" Maintenance : requires
+Booking "1" *-- "1" Payment : has
+Booking "1" *-- "0..1" Review : has
+
+note right of Users
+  Abstract base class cho
+  tất cả người dùng trong hệ thống
+end note
+
+note right of Maintenance
+  Status:
+  True - Cần bảo trì
+  False - Đã bảo trì xong
+end note
+
+@enduml

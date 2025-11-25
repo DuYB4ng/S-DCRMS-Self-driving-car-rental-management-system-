@@ -8,7 +8,7 @@ import '../../services/review_service.dart';
 import '../../services/payment_service.dart';
 
 class OrdersView extends StatelessWidget {
-  OrdersView({Key? key}) : super(key: key);
+  OrdersView({super.key});
 
   final ReviewService _reviewService = ReviewService();
   final PaymentService _paymentService = PaymentService();
@@ -265,7 +265,7 @@ class _ReviewDialogResult {
 }
 
 class _ReviewDialog extends StatefulWidget {
-  const _ReviewDialog({super.key});
+  const _ReviewDialog();
 
   @override
   State<_ReviewDialog> createState() => _ReviewDialogState();

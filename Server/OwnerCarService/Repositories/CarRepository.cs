@@ -12,6 +12,7 @@ namespace OwnerCarService.Repositories
         Task<Car> ThemXeAsync(Car car);
         Task<Car?> CapNhatXeAsync(Car car);
         Task<bool> XoaXeAsync(int carId);
+        Task<IEnumerable<Car>> LayTatCaXeKhongBaoTriAsync();
     }
 
     public class CarRepository : ICarRepository
@@ -99,6 +100,20 @@ namespace OwnerCarService.Repositories
             _context.Cars.Remove(car);
             await _context.SaveChangesAsync();
             return true;
+        }
+
+        // Lấy tất cả xe đang hoạt động & không có bảo trì đang "cần bảo trì"
+        public async Task<IEnumerable<Car>> LayTatCaXeKhongBaoTriAsync()
+        {
+            return await _context.Cars
+                .AsNoTracking()
+                .Include(c => c.OwnerCar)
+                .Include(c => c.Maintenances)
+                .Where(c =>
+                    c.IsActive &&                          // xe đang bật cho thuê
+                    !c.Maintenances.Any(m => m.Status)     // KHÔNG có maintenance nào đang Status = true (cần bảo trì)
+                )
+                .ToListAsync();
         }
     }
 }

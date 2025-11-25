@@ -1,0 +1,968 @@
+@startuml Sequence-SDCRMS
+!theme plain
+
+title Sơ Đồ Sequence - SDCRMS\n(Hệ Thống Quản Lý Cho Thuê Xe Tự Lái)
+
+' ===== DIAGRAM 1: Khách Hàng Đặt Xe =====
+page 1x1
+title Sequence 1: Khách Hàng Đặt Xe
+
+actor "Khách Hàng" as Customer
+participant "Mobile App" as MA
+participant "API Server" as API
+database "Database" as DB
+participant "Payment Service" as PS
+participant "Notification Service" as NS
+
+Customer -> MA: Mở app & tìm kiếm xe
+MA -> API: GET /api/cars?location=&type=&date=
+API -> DB: Query available cars
+DB --> API: Return car list
+API --> MA: Hiển thị kết quả xe
+
+Customer -> MA: Chọn xe & xem chi tiết
+MA -> API: GET /api/cars/{carId}
+API -> DB: Get car details
+DB --> API: Return car info
+API --> MA: Hiển thị chi tiết xe
+
+Customer -> MA: Click "Đặt Ngay"
+MA -> MA: Hiện form đặt xe
+Customer -> MA: Điền thông tin đặt xe
+
+MA -> API: POST /api/bookings
+note right of API
+  Xác thực dữ liệu booking
+end note
+API -> DB: Kiểm tra xe sẵn có
+DB --> API: Xe sẵn có
+
+API -> DB: Tạo booking (status: Pending)
+DB --> API: Booking đã tạo
+
+API -> PS: Khởi tạo thanh toán
+PS --> API: Payment URL
+API --> MA: Trả về payment URL
+
+MA -> Customer: Chuyển đến thanh toán
+Customer -> PS: Hoàn tất thanh toán
+PS -> API: Payment callback
+
+API -> DB: Cập nhật booking (status: Confirmed)
+API -> DB: Cập nhật car (status: Rented)
+
+API -> NS: Gửi xác nhận booking
+NS -> Customer: Thông báo Email/SMS
+NS -> MA: Push notification
+
+API --> MA: Booking đã xác nhận
+MA --> Customer: Hiện thông báo thành công
+
+@enduml
+
+@startuml Sequence-CarOwner-RegisterCar
+!theme plain
+
+title Sequence 2: Chủ Xe Đăng Ký Xe Mới
+
+actor "Chủ Xe" as CarOwner
+participant "Mobile App" as MA
+participant "API Server" as API
+database "Database" as DB
+participant "Verification Service" as VS
+participant "Notification Service" as NS
+actor "Admin" as Admin
+
+CarOwner -> MA: Vào "Thêm Xe"
+MA -> MA: Hiện form đăng ký xe
+
+CarOwner -> MA: Điền thông tin xe
+CarOwner -> MA: Upload ảnh xe
+CarOwner -> MA: Upload tài liệu
+
+MA -> API: POST /api/cars
+note right of API
+  Xác thực dữ liệu xe
+end note
+
+API -> DB: Kiểm tra biển số
+DB --> API: Biển số duy nhất
+
+API -> VS: Xác minh tài liệu
+VS --> API: Chờ xác minh
+
+API -> DB: Tạo car (status: Pending Verification)
+API -> DB: Upload ảnh lên storage
+DB --> API: Xe đã tạo
+
+API -> NS: Thông báo admin xác minh
+NS -> Admin: Xe mới chờ duyệt
+
+API --> MA: Xe đã gửi xét duyệt
+MA --> CarOwner: Hiện thông báo chờ
+
+note over Admin
+  Admin xét duyệt xe
+end note
+
+Admin -> API: PUT /api/cars/{carId}/approve
+API -> DB: Cập nhật car (status: Available)
+
+API -> NS: Thông báo chủ xe
+NS -> CarOwner: Thông báo xe đã duyệt
+
+CarOwner -> MA: Làm mới app
+MA -> API: GET /api/cars/my-cars
+API -> DB: Lấy danh sách xe của chủ
+DB --> API: Trả về danh sách xe
+API --> MA: Hiển thị xe
+MA --> CarOwner: Hiện xe đã duyệt
+
+@enduml
+
+@startuml Sequence-CheckIn-Process
+!theme plain
+
+title Sequence 3: Quy Trình Check-in (Kỹ Thuật Số)
+
+actor "Khách Hàng" as Customer
+participant "Mobile App" as MA
+participant "API Server" as API
+database "Database" as DB
+participant "Notification Service" as NS
+actor "Chủ Xe" as CarOwner
+
+note over Customer
+  Đến ngày bắt đầu booking
+end note
+
+NS -> Customer: Thông báo nhắc check-in
+Customer -> MA: Mở chi tiết booking
+MA -> API: GET /api/bookings/{bookingId}
+API -> DB: Lấy thông tin booking
+DB --> API: Trả về booking
+API --> MA: Hiển thị booking
+
+Customer -> MA: Click "Check-in"
+MA -> MA: Hiện quét QR code
+
+Customer -> MA: Quét mã QR xe
+MA -> API: POST /api/bookings/{bookingId}/checkin
+note right of API
+  Xác minh booking & vị trí
+end note
+
+API -> DB: Cập nhật booking (status: InProgress)
+API -> DB: Ghi lại thời gian & vị trí check-in
+DB --> API: Đã cập nhật
+
+API -> NS: Thông báo chủ xe
+NS -> CarOwner: Khách đã check-in
+
+API --> MA: Check-in thành công
+MA --> Customer: Hiện thông tin truy cập xe
+
+note over Customer
+  Khách sử dụng xe
+end note
+
+Customer -> MA: Báo cáo vấn đề (tùy chọn)
+MA -> API: POST /api/bookings/{bookingId}/issues
+API -> DB: Ghi nhật vấn đề
+API -> NS: Thông báo chủ xe & hỗ trợ
+
+@enduml
+
+@startuml Sequence-CheckOut-Process
+!theme plain
+
+title Sequence 4: Quy Trình Check-out
+
+actor "Khách Hàng" as Customer
+participant "Mobile App" as MA
+participant "API Server" as API
+database "Database" as DB
+participant "Notification Service" as NS
+actor "Chủ Xe" as CarOwner
+
+note over Customer
+  Sắp tới giờ trả xe
+end note
+
+NS -> Customer: Nhắc check-out
+Customer -> MA: Mở booking
+Customer -> MA: Click "Check-out"
+
+MA -> MA: Yêu cầu chụp ảnh xe
+Customer -> MA: Chụp ảnh xe
+Customer -> MA: Điền báo cáo tình trạng
+
+MA -> API: POST /api/bookings/{bookingId}/checkout
+note right of API
+  Upload ảnh & báo cáo
+end note
+
+API -> DB: Cập nhật booking (status: Completed)
+API -> DB: Cập nhật car (status: Available)
+API -> DB: Ghi lại thời gian check-out & ảnh
+
+API -> NS: Thông báo chủ xe
+NS -> CarOwner: Xe đã trả
+
+API --> MA: Check-out thành công
+MA --> Customer: Hiện yêu cầu đánh giá
+
+Customer -> MA: Gửi đánh giá
+MA -> API: POST /api/reviews
+API -> DB: Tạo review
+API -> DB: Cập nhật điểm xe
+
+API -> NS: Thông báo chủ xe
+NS -> CarOwner: Nhận được review mới
+
+API --> MA: Review đã gửi
+MA --> Customer: Thông báo cảm ơn
+
+@enduml
+
+@startuml Sequence-Staff-Support
+!theme plain
+
+title Sequence 5: Nhân Viên Xử Lý Hỗ Trợ Khách Hàng
+
+actor "Khách Hàng" as Customer
+participant "Mobile App" as MA
+actor "Nhân Viên" as Staff
+participant "Web App" as WA
+participant "API Server" as API
+database "Database" as DB
+participant "Notification Service" as NS
+
+Customer -> MA: Báo cáo vấn đề
+MA -> API: POST /api/support/tickets
+API -> DB: Tạo support ticket
+DB --> API: Ticket đã tạo
+
+API -> NS: Thông báo team hỗ trợ
+NS -> Staff: Cảnh báo ticket mới
+
+Staff -> WA: Xem tickets
+WA -> API: GET /api/support/tickets
+API -> DB: Lấy tickets chờ xử lý
+DB --> API: Trả về tickets
+API --> WA: Hiển thị tickets
+
+Staff -> WA: Mở ticket
+Staff -> WA: Gõ phản hồi
+WA -> API: POST /api/support/tickets/{id}/reply
+API -> DB: Thêm phản hồi
+API -> DB: Cập nhật trạng thái ticket
+
+API -> NS: Thông báo khách
+NS -> Customer: Thông báo phản hồi hỗ trợ
+
+Customer -> MA: Xem phản hồi
+MA -> API: GET /api/support/tickets/{id}
+API -> DB: Lấy ticket với các phản hồi
+DB --> API: Trả về ticket
+API --> MA: Hiển thị cuộc hội thoại
+
+alt Vấn đề đã giải quyết
+    Customer -> MA: Đánh dấu đã giải quyết
+    MA -> API: PUT /api/support/tickets/{id}/resolve
+    API -> DB: Cập nhật trạng thái (Resolved)
+    API -> NS: Thông báo staff
+else Cần leo thang
+    Staff -> WA: Leo thang lên admin
+    WA -> API: PUT /api/support/tickets/{id}/escalate
+    API -> DB: Cập nhật trạng thái & giao cho admin
+    API -> NS: Thông báo admin
+end
+
+@enduml
+
+@startuml Sequence-Admin-Fraud
+!theme plain
+
+title Sequence 6: Admin Phát Hiện Gian Lận
+
+participant "System Monitor" as SYS
+participant "API Server" as API
+database "Database" as DB
+participant "Fraud Detection AI" as FD
+actor "Quản Trị" as Admin
+participant "Web App" as WA
+participant "Notification Service" as NS
+actor "Người Dùng Nghi Ngờ" as User
+
+note over SYS
+  Giám sát liên tục
+end note
+
+SYS -> API: Giám sát hoạt động người dùng
+API -> DB: Lấy nhật ký giao dịch
+DB --> API: Trả về nhật ký
+
+API -> FD: Phân tích mẫu
+note right of FD
+  Thuật toán ML phát hiện bất thường
+end note
+FD --> API: Phát hiện gian lận (Rủi ro: 85)
+
+API -> DB: Tạo cảnh báo gian lận
+DB --> API: Cảnh báo đã tạo
+
+API -> NS: Thông báo team admin
+NS -> Admin: Cảnh báo gian lận mức cao
+
+Admin -> WA: Mở dashboard gian lận
+WA -> API: GET /api/fraud/alerts
+API -> DB: Lấy cảnh báo chờ xử lý
+DB --> API: Trả về cảnh báo
+API --> WA: Hiển thị cảnh báo gian lận
+
+Admin -> WA: Xem chi tiết cảnh báo
+WA -> API: GET /api/fraud/alerts/{alertId}
+API -> DB: Lấy cảnh báo với bằng chứng
+DB --> API: Trả về chi tiết đầy đủ
+API --> WA: Hiển thị bằng chứng
+
+Admin -> WA: Điều tra người dùng
+WA -> API: GET /api/users/{userId}/history
+API -> DB: Lấy lịch sử hoạt động người dùng
+DB --> API: Trả về lịch sử
+API --> WA: Hiển thị hồ sơ người dùng
+
+alt Xác nhận gian lận
+    Admin -> WA: Chặn người dùng
+    WA -> API: POST /api/fraud/alerts/{id}/block
+    API -> DB: Cập nhật user (status: Banned)
+    API -> DB: Cập nhật alert (status: Resolved)
+    API -> NS: Thông báo user (tài khoản bị đình chỉ)
+    NS -> User: Thông báo tài khoản bị chặn
+else Dương tính giả
+    Admin -> WA: Đánh dấu dương tính giả
+    WA -> API: PUT /api/fraud/alerts/{id}/resolve
+    API -> DB: Cập nhật alert (status: False Positive)
+    note over Admin
+      Cập nhật ML model
+    end note
+end
+
+API -> DB: Ghi nhật thao tác admin
+DB --> API: Đã ghi
+API --> WA: Thao tác hoàn tất
+WA --> Admin: Hiện xác nhận
+
+@enduml
+
+@startuml Sequence-Payment-Processing
+!theme plain
+
+title Sequence 7: Luồng Xử Lý Thanh Toán
+
+actor "Khách Hàng" as Customer
+participant "App" as APP
+participant "API Server" as API
+database "Database" as DB
+participant "Payment Gateway" as PG
+participant "Ngân Hàng" as Bank
+participant "Notification Service" as NS
+actor "Chủ Xe" as CarOwner
+
+Customer -> APP: Tiến hành thanh toán
+APP -> API: POST /api/payments/initiate
+API -> DB: Tạo payment record (Pending)
+DB --> API: Payment ID
+
+API -> PG: Tạo phiên thanh toán
+note right of PG
+  Tạo token bảo mật
+end note
+PG --> API: Payment URL & token
+
+API --> APP: Trả về payment URL
+APP -> Customer: Chuyển đến trang thanh toán
+
+Customer -> PG: Nhập thông tin thẻ
+PG -> Bank: Xử lý giao dịch
+Bank --> PG: Kết quả giao dịch
+
+alt Thanh toán thành công
+    PG -> API: Webhook: Thanh toán thành công
+    API -> DB: Cập nhật payment (Completed)
+    API -> DB: Cập nhật booking (Confirmed)
+    API -> DB: Tính thu nhập chủ xe
+    
+    API -> NS: Gửi xác nhận
+    NS -> Customer: Biên lai thanh toán
+    NS -> CarOwner: Booking đã xác nhận
+    
+    PG --> Customer: Trang thành công
+    Customer -> APP: Quay lại app
+    APP -> API: GET /api/payments/{paymentId}
+    API --> APP: Chi tiết thanh toán
+    APP --> Customer: Hiện thành công
+else Thanh toán thất bại
+    PG -> API: Webhook: Thanh toán thất bại
+    API -> DB: Cập nhật payment (Failed)
+    API -> DB: Giữ booking (Pending)
+    
+    API -> NS: Thông báo khách
+    NS -> Customer: Thông báo thanh toán thất bại
+    
+    PG --> Customer: Trang thất bại
+    Customer -> APP: Quay lại app
+    APP --> Customer: Hiện tùy chọn thử lại
+end
+
+@enduml
+
+@startuml Sequence-Admin-Report
+!theme plain
+
+title Sequence 8: Admin Tạo Báo Cáo Doanh Thu
+
+actor "Quản Trị" as Admin
+participant "Web App" as WA
+participant "API Server" as API
+database "Database" as DB
+participant "Report Service" as RS
+participant "Notification Service" as NS
+
+Admin -> WA: Vào trang Báo Cáo
+WA -> API: GET /api/reports/templates
+API --> WA: Trả về loại báo cáo
+WA --> Admin: Hiển thị tùy chọn báo cáo
+
+Admin -> WA: Chọn "Báo Cáo Doanh Thu"
+Admin -> WA: Chọn khoảng thời gian
+Admin -> WA: Click "Tạo"
+
+WA -> API: POST /api/reports/generate
+note right of API
+  Bắt đầu tác vụ async
+end note
+API -> DB: Truy vấn bookings & payments
+DB --> API: Trả về giao dịch
+
+API -> RS: Xử lý dữ liệu
+note right of RS
+  Tính toán chỉ số:
+  - Tổng doanh thu
+  - % tăng trưởng
+  - Top xe
+  - Phương thức thanh toán
+end note
+
+RS -> DB: Lưu báo cáo
+DB --> RS: Báo cáo đã lưu
+
+RS -> API: Báo cáo sẵn sàng
+API -> NS: Thông báo admin
+NS -> Admin: Báo cáo đã tạo
+
+Admin -> WA: Làm mới trang báo cáo
+WA -> API: GET /api/reports/{reportId}
+API -> DB: Lấy dữ liệu báo cáo
+DB --> API: Trả về báo cáo
+API --> WA: Hiển thị biểu đồ & bảng
+
+Admin -> WA: Click "Xuất PDF"
+WA -> API: GET /api/reports/{reportId}/export?format=pdf
+API -> RS: Tạo PDF
+RS --> API: File PDF
+API --> WA: Tải PDF
+
+@enduml
+
+
+@startuml Sequence-RealTime-GPS
+!theme plain
+
+title Sequence 9: Theo Dõi GPS Thời Gian Thực
+
+actor "Khách Hàng" as Customer
+participant "Mobile App" as App
+participant "WebSocket Server" as WS
+participant "Car IoT Device" as IoT
+database "Redis Cache" as Redis
+database "Database" as DB
+participant "Notification Service" as NS
+
+Customer -> App: Check-in thành công
+App -> WS: Connect WebSocket\nws://server/gps/{bookingId}
+activate WS
+WS -> WS: Xác thực JWT token
+WS -> Redis: Subscribe channel: gps:{carId}
+WS --> App: Connection established
+
+App -> App: Hiển thị bản đồ
+
+loop Every 30 seconds
+    IoT -> WS: Publish GPS data\n{lat, lng, speed, heading}
+    WS -> Redis: SETEX gps:{carId} (TTL: 60s)
+    Redis --> WS: Saved
+    
+    WS -> WS: Kiểm tra geofence
+    
+    alt Xe ra ngoài vùng cho phép
+        WS -> NS: Gửi cảnh báo
+        NS -> App: Push notification\n"Xe đang ngoài vùng"
+        NS -> DB: Log violation
+    end
+    
+    WS --> App: Broadcast GPS update
+    App -> App: Cập nhật marker trên bản đồ
+end
+
+Customer -> App: Kết thúc chuyến đi (Check-out)
+App -> WS: Disconnect WebSocket
+WS -> Redis: UNSUBSCRIBE channel
+WS -> DB: Tính tổng quãng đường
+DB --> WS: Total distance: 45 km
+
+WS --> App: Disconnected + stats
+deactivate WS
+App --> Customer: Hiển thị thống kê chuyến đi
+
+note right of IoT
+  **Car IoT Device**
+  - GPS Module
+  - 4G connectivity
+  - Battery monitoring
+  - Door lock control
+end note
+
+@enduml
+
+
+@startuml Sequence-Withdrawal-Process
+!theme plain
+
+title Sequence 10: Chủ Xe Rút Tiền Thu Nhập
+
+actor "Chủ Xe" as Owner
+participant "Web App" as Web
+participant "API Server" as API
+database "Database" as DB
+participant "Payment Gateway" as PG
+participant "Bank API" as Bank
+participant "Notification Service" as NS
+actor "Admin" as Admin
+
+Owner -> Web: Vào "Thu nhập của tôi"
+Web -> API: GET /api/car-owners/{ownerId}/earnings
+API -> DB: SELECT earnings\nWHERE ownerID = ?
+DB --> API: Return earnings
+API --> Web: {available: $5,000, pending: $1,200}
+Web --> Owner: Hiển thị thu nhập
+
+Owner -> Web: Click "Rút tiền"
+Web --> Owner: Hiện form withdrawal
+Owner -> Web: Nhập số tiền: $5,000
+
+Web -> API: POST /api/withdrawals\n{amount: 5000, bankAccountId: 123}
+API -> API: Validate amount & balance
+
+alt Số tiền không hợp lệ
+    API --> Web: 400 Bad Request
+    Web --> Owner: "Số dư không đủ"
+else Số tiền hợp lệ
+    API -> DB: BEGIN TRANSACTION
+    
+    API -> DB: INSERT withdrawal_request\nstatus: Pending
+    DB --> API: Withdrawal ID: 456
+    
+    API -> DB: UPDATE earnings\nSET available = available - 5000
+    DB --> API: Updated
+    
+    API -> DB: COMMIT
+    
+    API -> NS: Thông báo admin
+    NS -> Admin: Yêu cầu rút tiền mới
+    
+    API --> Web: 201 Created {withdrawalId: 456}
+    Web --> Owner: "Yêu cầu đã được gửi"
+end
+
+note over Admin
+  Admin xét duyệt trong 24h
+end note
+
+Admin -> API: PUT /api/admin/withdrawals/456/approve
+API -> DB: UPDATE withdrawal\nSET status = Approved
+DB --> API: Updated
+
+API -> PG: Initiate bank transfer
+activate PG
+PG -> Bank: Transfer request\n{amount, beneficiary}
+activate Bank
+Bank -> Bank: Process transfer
+Bank --> PG: Transaction ID: TXN789
+deactivate Bank
+PG --> API: Transfer completed
+deactivate PG
+
+API -> DB: UPDATE withdrawal\nSET status = Completed\nSET transactionId = TXN789
+DB --> API: Updated
+
+API -> NS: Gửi xác nhận
+NS -> Owner: Email + SMS\n"Tiền đã được chuyển"
+
+Owner -> Web: Vào "Lịch sử giao dịch"
+Web -> API: GET /api/withdrawals?ownerId={id}
+API -> DB: SELECT withdrawals
+DB --> API: Return history
+API --> Web: Transaction list
+Web --> Owner: Hiển thị lịch sử
+
+@enduml
+
+
+@startuml Sequence-Maintenance-Schedule
+!theme plain
+
+title Sequence 11: Lên Lịch Bảo Dưỡng Xe
+
+actor "Chủ Xe" as Owner
+participant "Mobile App" as App
+participant "API Server" as API
+database "Database" as DB
+participant "Booking Service" as BS
+participant "Calendar Service" as Cal
+participant "Notification Service" as NS
+
+Owner -> App: Vào "Quản lý xe"
+App -> API: GET /api/cars?ownerId={id}
+API -> DB: Get cars
+DB --> API: Car list
+API --> App: Return cars
+App --> Owner: Hiển thị danh sách xe
+
+Owner -> App: Chọn xe cần bảo dưỡng
+App --> Owner: Chi tiết xe
+
+Owner -> App: Click "Lên lịch bảo dưỡng"
+App --> Owner: Hiện form
+
+Owner -> App: Điền:\n- Loại: Regular maintenance\n- Ngày: 2025-11-25\n- Thời gian: 2 ngày
+
+App -> API: POST /api/maintenance\n{carId, type, scheduledDate, duration}
+API -> BS: checkBookingConflict(carId, dateRange)
+activate BS
+
+BS -> DB: SELECT bookings\nWHERE dates overlap
+DB --> BS: Return bookings
+
+alt Có booking xung đột
+    BS --> API: Conflict: Booking #123
+    deactivate BS
+    API --> App: 409 Conflict
+    App --> Owner: "Xe có booking trong thời gian này"
+    
+    Owner -> App: Chọn:\n1. Cancel booking\n2. Đổi lịch
+    
+    alt Cancel booking
+        App -> API: PUT /api/bookings/123/cancel
+        API -> DB: Update booking: Cancelled
+        API -> NS: Notify customer
+    else Đổi lịch
+        Owner -> App: Chọn ngày khác
+    end
+    
+else Không xung đột
+    BS --> API: No conflict
+    deactivate BS
+    
+    API -> DB: INSERT maintenance\nstatus: Scheduled
+    DB --> API: Maintenance ID: 456
+    
+    API -> DB: UPDATE car status: Maintenance
+    DB --> API: Updated
+    
+    API -> Cal: Create calendar event
+    Cal --> API: Event created
+    
+    API -> NS: Schedule reminders
+    NS -> NS: Reminder: 1 day before
+    
+    API --> App: 201 Created
+    App --> Owner: "Lịch bảo dưỡng đã tạo"
+end
+
+note over Owner
+  **Ngày bảo dưỡng (2025-11-25)**
+end note
+
+NS -> Owner: Nhắc nhở: "Xe cần bảo dưỡng"
+
+Owner -> App: Update tiến độ
+App -> API: PUT /api/maintenance/456\n{status: InProgress}
+API -> DB: Update status
+DB --> API: Updated
+API --> App: Success
+
+Owner -> App: Hoàn thành bảo dưỡng
+App --> Owner: Upload hóa đơn + Chi phí
+
+App -> API: PUT /api/maintenance/456/complete\n{cost: 250, invoiceUrl}
+API -> DB: UPDATE maintenance: Completed
+API -> DB: UPDATE car status: Available
+API -> DB: INSERT maintenance_history
+DB --> API: Updated
+
+API --> App: Success
+App --> Owner: "Xe đã sẵn sàng"
+
+@enduml
+
+
+@startuml Sequence-Promotion-Apply
+!theme plain
+
+title Sequence 12: Áp Dụng Mã Giảm Giá
+
+actor "Khách Hàng" as Customer
+participant "Mobile App" as App
+participant "API Server" as API
+database "Database" as DB
+participant "Promotion Service" as PS
+
+Customer -> App: Chọn xe & điền booking
+App --> Customer: Hiện tổng tiền: $100
+
+Customer -> App: Nhập mã: "SUMMER20"
+
+App -> API: POST /api/promotions/validate\n{code: "SUMMER20", bookingAmount: 100}
+activate API
+
+API -> DB: SELECT promotion\nWHERE code = ? AND isActive = true
+DB --> API: Return promotion
+
+API -> PS: Validate conditions
+activate PS
+
+PS -> PS: Check:\n- Còn hạn sử dụng?\n- Chưa vượt max usage?\n- Đủ min booking amount?
+
+alt Promotion hợp lệ
+    PS --> API: Valid\nDiscount: 20% = $20
+    deactivate PS
+    
+    API --> App: {valid: true, discount: 20}
+    deactivate API
+    
+    App -> App: Tính lại: $100 - $20 = $80
+    App --> Customer: Giá mới: $80 (Giảm $20)
+    
+    Customer -> App: Xác nhận đặt xe
+    
+    App -> API: POST /api/bookings\n{..., promotionCode: "SUMMER20"}
+    API -> DB: CREATE booking
+    DB --> API: Booking created
+    
+    API -> DB: INSERT promotion_usage
+    DB --> API: Usage recorded
+    
+    API -> DB: UPDATE promotion\nSET currentUsage++
+    DB --> API: Updated
+    
+    API --> App: Booking confirmed
+    App --> Customer: "Đã áp dụng mã giảm 20%"
+    
+else Promotion không hợp lệ
+    alt Hết hạn
+        PS --> API: Invalid: Expired
+        API --> App: {valid: false, error: "Mã đã hết hạn"}
+    else Đã hết lượt
+        PS --> API: Invalid: Max usage
+        API --> App: {valid: false, error: "Mã đã hết lượt"}
+    else Không đủ giá trị tối thiểu
+        PS --> API: Invalid: Min amount
+        API --> App: {valid: false, error: "Cần đặt tối thiểu $150"}
+    end
+    
+    deactivate PS
+    deactivate API
+    App --> Customer: Hiển thị lỗi
+end
+
+@enduml
+
+
+@startuml Sequence-Review-Response
+!theme plain
+
+title Sequence 13: Chủ Xe Phản Hồi Review
+
+actor "Khách Hàng" as Customer
+participant "Mobile App" as CustomerApp
+participant "API Server" as API
+database "Database" as DB
+participant "Notification Service" as NS
+actor "Chủ Xe" as Owner
+participant "Web App" as OwnerApp
+
+note over Customer
+  Sau khi hoàn thành booking
+end note
+
+Customer -> CustomerApp: Vào "Đánh giá"
+CustomerApp --> Customer: Hiện form review
+
+Customer -> CustomerApp: Điền:\n- Rating: 5 sao\n- Comment: "Xe rất tốt!"
+
+CustomerApp -> API: POST /api/reviews\n{bookingId, carId, rating: 5, comment}
+API -> DB: INSERT review
+DB --> API: Review ID: 789
+
+API -> DB: UPDATE car\nSET averageRating = CALC_AVG()
+DB --> API: Updated rating: 4.8
+
+API -> NS: Thông báo chủ xe
+NS -> Owner: "Bạn có review mới"
+
+API --> CustomerApp: Review đã gửi
+CustomerApp --> Customer: "Cảm ơn đánh giá!"
+
+note over Owner
+  Chủ xe nhận thông báo
+end note
+
+Owner -> OwnerApp: Vào "Reviews"
+OwnerApp -> API: GET /api/reviews?carId={carId}
+API -> DB: SELECT reviews
+DB --> API: Return reviews
+API --> OwnerApp: Review list
+OwnerApp --> Owner: Hiển thị reviews
+
+Owner -> OwnerApp: Click review mới
+OwnerApp --> Owner: Hiện chi tiết:\n"★★★★★ - Xe rất tốt!"
+
+Owner -> OwnerApp: Click "Phản hồi"
+OwnerApp --> Owner: Hiện form reply
+
+Owner -> OwnerApp: Gõ: "Cảm ơn bạn!\nHẹn gặp lại!"
+
+OwnerApp -> API: POST /api/reviews/{reviewId}/response\n{response}
+API -> DB: UPDATE review\nSET carOwnerResponse = ?
+DB --> API: Updated
+
+API -> NS: Thông báo khách hàng
+NS -> Customer: "Chủ xe đã phản hồi"
+
+API --> OwnerApp: Response đã gửi
+OwnerApp --> Owner: "Đã gửi phản hồi"
+
+Customer -> CustomerApp: Xem phản hồi
+CustomerApp -> API: GET /api/reviews/{reviewId}
+API -> DB: Get review with response
+DB --> API: Return review
+API --> CustomerApp: Review + response
+CustomerApp --> Customer: Hiển thị phản hồi
+
+@enduml
+
+
+@startuml Sequence-Emergency-Support
+!theme plain
+
+title Sequence 14: Hỗ Trợ Khẩn Cấp 24/7
+
+actor "Khách Hàng" as Customer
+participant "Mobile App" as App
+participant "API Server" as API
+database "Database" as DB
+participant "Notification Service" as NS
+actor "Staff On-Call" as Staff
+participant "SMS Gateway" as SMS
+actor "Emergency Contact" as Emergency
+
+note over Customer
+  Khách gặp sự cố trong chuyến đi
+end note
+
+Customer -> App: Click "SOS / Hỗ trợ khẩn cấp"
+App --> Customer: Hiện options:\n1. Sự cố xe\n2. Tai nạn\n3. Y tế\n4. Khác
+
+Customer -> App: Chọn "Tai nạn"
+App -> App: Lấy vị trí GPS hiện tại
+
+App -> API: POST /api/emergency/create\n{type: "Accident", location, bookingId}
+activate API
+
+API -> DB: INSERT emergency_ticket\npriority: CRITICAL
+DB --> API: Ticket ID: 999
+
+API -> NS: Send CRITICAL alerts
+activate NS
+
+NS -> Staff: SMS + Call:\n"KHẨN CẤP: Tai nạn tại [GPS]"
+NS -> Staff: Push notification với map link
+
+alt Có emergency contact
+    NS -> Emergency: SMS:\n"Khách hàng [Name] cần hỗ trợ khẩn cấp"
+end
+
+NS -> SMS: Gửi SMS cho 3 staff gần nhất
+deactivate NS
+
+API -> DB: UPDATE booking\nSET status = Emergency
+DB --> API: Updated
+
+API --> App: {ticketId: 999, estimatedResponse: "5-10 phút"}
+deactivate API
+
+App --> Customer: "Đã gửi yêu cầu khẩn cấp\nStaff sẽ liên hệ ngay"
+
+note over Staff
+  Staff nhận alert
+end note
+
+Staff -> Staff: Xem vị trí trên bản đồ
+Staff -> API: PUT /api/emergency/999/acknowledge
+API -> DB: UPDATE ticket: Acknowledged
+DB --> API: Updated
+
+API -> NS: Notify customer
+NS -> Customer: "Staff đã nhận & đang đến"
+
+Staff -> Customer: Gọi điện thoại
+Customer -> Staff: Mô tả tình huống
+
+alt Cần cứu hộ
+    Staff -> API: POST /api/emergency/999/dispatch-rescue
+    API -> NS: Call emergency services
+    NS -> NS: Gọi 115 (Cấp cứu)\nhoặc 113 (Cảnh sát)
+else Chỉ cần hỗ trợ kỹ thuật
+    Staff -> Customer: Hướng dẫn xử lý qua điện thoại
+end
+
+Staff -> API: POST /api/emergency/999/updates\n{status, notes}
+API -> DB: INSERT status updates
+DB --> API: Updated
+
+API -> NS: Real-time update to customer
+NS -> App: Push notification: "Staff cách 2km"
+
+note over Staff, Customer
+  Staff đến hiện trường & xử lý
+end note
+
+Staff -> API: PUT /api/emergency/999/resolve\n{resolution, photos}
+API -> DB: UPDATE ticket: Resolved
+DB --> API: Updated
+
+API -> NS: Notify customer
+NS -> Customer: "Sự cố đã được giải quyết"
+
+Staff -> API: POST /api/emergency/999/report
+API -> DB: INSERT incident_report
+DB --> API: Report saved
+
+alt Xe không thể tiếp tục
+    API -> DB: UPDATE booking: Terminated
+    API -> DB: Arrange tow truck / replacement car
+end
+
+@enduml

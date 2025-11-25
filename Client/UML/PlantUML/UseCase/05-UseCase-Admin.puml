@@ -1,0 +1,134 @@
+@startuml UseCase-Admin
+!theme plain
+title Sơ Đồ Use Case - Chức Năng Quản Trị
+
+actor "Quản Trị" as Admin #FFB4B4
+actor "Cổng Thanh Toán" as PaymentGateway #E0E0E0
+actor "Dịch Vụ AI" as AIService #E0E0E0
+actor "Hệ Thống Bảo Mật" as SecurityService #E0E0E0
+
+rectangle "Hệ Thống SDCRMS - Quản Trị" {
+    
+    package "Quản Lý Hệ Thống" #FFEBEE {
+        usecase UC26 as "Quản Lý Nhân Viên & Vai Trò"
+        usecase UC27 as "Giám Sát Hoạt Động Hệ Thống"
+        usecase UC32 as "Cấu Hình & Sao Lưu Hệ Thống"
+        usecase UC37 as "Quản Lý Phân Quyền & Bảo Mật"
+        usecase UC112 as "Quản Lý API & Tích Hợp"
+        usecase UC113 as "Xem Nhật Ký Hệ Thống"
+    }
+    
+    package "Giám Sát & Bảo Mật" #FFCDD2 {
+        usecase UC28 as "Giám Sát Giao Dịch & Phát Hiện Gian Lận"
+        usecase UC29 as "Quản Lý Tuân Thủ & Xử Lý Vi Phạm"
+        usecase UC40 as "Giám Sát Truy Cập Hệ Thống"
+        usecase UC114 as "Phân Tích Mạo Dạng Bằng AI"
+        usecase UC115 as "Quản Lý Khóa Tài Khoản Tự Động"
+    }
+    
+    package "Báo Cáo & Tài Chính" #EF9A9A {
+        usecase UC31 as "Dashboard Doanh Thu & Phân Tích"
+        usecase UC43 as "Xuất Báo Cáo & Quản Lý Ngân Sách"
+        usecase UC116 as "Phân Tích Trào Lưu Thị Trường"
+        usecase UC117 as "Dự Báo Doanh Thu"
+    }
+    
+    package "Quản Lý Nội Dung & Marketing" #E1BEE7 {
+        usecase UC46 as "Quản Lý Nội Dung & Khuyến Mãi"
+        usecase UC118 as "Quản Lý Chiến Dịch Marketing"
+        usecase UC119 as "Phân Tích Khách Hàng"
+    }
+    
+    package "Quản Lý Nâng Cao" #F8BBD0 {
+        usecase UC120 as "Quản Lý Chính Sách Toàn Cầu"
+        usecase UC121 as "Quản Lý Đa Ngôn Ngữ"
+        usecase UC122 as "Tối ưu Hiệu Suất Hệ Thống"
+    }
+    
+    package "Chức Năng Chung" #F5F5F5 {
+        usecase UC34 as "Đăng Nhập/Đăng Xuất"
+        usecase UC35 as "Cập Nhật Hồ Sơ"
+        usecase UC36 as "Đổi Mật Khẩu"
+    }
+}
+
+' Admin Relationships
+Admin --> UC26
+Admin --> UC27
+Admin --> UC32
+Admin --> UC37
+Admin --> UC112
+Admin --> UC113
+Admin --> UC28
+Admin --> UC29
+Admin --> UC40
+Admin --> UC114
+Admin --> UC115
+Admin --> UC31
+Admin --> UC43
+Admin --> UC116
+Admin --> UC117
+Admin --> UC46
+Admin --> UC118
+Admin --> UC119
+Admin --> UC120
+Admin --> UC121
+Admin --> UC122
+Admin --> UC34
+Admin --> UC35
+Admin --> UC36
+
+' External Systems Integration
+UC28 ..> PaymentGateway : <<tích hợp>>
+UC114 ..> AIService : <<tích hợp>>
+UC115 ..> SecurityService : <<tích hợp>>
+UC116 ..> AIService : <<tích hợp>>
+UC117 ..> AIService : <<tích hợp>>
+UC119 ..> AIService : <<tích hợp>>
+
+' Include Relationships
+UC31 ..> UC28 : <<include>>
+UC27 ..> UC26 : <<include>>
+UC27 ..> UC32 : <<include>>
+UC27 ..> UC113 : <<include>>
+UC26 ..> UC37 : <<include>>
+UC43 ..> UC31 : <<include>>
+UC28 ..> UC114 : <<include>>
+UC118 ..> UC119 : <<include>>
+
+' Extend Relationships
+UC28 ..> UC29 : <<extend>>
+UC29 ..> UC27 : <<extend>>
+UC114 ..> UC115 : <<extend>>
+UC116 ..> UC31 : <<extend>>
+UC117 ..> UC116 : <<extend>>
+UC122 ..> UC27 : <<extend>>
+
+' Dependencies
+UC28 --> UC27 : yêu cầu
+UC31 --> UC32 : cấu hình bởi
+UC40 --> UC37 : phụ thuộc
+UC46 --> UC27 : thông báo tới
+UC114 --> UC115 : tự động kích hoạt
+UC117 --> UC118 : hỗ trợ quyết định
+UC119 --> UC118 : cung cấp insights
+UC122 --> UC113 : dựa trên
+
+note right of Admin
+  Quản trị viên có thể:
+  - Quản lý toàn bộ hệ thống
+  - Giám sát & xem nhật ký
+  - Phân quyền & bảo mật
+  - Quản lý API & tích hợp
+  - Phát hiện gian lận bằng AI
+  - Khóa tài khoản tự động
+  - Dashboard & phân tích
+  - Dự báo doanh thu AI
+  - Phân tích trào lưu thị trường
+  - Quản lý chiến dịch marketing
+  - Phân tích khách hàng
+  - Chính sách đa quốc gia
+  - Tối ưu hiệu suất hệ thống
+end note
+
+@enduml

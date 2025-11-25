@@ -21,7 +21,7 @@ namespace UserService.Controllers
             var users = await _userService.GetAllAsync();
             return Ok(users);
         }
-        
+
         [HttpGet("firebase/{firebaseUid}")]
         public async Task<ActionResult<User?>> GetByFirebaseUid(string firebaseUid)
         {
@@ -48,7 +48,11 @@ namespace UserService.Controllers
         public async Task<ActionResult<User>> CreateUser([FromBody] User user)
         {
             var createdUser = await _userService.CreateUserAsync(user);
-            return CreatedAtAction(nameof(GetByFirebaseUid), new { firebaseUid = createdUser.FirebaseUid }, createdUser);
+            return CreatedAtAction(
+                nameof(GetByFirebaseUid),
+                new { firebaseUid = createdUser.FirebaseUid },
+                createdUser
+            );
         }
 
         [HttpPut("{id}")]
@@ -62,10 +66,11 @@ namespace UserService.Controllers
             await _userService.UpdateUserAsync(user);
             return NoContent();
         }
+
         [HttpPost("sync")]
         public async Task<ActionResult<User>> SyncUser([FromBody] UserSyncDto dto)
         {
-            if(dto == null)
+            if (dto == null)
                 return BadRequest("Body is null");
 
             var user = new User
@@ -79,11 +84,15 @@ namespace UserService.Controllers
                 Email = dto.Email,
                 Sex = dto.Sex,
                 Birthday = dto.Birthday ?? DateTime.MinValue,
-                Address = dto.Address
+                Address = dto.Address,
             };
 
             var createdUser = await _userService.CreateUserAsync(user);
-            return CreatedAtAction(nameof(GetByFirebaseUid), new { firebaseUid = createdUser.FirebaseUid }, createdUser);
+            return CreatedAtAction(
+                nameof(GetByFirebaseUid),
+                new { firebaseUid = createdUser.FirebaseUid },
+                createdUser
+            );
         }
     }
 }

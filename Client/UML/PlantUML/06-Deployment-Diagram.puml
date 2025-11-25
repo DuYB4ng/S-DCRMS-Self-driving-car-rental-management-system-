@@ -1,0 +1,212 @@
+@startuml Deployment-SDCRMS
+!theme plain
+
+title Sơ Đồ Deployment - Cơ Sở Hạ Tầng SDCRMS
+
+node "Lớp Client - User Devices" {
+    node "iOS Device" {
+        artifact "Customer/Owner\nMobile App"
+    }
+    
+    node "Android Device" {
+        artifact "Customer/Owner\nMobile App"
+    }
+    
+    node "Web Browser" {
+        artifact "Staff/Admin\nWeb App"
+    }
+}
+
+node "Lớp CDN - CloudFlare" {
+    artifact "Static Assets\n(CSS, JS, Images)"
+}
+
+node "Lớp Web Server - DMZ" {
+    node "NGINX Cluster" {
+        artifact "Load Balancer\n(Round Robin)"
+    }
+    
+    node "API Gateway Cluster" {
+        node "Gateway 1\n(Kong)" <<VM>>
+        node "Gateway 2\n(Kong)" <<VM>>
+    }
+}
+
+node "Lớp Application - Private Subnet" {
+    node "App Server Cluster" {
+        node "App Server 1" <<VM>> {
+            artifact ".NET Core API\n(v8.0)"
+            artifact "Docker Runtime"
+        }
+        
+        node "App Server 2" <<VM>> {
+            artifact ".NET Core API\n(v8.0)"
+            artifact "Docker Runtime"
+        }
+        
+        node "App Server 3" <<VM>> {
+            artifact ".NET Core API\n(v8.0)"
+            artifact "Docker Runtime"
+        }
+    }
+    
+    node "Background Jobs Server" <<VM>> {
+        artifact "Hangfire Jobs\n(Scheduled Tasks)"
+    }
+    
+    node "Real-time Server" <<VM>> {
+        artifact "SignalR Hub\n(WebSocket)"
+    }
+}
+
+node "Lớp Cache - Private Subnet" {
+    node "Redis Cluster" {
+        database "Redis Master" <<Primary>>
+        database "Redis Slave 1" <<Replica>>
+        database "Redis Slave 2" <<Replica>>
+    }
+}
+
+node "Lớp Database - Private Subnet" {
+    node "SQL Server Cluster" {
+        database "Main DB Primary\nSQL Server 2022" <<Primary>> {
+            artifact "Users, Cars\nBookings, Payments"
+        }
+        
+        database "Main DB Replica 1" <<Replica>> {
+            artifact "Read-Only Copy"
+        }
+        
+        database "Analytics DB\nSQL Server 2022" <<Analytics>> {
+            artifact "Reports, Statistics\nData Warehouse"
+        }
+    }
+    
+    node "NoSQL Cluster" {
+        database "MongoDB Primary" <<Primary>> {
+            artifact "Logs, Sessions\nUnstructured Data"
+        }
+        
+        database "MongoDB Secondary" <<Replica>>
+    }
+    
+    node "Search Cluster" {
+        database "Elasticsearch Node 1" <<Primary>>
+        database "Elasticsearch Node 2" <<Replica>>
+    }
+}
+
+node "Lớp Storage - Object Storage" {
+    storage "AWS S3" {
+        folder "User Documents"
+        folder "Car Images"
+        folder "Backups"
+    }
+}
+
+node "Lớp Monitoring" {
+    node "Prometheus" <<Monitoring>> {
+        artifact "Metrics Collection"
+    }
+    
+    node "Grafana" <<Dashboard>> {
+        artifact "Visualization"
+    }
+    
+    node "ELK Stack" {
+        artifact "Log Aggregation\n(Elasticsearch, Logstash, Kibana)"
+    }
+}
+
+cloud "Dịch Vụ Bên Ngoài" {
+    node "Payment Gateways" {
+        artifact "VNPay API"
+        artifact "Momo API"
+    }
+    
+    node "Communication Services" {
+        artifact "Twilio SMS"
+        artifact "SendGrid Email"
+    }
+    
+    node "AI Services" {
+        artifact "Azure ML\n(Fraud Detection)"
+    }
+    
+    node "Map Services" {
+        artifact "Google Maps API"
+    }
+}
+
+' Connections
+"iOS Device" --> "NGINX Cluster" : HTTPS (443)
+"Android Device" --> "NGINX Cluster" : HTTPS (443)
+"Web Browser" --> "NGINX Cluster" : HTTPS (443)
+
+"NGINX Cluster" --> "Gateway 1\n(Kong)" : HTTP (8000)
+"NGINX Cluster" --> "Gateway 2\n(Kong)" : HTTP (8000)
+
+"Gateway 1\n(Kong)" --> "App Server 1" : HTTP (5000)
+"Gateway 1\n(Kong)" --> "App Server 2" : HTTP (5000)
+"Gateway 2\n(Kong)" --> "App Server 2" : HTTP (5000)
+"Gateway 2\n(Kong)" --> "App Server 3" : HTTP (5000)
+
+"App Server 1" --> "Main DB Primary\nSQL Server 2022" : TDS (1433)
+"App Server 2" --> "Main DB Primary\nSQL Server 2022" : TDS (1433)
+"App Server 3" --> "Main DB Replica 1" : TDS (1433)
+
+"Main DB Primary\nSQL Server 2022" --> "Main DB Replica 1" : Replication
+"Main DB Primary\nSQL Server 2022" --> "Analytics DB\nSQL Server 2022" : CDC
+
+"MongoDB Primary" --> "MongoDB Secondary" : Replication
+"Elasticsearch Node 1" --> "Elasticsearch Node 2" : Replication
+
+"App Server 1" --> "Redis Master" : Redis (6379)
+"App Server 2" --> "Redis Master" : Redis (6379)
+"App Server 3" --> "Redis Master" : Redis (6379)
+"Redis Master" --> "Redis Slave 1" : Replication
+"Redis Master" --> "Redis Slave 2" : Replication
+
+"App Server 1" --> "AWS S3" : HTTPS
+"App Server 2" --> "AWS S3" : HTTPS
+"App Server 3" --> "AWS S3" : HTTPS
+
+"Real-time Server" --> "App Server 1" : WebSocket
+"Background Jobs Server" --> "Main DB Primary\nSQL Server 2022" : TDS (1433)
+
+"App Server 1" --> "Payment Gateways" : HTTPS
+"App Server 2" --> "Communication Services" : HTTPS
+"App Server 3" --> "AI Services" : HTTPS
+"App Server 1" --> "Map Services" : HTTPS
+
+"Prometheus" ..> "App Server 1" : Scrape Metrics
+"Prometheus" ..> "App Server 2" : Scrape Metrics
+"Prometheus" ..> "App Server 3" : Scrape Metrics
+"Grafana" --> "Prometheus" : Query
+
+"ELK Stack" <.. "App Server 1" : Ship Logs
+"ELK Stack" <.. "App Server 2" : Ship Logs
+"ELK Stack" <.. "App Server 3" : Ship Logs
+
+note right of "Lớp Web Server - DMZ"
+  **DMZ Zone**
+  - Public IPs
+  - Firewall: Allow 80, 443
+  - DDoS Protection
+end note
+
+note right of "Lớp Application - Private Subnet"
+  **Private Network**
+  - No Public IPs
+  - Security Group: Only from Gateway
+  - Auto-scaling: 2-10 instances
+end note
+
+note right of "Lớp Database - Private Subnet"
+  **Isolated Database Zone**
+  - No Internet Access
+  - Encrypted at Rest (TDE)
+  - Automated Backups (Daily)
+end note
+
+@enduml

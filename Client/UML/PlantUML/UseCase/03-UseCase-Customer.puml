@@ -1,0 +1,147 @@
+@startuml UseCase-Customer
+!theme plain
+title Sơ Đồ Use Case - Chức Năng Khách Hàng
+
+actor "Khách Hàng" as Customer #B4D7FF
+actor "Cổng Thanh Toán" as PaymentGateway #E0E0E0
+actor "Dịch Vụ Thông Báo" as NotificationService #E0E0E0
+actor "AI Chatbot" as AIService #E0E0E0
+actor "Hệ Thống GPS" as GPSService #E0E0E0
+actor "Dịch Vụ Xác Thực" as VerificationService #E0E0E0
+
+rectangle "Hệ Thống SDCRMS - Khách Hàng" {
+    
+    package "Tìm Kiếm & Đặt Xe" #E6F3FF {
+        usecase UC10 as "Tìm Kiếm & So Sánh Xe"
+        usecase UC11 as "Xem Chi Tiết Xe"
+        usecase UC12 as "Đặt Xe (Real-time)"
+        usecase UC70 as "Lưu Xe Yêu Thích"
+        usecase UC71 as "Đặt Xe Định Kỳ"
+        usecase UC96 as "Xem Bản Đồ & Xe Gần Đây"
+    }
+    
+    package "Thanh Toán & Quản Lý" #B3E5FC {
+        usecase UC14 as "Thanh Toán & Xem Hóa Đơn"
+        usecase UC16 as "Xem Lịch Sử & Thống Kê"
+        usecase UC72 as "Quản Lý Thẻ Thanh Toán"
+        usecase UC73 as "Xem Điểm Tích Lũy"
+        usecase UC97 as "Quản Lý Ngân Sách Chi Tiêu"
+        usecase UC98 as "Yêu Cầu Hóa Đơn VAT"
+    }
+    
+    package "Sử Dụng & Đánh Giá" #81D4FA {
+        usecase UC13 as "Nhận/Trả Xe Kỹ Thuật Số"
+        usecase UC15 as "Đánh Giá & Nhận Xét"
+        usecase UC74 as "Báo Cáo Sự Cố"
+        usecase UC75 as "Gia Hạn Thuê Xe"
+        usecase UC99 as "Theo Dõi Vị Trí Xe"
+        usecase UC100 as "Xác Minh Danh Tính"
+    }
+    
+    package "Chương Trình Thành Viên" #29B6F6 {
+        usecase UC101 as "Nâng Cấp Thành Viên"
+        usecase UC102 as "Đổi Điểm Thưởng"
+        usecase UC103 as "Nhận Khuyến Mãi Đặc Biệt"
+    }
+    
+    package "Thông Báo & Hỗ Trợ" #4FC3F7 {
+        usecase UC18 as "Nhận Thông Báo Real-time"
+        usecase UC76 as "Chat với AI Assistant"
+        usecase UC77 as "Liên Hệ Hỗ Trợ"
+    }
+    
+    package "Chức Năng Chung" #F5F5F5 {
+        usecase UC34 as "Đăng Nhập/Đăng Xuất"
+        usecase UC35 as "Cập Nhật Hồ Sơ"
+        usecase UC36 as "Đổi Mật Khẩu"
+    }
+}
+
+' Customer Relationships
+Customer --> UC10
+Customer --> UC11
+Customer --> UC12
+Customer --> UC70
+Customer --> UC71
+Customer --> UC96
+Customer --> UC13
+Customer --> UC14
+Customer --> UC15
+Customer --> UC74
+Customer --> UC75
+Customer --> UC99
+Customer --> UC100
+Customer --> UC16
+Customer --> UC72
+Customer --> UC73
+Customer --> UC97
+Customer --> UC98
+Customer --> UC101
+Customer --> UC102
+Customer --> UC103
+Customer --> UC18
+Customer --> UC76
+Customer --> UC77
+Customer --> UC34
+Customer --> UC35
+Customer --> UC36
+
+' External Systems Integration
+UC14 ..> PaymentGateway : <<tích hợp>>
+UC18 ..> NotificationService : <<tích hợp>>
+UC10 ..> AIService : <<tích hợp>>
+UC12 ..> AIService : <<tích hợp>>
+UC76 ..> AIService : <<tích hợp>>
+UC72 ..> PaymentGateway : <<tích hợp>>
+UC96 ..> GPSService : <<tích hợp>>
+UC99 ..> GPSService : <<tích hợp>>
+UC100 ..> VerificationService : <<tích hợp>>
+
+' Include Relationships
+UC12 ..> UC14 : <<include>>
+UC12 ..> UC18 : <<include>>
+UC12 ..> UC100 : <<include>>
+UC16 ..> UC14 : <<include>>
+UC10 ..> UC11 : <<include>>
+UC71 ..> UC12 : <<include>>
+UC75 ..> UC14 : <<include>>
+UC13 ..> UC99 : <<include>>
+UC101 ..> UC73 : <<include>>
+
+' Extend Relationships
+UC15 ..> UC12 : <<extend>>
+UC70 ..> UC10 : <<extend>>
+UC74 ..> UC13 : <<extend>>
+UC75 ..> UC13 : <<extend>>
+UC77 ..> UC76 : <<extend>>
+UC96 ..> UC10 : <<extend>>
+UC98 ..> UC14 : <<extend>>
+UC102 ..> UC73 : <<extend>>
+UC103 ..> UC101 : <<extend>>
+
+' Dependencies
+UC12 --> UC13 : dẫn đến
+UC13 --> UC15 : sau khi hoàn thành
+UC74 --> UC18 : thông báo
+UC74 --> UC77 : yêu cầu hỗ trợ
+UC70 --> UC12 : đặt nhanh
+UC73 --> UC16 : hiển thị trong
+UC97 --> UC16 : theo dõi trong
+UC102 --> UC14 : áp dụng giảm giá
+
+note right of Customer
+  Khách hàng có thể:
+  - Tìm kiếm thông minh với AI
+  - Xem bản đồ & xe gần đây
+  - Lưu yêu thích, đặt định kỳ
+  - Xác minh danh tính an toàn
+  - Check-in/out kỹ thuật số
+  - Theo dõi GPS vị trí xe
+  - Gia hạn, báo cáo sự cố
+  - Thanh toán & quản lý ngân sách
+  - Tích điểm, đổi thưởng
+  - Nâng cấp thành viên VIP
+  - Chat AI 24/7 & hỗ trợ
+end note
+
+@enduml

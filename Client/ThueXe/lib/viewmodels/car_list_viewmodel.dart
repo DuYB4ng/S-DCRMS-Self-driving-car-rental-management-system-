@@ -25,7 +25,7 @@ class CarListViewModel extends ChangeNotifier {
 
     try {
       // 🔥 Gọi API lấy toàn bộ xe
-      final res = await api.get("/Car");
+      final res = await api.get("/Car/available");
       final List<dynamic> allCars = res.data;
 
       // 🔥 Lọc thành phố (location)
@@ -41,7 +41,6 @@ class CarListViewModel extends ChangeNotifier {
       // Bạn muốn lọc thêm theo ngày nhận / trả?
       // Vì backend chưa có logic booking, flutter KHÔNG biết xe có bị trùng lịch
       // nên mình chỉ lọc theo thành phố + isAvailable là đủ
-
     } catch (e) {
       errorMessage = "Không thể tải danh sách xe";
     }
@@ -58,7 +57,7 @@ class CarListViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final res = await api.get("/Car");
+      final res = await api.get("/Car/available");
       cars = res.data;
     } catch (e) {
       errorMessage = "Không thể tải danh sách xe";

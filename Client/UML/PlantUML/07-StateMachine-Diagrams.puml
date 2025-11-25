@@ -1,0 +1,1540 @@
+@startuml StateMachine-Booking
+!theme plain
+
+title Sơ Đồ State - Vòng Đời Booking
+
+[*] --> Pending : Khách Hàng Tạo Booking
+
+state Pending {
+    Pending : Entry / Tạo bản ghi booking
+    Pending : Entry / Gửi thông báo cho Chủ Xe
+    Pending : Do / Chờ Chủ Xe phản hồi
+    Pending : Exit / Log trạng thái
+}
+
+Pending --> Confirmed : Chủ Xe Chấp Nhận
+Pending --> Rejected : Chủ Xe Từ Chối
+Pending --> Cancelled : Khách Hủy (Trước 24h)
+Pending --> Expired : Timeout (> 24h không phản hồi)
+
+state Confirmed {
+    Confirmed : Entry / Lock xe trong lịch
+    Confirmed : Entry / Tạo payment request
+    Confirmed : Do / Chờ thanh toán
+    Confirmed : Exit / Xác nhận thanh toán
+}
+
+Confirmed --> PaymentPending : Chờ Thanh Toán
+Confirmed --> Cancelled : Khách Hủy (Hoàn tiền 80%)
+
+state PaymentPending {
+    PaymentPending : Entry / Tạo transaction
+    PaymentPending : Do / Kiểm tra payment gateway
+    PaymentPending : Exit / Update payment status
+}
+
+PaymentPending --> Paid : Thanh Toán Thành Công
+PaymentPending --> PaymentFailed : Thanh Toán Thất Bại
+PaymentPending --> Cancelled : Timeout (> 15 phút)
+
+state Paid {
+    Paid : Entry / Gửi confirmation email
+    Paid : Entry / Tạo QR code check-in
+    Paid : Do / Đợi ngày thuê xe
+}
+
+Paid --> ReadyForCheckIn : Đến Ngày Thuê
+Paid --> Cancelled : Khách Hủy (Hoàn tiền 50%)
+
+state ReadyForCheckIn {
+    ReadyForCheckIn : Entry / Kích hoạt QR code
+    ReadyForCheckIn : Do / Chờ check-in
+    ReadyForCheckIn : Exit / Ghi nhận thời gian check-in
+}
+
+ReadyForCheckIn --> InProgress : Quét QR Check-in Thành Công
+ReadyForCheckIn --> NoShow : Không Check-in (> 2h)
+
+state InProgress {
+    InProgress : Entry / Unlock xe
+    InProgress : Do / GPS tracking active
+    InProgress : Do / Monitor distance
+    InProgress : Exit / Lock xe
+}
+
+InProgress --> ReadyForCheckOut : Đến Giờ Trả Xe
+InProgress --> Extended : Khách Gia Hạn
+
+state Extended {
+    Extended : Entry / Tính phí gia hạn
+    Extended : Do / Chờ thanh toán thêm
+    Extended : Exit / Cập nhật thời gian mới
+}
+
+Extended --> InProgress : Thanh Toán Gia Hạn Thành Công
+Extended --> Overdue : Không Thanh Toán
+
+state ReadyForCheckOut {
+    ReadyForCheckOut : Entry / Kích hoạt QR check-out
+    ReadyForCheckOut : Do / Chờ check-out
+    ReadyForCheckOut : Exit / Tính toán chi phí cuối
+}
+
+ReadyForCheckOut --> PendingInspection : Quét QR Check-out Thành Công
+ReadyForCheckOut --> Overdue : Quá Giờ (> 1h)
+
+state PendingInspection {
+    PendingInspection : Entry / Yêu cầu Chủ Xe kiểm tra
+    PendingInspection : Do / Đợi báo cáo tình trạng xe
+    PendingInspection : Exit / Lưu báo cáo
+}
+
+PendingInspection --> PendingPayment : Không Có Vấn Đề
+PendingInspection --> Disputed : Chủ Xe Báo Hư Hỏng
+
+state Disputed {
+    Disputed : Entry / Tạo dispute ticket
+    Disputed : Do / Admin điều tra
+    Disputed : Exit / Quyết định bồi thường
+}
+
+Disputed --> PendingPayment : Admin Giải Quyết
+
+state PendingPayment {
+    PendingPayment : Entry / Tính tổng chi phí
+    PendingPayment : Entry / Trừ tiền cọc (nếu có)
+    PendingPayment : Do / Xử lý thanh toán cuối
+}
+
+PendingPayment --> Completed : Thanh Toán Hoàn Tất
+PendingPayment --> PaymentIssue : Lỗi Thanh Toán
+
+state PaymentIssue {
+    PaymentIssue : Entry / Gửi thông báo nợ
+    PaymentIssue : Do / Retry thanh toán
+}
+
+PaymentIssue --> Completed : Thanh Toán Thành Công
+PaymentIssue --> Suspended : Nợ > 7 ngày (Khóa tài khoản)
+
+state Completed {
+    Completed : Entry / Release xe
+    Completed : Entry / Chuyển tiền cho Chủ Xe
+    Completed : Entry / Gửi yêu cầu đánh giá
+}
+
+Completed --> [*]
+
+state Cancelled {
+    Cancelled : Entry / Release xe
+    Cancelled : Entry / Hoàn tiền (theo policy)
+    Cancelled : Entry / Cập nhật stats
+}
+
+Cancelled --> [*]
+
+state Rejected {
+    Rejected : Entry / Thông báo từ chối
+    Rejected : Entry / Gợi ý xe khác
+}
+
+Rejected --> [*]
+
+state Expired {
+    Expired : Entry / Auto cancel
+    Expired : Entry / Release xe
+}
+
+Expired --> [*]
+
+state NoShow {
+    NoShow : Entry / Tính phí no-show
+    NoShow : Entry / Không hoàn tiền
+}
+
+NoShow --> [*]
+
+state Overdue {
+    Overdue : Entry / Tính phí phạt
+    Overdue : Entry / Gửi cảnh báo
+    Overdue : Do / Tăng phí theo giờ
+}
+
+Overdue --> PendingInspection : Check-out Sau Đó
+Overdue --> Disputed : Xe Bị Mất (> 48h)
+
+state Suspended {
+    Suspended : Entry / Khóa tài khoản khách
+    Suspended : Do / Đợi thanh toán nợ
+}
+
+Suspended --> Completed : Thanh Toán Nợ
+Suspended --> [*] : Nợ Không Đòi Được
+
+note right of Pending
+  Trạng thái khởi đầu
+  Timeout: 24h
+end note
+
+note right of InProgress
+  GPS tracking bật
+  Monitor real-time
+end note
+
+note right of Disputed
+  Admin can escalate
+  Evidence required
+end note
+
+@enduml
+
+
+@startuml StateMachine-Car
+!theme plain
+
+title Sơ Đồ State - Vòng Đời Car
+
+[*] --> Draft : Chủ Xe Tạo Car Profile
+
+state Draft {
+    Draft : Entry / Tạo bản ghi xe
+    Draft : Do / Chủ Xe nhập thông tin
+    Draft : Exit / Validate data
+}
+
+Draft --> PendingVerification : Submit Để Xét Duyệt
+Draft --> Deleted : Chủ Xe Xóa Draft
+
+state PendingVerification {
+    PendingVerification : Entry / Assign cho Admin
+    PendingVerification : Do / Admin kiểm tra giấy tờ
+    PendingVerification : Do / Verify VIN, license plates
+    PendingVerification : Exit / Log decision
+}
+
+PendingVerification --> Approved : Admin Phê Duyệt
+PendingVerification --> Rejected : Admin Từ Chối
+PendingVerification --> PendingMoreInfo : Yêu Cầu Bổ Sung
+
+state PendingMoreInfo {
+    PendingMoreInfo : Entry / Gửi yêu cầu cho Chủ Xe
+    PendingMoreInfo : Do / Chờ tài liệu bổ sung
+}
+
+PendingMoreInfo --> PendingVerification : Chủ Xe Cung Cấp Thêm
+PendingMoreInfo --> Expired : Timeout (> 7 ngày)
+
+state Approved {
+    Approved : Entry / Tạo listing
+    Approved : Entry / Set initial status: Available
+}
+
+Approved --> Available : Publish
+
+state Available {
+    Available : Entry / Hiện trên search
+    Available : Do / Có thể được booking
+    Available : Exit / Remove từ search
+}
+
+Available --> Booked : Khách Booking Thành Công
+Available --> Maintenance : Chủ Xe Báo Bảo Dưỡng
+Available --> Inactive : Chủ Xe Tạm Ngưng
+
+state Booked {
+    Booked : Entry / Lock lịch
+    Booked : Do / Đợi booking check-in
+    Booked : Exit / Unlock or extend
+}
+
+Booked --> Rented : Khách Check-in
+Booked --> Available : Booking Cancelled
+
+state Rented {
+    Rented : Entry / Xe đang được thuê
+    Rented : Do / GPS tracking
+    Rented : Do / Monitor violations
+    Rented : Exit / Calculate usage
+}
+
+Rented --> PendingReturn : Check-out Thành Công
+Rented --> ReportedStolen : Báo Mất Xe
+
+state PendingReturn {
+    PendingReturn : Entry / Chờ inspection
+    PendingReturn : Do / Chủ Xe kiểm tra
+}
+
+PendingReturn --> Available : Không Vấn Đề
+PendingReturn --> Maintenance : Có Hư Hỏng
+
+state Maintenance {
+    Maintenance : Entry / Tạo maintenance ticket
+    Maintenance : Do / Xe đang sửa chữa
+    Maintenance : Exit / Close ticket
+}
+
+Maintenance --> Available : Bảo Dưỡng Xong
+Maintenance --> Scrapped : Hư Hỏng Nặng Không Sửa Được
+
+state Inactive {
+    Inactive : Entry / Hide từ search
+    Inactive : Do / Không nhận booking mới
+    Inactive : Exit / Re-verify status
+}
+
+Inactive --> Available : Chủ Xe Kích Hoạt Lại
+Inactive --> Deleted : Chủ Xe Xóa Xe
+
+state ReportedStolen {
+    ReportedStolen : Entry / Thông báo cảnh sát
+    ReportedStolen : Entry / Lock account khách
+    ReportedStolen : Do / Điều tra
+}
+
+ReportedStolen --> Recovered : Tìm Thấy Xe
+ReportedStolen --> Scrapped : Xe Không Tìm Thấy (> 30 ngày)
+
+state Recovered {
+    Recovered : Entry / Unlock account
+    Recovered : Entry / Tính bồi thường
+}
+
+Recovered --> Maintenance : Cần Sửa Chữa
+Recovered --> Available : Xe Nguyên Vẹn
+
+state Rejected {
+    Rejected : Entry / Gửi lý do từ chối
+    Rejected : Exit / Allow re-submit
+}
+
+Rejected --> Draft : Chủ Xe Sửa Thông Tin
+Rejected --> Deleted : Chủ Xe Hủy
+
+state Scrapped {
+    Scrapped : Entry / Archive data
+    Scrapped : Entry / Remove listing
+    Scrapped : Exit / Final report
+}
+
+Scrapped --> [*]
+
+state Deleted {
+    Deleted : Entry / Soft delete
+    Deleted : Entry / Keep audit log
+}
+
+Deleted --> [*]
+
+state Expired {
+    Expired : Entry / Auto archive
+}
+
+Expired --> [*]
+
+note right of Draft
+  Chủ Xe có thể save/edit
+  Không visible cho khách
+end note
+
+note right of PendingVerification
+  Admin SLA: 48h
+  Check: giấy tờ, hình ảnh, VIN
+end note
+
+note right of Rented
+  GPS tracking real-time
+  Alert nếu ra ngoài vùng
+end note
+
+note right of ReportedStolen
+  Critical alert
+  Notify authorities
+end note
+
+@enduml
+
+
+@startuml StateMachine-Payment
+!theme plain
+
+title Sơ Đồ State - Vòng Đời Payment Transaction
+
+[*] --> Initiated : Tạo Payment Request
+
+state Initiated {
+    Initiated : Entry / Tạo transaction ID
+    Initiated : Entry / Lock amount
+    Initiated : Do / Chờ khách chọn phương thức
+    Initiated : Exit / Log payment method
+}
+
+Initiated --> MethodSelected : Khách Chọn Payment Method
+Initiated --> Cancelled : Khách Hủy
+Initiated --> Expired : Timeout (> 15 phút)
+
+state MethodSelected {
+    MethodSelected : Do / Validate payment method
+    MethodSelected : Do / Check account balance (if wallet)
+}
+
+MethodSelected --> Processing : Bắt Đầu Xử Lý
+
+state Processing {
+    Processing : Entry / Call payment gateway
+    Processing : Do / Wait for response
+    Processing : Exit / Parse gateway response
+}
+
+Processing --> Authorizing : Gateway Phản Hồi OK
+
+state Authorizing {
+    Authorizing : Entry / Request authorization
+    Authorizing : Do / Verify funds
+    Authorizing : Do / Check fraud rules
+}
+
+Authorizing --> Authorized : Authorization Successful
+Authorizing --> Declined : Insufficient Funds
+Authorizing --> Declined : Fraud Detected
+Authorizing --> Failed : Authorization Error
+
+state Authorized {
+    Authorized : Entry / Hold funds
+    Authorized : Do / Reserve amount
+    Authorized : Exit / Prepare capture
+}
+
+Authorized --> Capturing : Admin Trigger Capture
+Authorized --> Voided : Cancel Before Capture (> 7 days)
+
+state Capturing {
+    Capturing : Entry / Request fund transfer
+    Capturing : Do / Debit customer
+    Capturing : Do / Credit merchant
+}
+
+Capturing --> Captured : Capture Successful
+Capturing --> Failed : Capture Error
+
+state Captured {
+    Captured : Entry / Funds transferred
+    Captured : Entry / Update booking status: Paid
+    Captured : Entry / Generate receipt
+    Captured : Do / Settlement pending
+}
+
+Captured --> Settled : Bank Clears Transaction
+Captured --> PartialRefund : Khách Yêu Cầu Refund (Một Phần)
+Captured --> FullRefund : Khách Yêu Cầu Refund (Toàn Bộ)
+
+state Settled {
+    Settled : Entry / Funds available
+    Settled : Entry / Commission split
+    Settled : Do / Final state for successful payment
+}
+
+Settled --> PartialRefund : Refund Sau Settlement
+Settled --> FullRefund : Refund Sau Settlement
+Settled --> [*]
+
+state PartialRefund {
+    PartialRefund : Entry / Calculate refund amount
+    PartialRefund : Do / Process refund via gateway
+}
+
+PartialRefund --> RefundProcessing : Gateway Accepts
+
+state FullRefund {
+    FullRefund : Entry / Refund 100%
+    FullRefund : Do / Reverse transaction
+}
+
+FullRefund --> RefundProcessing : Gateway Accepts
+
+state RefundProcessing {
+    RefundProcessing : Entry / Initiate refund
+    RefundProcessing : Do / Credit customer account
+}
+
+RefundProcessing --> Refunded : Refund Successful
+RefundProcessing --> RefundFailed : Refund Error
+
+state Refunded {
+    Refunded : Entry / Update booking
+    Refunded : Entry / Notify customer
+    Refunded : Entry / Adjust commission
+}
+
+Refunded --> [*]
+
+state RefundFailed {
+    RefundFailed : Entry / Log error
+    RefundFailed : Entry / Create manual task
+}
+
+RefundFailed --> RefundProcessing : Retry Refund
+RefundFailed --> [*] : Manual Resolution
+
+state Declined {
+    Declined : Entry / Log decline reason
+    Declined : Entry / Notify customer
+}
+
+Declined --> [*]
+
+state Failed {
+    Failed : Entry / Log error details
+    Failed : Entry / Notify customer
+}
+
+Failed --> Retry : Khách Thử Lại
+Failed --> [*]
+
+state Retry {
+    Retry : Entry / Reset transaction
+    Retry : Do / Allow new attempt
+}
+
+Retry --> MethodSelected : Chọn Lại Payment Method
+
+state Cancelled {
+    Cancelled : Entry / Release lock
+    Cancelled : Entry / Update booking
+}
+
+Cancelled --> [*]
+
+state Expired {
+    Expired : Entry / Auto cancel
+    Expired : Entry / Notify timeout
+}
+
+Expired --> [*]
+
+state Voided {
+    Voided : Entry / Release authorization
+    Voided : Entry / No funds captured
+}
+
+Voided --> [*]
+
+note right of Initiated
+  Timeout: 15 phút
+  Lock amount = booking total
+end note
+
+note right of Processing
+  Gateway: VNPay, Momo, Stripe
+  Max wait: 30 seconds
+end note
+
+note right of Authorizing
+  Fraud check rules:
+  - Unusual location
+  - High amount
+  - Multiple attempts
+end note
+
+note right of Captured
+  Settlement time: 1-3 days
+  Commission: 10%
+end note
+
+note right of Refunded
+  Refund window: 30 days
+  Processing time: 5-7 days
+end note
+
+@enduml
+
+
+@startuml StateMachine-User
+!theme plain
+
+title Sơ Đồ State - Vòng Đời User Account
+
+[*] --> Registered : Khách Đăng Ký
+
+state Registered {
+    Registered : Entry / Tạo user record
+    Registered : Entry / Hash password
+    Registered : Entry / Generate verification token
+    Registered : Do / Gửi email xác thực
+    Registered : Exit / Log registration
+}
+
+Registered --> PendingVerification : Chờ Xác Thực Email
+
+state PendingVerification {
+    PendingVerification : Do / Đợi click link verification
+    PendingVerification : Exit / Mark email verified
+}
+
+PendingVerification --> Active : Click Link Xác Thực
+PendingVerification --> Expired : Không Xác Thực (> 48h)
+
+state Active {
+    Active : Entry / Enable full access
+    Active : Do / User có thể login
+    Active : Do / Có thể booking/list car
+}
+
+Active --> Suspended : Admin Suspend (Vi phạm)
+Active --> Locked : Quá Nhiều Login Attempts
+Active --> Inactive : Không Hoạt Động (> 365 ngày)
+Active --> Deleted : User Tự Xóa Account
+
+state Suspended {
+    Suspended : Entry / Revoke access
+    Suspended : Entry / Notify user with reason
+    Suspended : Do / Block login
+    Suspended : Do / Cancel active bookings
+}
+
+Suspended --> Active : Admin Unsuspend (Appeal Thành Công)
+Suspended --> Banned : Vi Phạm Nghiêm Trọng
+
+state Locked {
+    Locked : Entry / Temporary lock
+    Locked : Entry / Gửi email cảnh báo
+    Locked : Do / Block login 30 phút
+}
+
+Locked --> Active : Timeout (30 phút)
+Locked --> Active : Reset Password Success
+
+state Inactive {
+    Inactive : Entry / Archive data
+    Inactive : Do / Hide từ search
+    Inactive : Do / Keep audit logs
+}
+
+Inactive --> Active : User Login Lại
+Inactive --> Deleted : Không Hoạt Động (> 730 ngày)
+
+state Banned {
+    Banned : Entry / Permanent block
+    Banned : Entry / Blacklist email/phone
+    Banned : Entry / Cancel all bookings
+    Banned : Entry / Notify authorities (if fraud)
+}
+
+Banned --> [*]
+
+state Deleted {
+    Deleted : Entry / Soft delete
+    Deleted : Entry / Anonymize PII
+    Deleted : Entry / Keep transaction history
+    Deleted : Do / GDPR compliance
+}
+
+Deleted --> [*]
+
+state Expired {
+    Expired : Entry / Auto delete unverified
+    Expired : Entry / Clean up temp data
+}
+
+Expired --> [*]
+
+note right of Registered
+  Require: email, phone, password
+  Auto-generate: userID
+end note
+
+note right of Active
+  Normal operational state
+  All features available
+end note
+
+note right of Suspended
+  Reasons:
+  - Late payment
+  - Bad reviews
+  - Fraudulent activity
+  Appeal window: 14 days
+end note
+
+note right of Banned
+  Permanent
+  Reasons:
+  - Stolen cars
+  - Fake identity
+  - Repeated fraud
+end note
+
+note right of Locked
+  Auto-lock after 5 failed logins
+  Duration: 30 minutes
+  Can reset password to unlock
+end note
+
+@enduml
+
+
+@startuml StateMachine-Notification
+!theme plain
+
+title Sơ Đồ State - Vòng Đời Notification
+
+[*] --> DaTao : Tạo Notification Mới
+
+state DaTao {
+    DaTao : Entry / Tạo notificationID
+    DaTao : Entry / Đặt thời gian tạo
+    DaTao : Do / Chuẩn bị nội dung thông báo
+    DaTao : Exit / Ghi log tạo
+}
+
+DaTao --> DangCho : Đưa Vào Hàng Đợi
+
+state DangCho {
+    DangCho : Entry / Thêm vào hàng đợi gửi
+    DangCho : Do / Chờ dịch vụ gửi
+    DangCho : Exit / Chuẩn bị gửi đi
+}
+
+DangCho --> DangGui : Bắt Đầu Gửi
+DangCho --> DaHuy : User Tắt Thông Báo
+
+state DangGui {
+    DangGui : Entry / Chọn kênh gửi
+    DangGui : Do / Gửi qua Push/Email/SMS
+    DangGui : Exit / Ghi nhận lần thử
+}
+
+DangGui --> DaGiao : Gửi Thành Công
+DangGui --> ThatBai : Gửi Thất Bại
+
+state DaGiao {
+    DaGiao : Entry / Đánh dấu đã giao
+    DaGiao : Entry / Cập nhật thời gian giao
+    DaGiao : Do / Chờ người dùng tương tác
+}
+
+DaGiao --> DaDoc : Người Dùng Mở Thông Báo
+DaGiao --> HetHan : Không Đọc (> 30 ngày)
+
+state DaDoc {
+    DaDoc : Entry / Đánh dấu đã đọc
+    DaDoc : Entry / Ghi thời gian đọc
+    DaDoc : Do / Người dùng đã xem nội dung
+}
+
+DaDoc --> DaThucHien : Người Dùng Click Nút Hành Động
+DaDoc --> DaLuuTru : Người Dùng Lưu Trữ
+DaDoc --> DaXoa : Người Dùng Xóa
+
+state DaThucHien {
+    DaThucHien : Entry / Thực thi hành động
+    DaThucHien : Entry / Theo dõi chuyển đổi
+}
+
+DaThucHien --> DaLuuTru : Tự Động Lưu Trữ Sau Hành Động
+DaThucHien --> [*]
+
+state ThatBai {
+    ThatBai : Entry / Ghi log lỗi
+    ThatBai : Do / Xác định chiến lược thử lại
+}
+
+ThatBai --> ThuLai : Có Thể Thử Lại
+ThatBai --> LoiVinhVien : Vượt Quá Số Lần Thử
+
+state ThuLai {
+    ThuLai : Entry / Tăng số lần thử
+    ThuLai : Do / Chờ thời gian backoff
+}
+
+ThuLai --> DangCho : Thử Lại Ngay
+
+state LoiVinhVien {
+    LoiVinhVien : Entry / Ghi log lỗi vĩnh viễn
+    LoiVinhVien : Entry / Cảnh báo admin nếu quan trọng
+}
+
+LoiVinhVien --> [*]
+
+state DaHuy {
+    DaHuy : Entry / Xóa khỏi hàng đợi
+    DaHuy : Entry / Ghi log hủy
+}
+
+DaHuy --> [*]
+
+state DaLuuTru {
+    DaLuuTru : Entry / Chuyển vào kho lưu trữ
+    DaLuuTru : Do / Vẫn có thể tìm kiếm
+}
+
+DaLuuTru --> DaXoa : Người Dùng Xóa
+DaLuuTru --> [*] : Tự Động Xóa (> 90 ngày)
+
+state DaXoa {
+    DaXoa : Entry / Xóa mềm
+    DaXoa : Entry / Giữ nhật ký kiểm tra
+}
+
+DaXoa --> [*]
+
+state HetHan {
+    HetHan : Entry / Đánh dấu hết hạn
+    HetHan : Entry / Tự động lưu trữ
+}
+
+HetHan --> [*]
+
+note right of DaTao
+  **Các Loại Thông Báo:**
+  - Cập nhật booking
+  - Xác nhận thanh toán
+  - Yêu cầu đánh giá
+  - Khuyến mãi
+  - Cảnh báo hệ thống
+end note
+
+note right of DangGui
+  **Kênh Gửi:**
+  - Thông báo đẩy (Push)
+  - Email
+  - SMS
+  - Thông báo trong ứng dụng
+end note
+
+note right of ThatBai
+  **Logic Thử Lại:**
+  - Lần 1: Ngay lập tức
+  - Lần 2: 5 phút
+  - Lần 3: 30 phút
+  - Tối đa: 3 lần
+end note
+
+@enduml
+
+
+@startuml StateMachine-Review
+!theme plain
+
+title Sơ Đồ State - Vòng Đời Review
+
+[*] --> ChoXuLy : Khách Hàng Gửi Review
+
+state ChoXuLy {
+    ChoXuLy : Entry / Tạo bản ghi đánh giá
+    ChoXuLy : Entry / Gán reviewID
+    ChoXuLy : Do / Chờ kiểm duyệt
+    ChoXuLy : Exit / Ghi log gửi
+}
+
+ChoXuLy --> DangKiemDuyet : Bắt Đầu Kiểm Tra Tự Động
+
+state DangKiemDuyet {
+    DangKiemDuyet : Entry / Chạy bộ lọc nội dung AI
+    DangKiemDuyet : Do / Kiểm tra spam/ngôn từ xấu
+    DangKiemDuyet : Do / Xác thực logic đánh giá
+    DangKiemDuyet : Exit / Chuẩn bị quyết định
+}
+
+DangKiemDuyet --> DaDuyet : Qua Tất Cả Kiểm Tra
+DangKiemDuyet --> BiDanhDau : Phát Hiện Vấn Đề Nội Dung
+DangKiemDuyet --> BiTuChoi : Spam/Nội Dung Xấu
+
+state DaDuyet {
+    DaDuyet : Entry / Xuất bản đánh giá
+    DaDuyet : Entry / Cập nhật rating xe
+    DaDuyet : Do / Hiển thị công khai
+}
+
+DaDuyet --> DaXuatBan : Hiển Thị Công Khai
+
+state DaXuatBan {
+    DaXuatBan : Entry / Thêm vào danh sách đánh giá xe
+    DaXuatBan : Entry / Thông báo cho chủ xe
+    DaXuatBan : Do / Hiển thị trên nền tảng
+}
+
+DaXuatBan --> CoPhanHoi : Chủ Xe Phản Hồi
+DaXuatBan --> BiBaoCao : Người Dùng Báo Cáo Vi Phạm
+DaXuatBan --> DaChinhSua : Khách Chỉnh Sửa (Trong 24h)
+DaXuatBan --> DaXoa : Khách Xóa
+
+state CoPhanHoi {
+    CoPhanHoi : Entry / Thêm phản hồi chủ xe
+    CoPhanHoi : Entry / Thông báo khách hàng
+    CoPhanHoi : Do / Hiển thị cả đánh giá & phản hồi
+}
+
+CoPhanHoi --> BiBaoCao : Người Dùng Báo Cáo
+CoPhanHoi --> DaXoa : Khách Xóa
+CoPhanHoi --> [*] : Kết Thúc Vòng Đời Bình Thường
+
+state BiDanhDau {
+    BiDanhDau : Entry / Xếp hàng kiểm duyệt thủ công
+    BiDanhDau : Entry / Thông báo người kiểm duyệt
+    BiDanhDau : Do / Chờ quyết định admin
+}
+
+BiDanhDau --> DaDuyet : Admin Chấp Nhận
+BiDanhDau --> BiTuChoi : Admin Từ Chối
+BiDanhDau --> ChoChinhSua : Yêu Cầu Sửa
+
+state ChoChinhSua {
+    ChoChinhSua : Entry / Thông báo khách hàng
+    ChoChinhSua : Do / Chờ khách chỉnh sửa
+}
+
+ChoChinhSua --> DangKiemDuyet : Khách Sửa & Gửi Lại
+ChoChinhSua --> HetHan : Không Sửa (> 7 ngày)
+
+state BiTuChoi {
+    BiTuChoi : Entry / Thông báo khách với lý do
+    BiTuChoi : Entry / Không xuất bản
+}
+
+BiTuChoi --> [*]
+
+state BiBaoCao {
+    BiBaoCao : Entry / Tạo ticket báo cáo
+    BiBaoCao : Entry / Thông báo admin
+    BiBaoCao : Do / Admin điều tra
+}
+
+BiBaoCao --> BiAn : Admin Ẩn Tạm Thời
+BiBaoCao --> BiXoa : Vi Phạm Nghiêm Trọng
+BiBaoCao --> DaXuatBan : Không Vi Phạm
+
+state BiAn {
+    BiAn : Entry / Xóa khỏi hiển thị công khai
+    BiAn : Do / Đang điều tra
+}
+
+BiAn --> DaXuatBan : Admin Phục Hồi
+BiAn --> BiXoa : Xác Nhận Vi Phạm
+
+state BiXoa {
+    BiXoa : Entry / Xóa vĩnh viễn
+    BiXoa : Entry / Cập nhật rating xe
+    BiXoa : Entry / Ghi log lý do
+}
+
+BiXoa --> [*]
+
+state DaChinhSua {
+    DaChinhSua : Entry / Tạo phiên bản mới
+    DaChinhSua : Entry / Giữ lịch sử chỉnh sửa
+}
+
+DaChinhSua --> DangKiemDuyet : Kiểm Tra Lại Nội Dung
+
+state DaXoa {
+    DaXoa : Entry / Xóa mềm
+    DaXoa : Entry / Cập nhật rating xe
+    DaXoa : Entry / Thông báo chủ xe
+}
+
+DaXoa --> [*]
+
+state HetHan {
+    HetHan : Entry / Tự động lưu trữ
+}
+
+HetHan --> [*]
+
+note right of ChoXuLy
+  **Thang Điểm:** 1-5 sao
+  **Bắt buộc:** Bình luận (tối thiểu 10 ký tự)
+  **Tùy chọn:** Hình ảnh
+end note
+
+note right of DangKiemDuyet
+  **Bộ Lọc AI:**
+  - Phát hiện ngôn từ xấu
+  - Mẫu spam
+  - Phát hiện đánh giá giả
+  - Phân tích cảm xúc
+end note
+
+note right of DaXuatBan
+  **Hiển Thị Tại:**
+  - Trang chi tiết xe
+  - Dashboard chủ xe
+  - Kết quả tìm kiếm
+  - Phân tích
+end note
+
+@enduml
+
+
+@startuml StateMachine-Customer
+!theme plain
+
+title Sơ Đồ State - Vòng Đời Customer Account
+
+[*] --> DaDangKy : Đăng Ký Tài Khoản
+
+state DaDangKy {
+    DaDangKy : Entry / Tạo bản ghi khách hàng
+    DaDangKy : Entry / Tạo customerID
+    DaDangKy : Entry / Đặt điểm thưởng: 0 điểm
+    DaDangKy : Exit / Gửi email chào mừng
+}
+
+DaDangKy --> ChoXacThuc : Chờ Xác Thực
+
+state ChoXacThuc {
+    ChoXacThuc : Do / Chờ xác thực email
+    ChoXacThuc : Do / Chờ OTP điện thoại
+}
+
+ChoXacThuc --> XacThucCoBan : Email & Điện Thoại Đã Xác Thực
+ChoXacThuc --> HetHan : Không Xác Thực (> 48h)
+
+state XacThucCoBan {
+    XacThucCoBan : Entry / Kích hoạt khả năng đặt xe
+    XacThucCoBan : Do / Có thể đặt xe
+    XacThucCoBan : Do / Tính năng giới hạn
+}
+
+XacThucCoBan --> XacThucDayDu : Tải Lên Bằng Lái Xe
+XacThucCoBan --> KhachHoatDong : Hoàn Thành Booking Đầu Tiên
+
+state XacThucDayDu {
+    XacThucDayDu : Entry / Xác minh bằng lái xe
+    XacThucDayDu : Entry / Kích hoạt tất cả tính năng
+    XacThucDayDu : Do / Có thể thuê tất cả loại xe
+}
+
+XacThucDayDu --> KhachHoatDong : Bắt Đầu Sử Dụng Dịch Vụ
+
+state KhachHoatDong {
+    KhachHoatDong : Entry / Trạng thái hoạt động bình thường
+    KhachHoatDong : Do / Đặt xe thường xuyên
+    KhachHoatDong : Do / Tích lũy điểm thưởng
+}
+
+KhachHoatDong --> KhachVIP : Tổng Booking > 20
+KhachHoatDong --> KhachCoNguyCoRuiRo : Không Hoạt Động > 90 Ngày
+KhachHoatDong --> BiTamNgung : Thanh Toán Trễ
+KhachHoatDong --> BiCamVinh : Phát Hiện Vi Phạm
+
+state KhachVIP {
+    KhachVIP : Entry / Nâng cấp lên hạng VIP
+    KhachVIP : Entry / Mở khóa đặc quyền:\n- Hỗ trợ ưu tiên\n- Giảm giá đặc biệt\n- Hủy miễn phí
+    KhachVIP : Do / Duy trì trạng thái VIP
+}
+
+KhachVIP --> KhachHoatDong : Hạ Bậc (Không hoạt động > 180 ngày)
+KhachVIP --> BiTamNgung : Vấn Đề Thanh Toán
+KhachVIP --> [*] : Xóa Tài Khoản
+
+state KhachCoNguyCoRuiRo {
+    KhachCoNguyCoRuiRo : Entry / Đánh dấu có nguy cơ rời đi
+    KhachCoNguyCoRuiRo : Entry / Gửi chiến dịch tái kích hoạt
+    KhachCoNguyCoRuiRo : Do / Theo dõi hoạt động
+}
+
+KhachCoNguyCoRuiRo --> KhachHoatDong : Khách Quay Lại
+KhachCoNguyCoRuiRo --> KhachKhongHoatDong : Không Hoạt Động > 180 Ngày
+
+state KhachKhongHoatDong {
+    KhachKhongHoatDong : Entry / Đánh dấu không hoạt động
+    KhachKhongHoatDong : Entry / Gửi ưu đãi thu hút quay lại
+    KhachKhongHoatDong : Do / Quyền truy cập giới hạn
+}
+
+KhachKhongHoatDong --> KhachHoatDong : Kích Hoạt Lại
+KhachKhongHoatDong --> KhachNgu : Không Hoạt Động > 365 Ngày
+
+state KhachNgu {
+    KhachNgu : Entry / Lưu trữ dữ liệu khách hàng
+    KhachNgu : Do / Tồn tại tối thiểu trong hệ thống
+}
+
+KhachNgu --> KhachHoatDong : Khách Hàng Quay Lại
+KhachNgu --> DaXoa : Không Hoạt Động > 730 Ngày
+
+state BiTamNgung {
+    BiTamNgung : Entry / Chặn khả năng đặt xe
+    BiTamNgung : Entry / Gửi thông báo tạm ngưng
+    BiTamNgung : Do / Giải quyết vấn đề tồn đọng
+}
+
+BiTamNgung --> KhachHoatDong : Vấn Đề Đã Được Giải Quyết
+BiTamNgung --> BiCamVinh : Vi Phạm Lặp Lại
+
+state BiCamVinh {
+    BiCamVinh : Entry / Cấm vĩnh viễn
+    BiCamVinh : Entry / Hủy tất cả booking
+    BiCamVinh : Entry / Thêm vào cơ sở dữ liệu danh sách đen
+    BiCamVinh : Do / Không có quyền truy cập dịch vụ
+}
+
+BiCamVinh --> [*]
+
+state DaXoa {
+    DaXoa : Entry / Xóa tuân thủ GDPR
+    DaXoa : Entry / Ẩn danh thông tin cá nhân
+    DaXoa : Entry / Giữ lịch sử giao dịch
+}
+
+DaXoa --> [*]
+
+state HetHan {
+    HetHan : Entry / Tự động dọn dẹp
+}
+
+HetHan --> [*]
+
+note right of XacThucCoBan
+  **Tính Năng Cơ Bản:**
+  - Tìm kiếm xe
+  - Xem chi tiết
+  - Đặt xe tiêu chuẩn
+  - Hỗ trợ cơ bản
+end note
+
+note right of XacThucDayDu
+  **Tính Năng Đầy Đủ:**
+  - Tất cả loại xe
+  - Đặt xe tức thì
+  - Hỗ trợ ưu tiên
+  - Chương trình thưởng
+end note
+
+note right of KhachVIP
+  **Yêu Cầu VIP:**
+  - 20+ booking hoàn thành
+  - Tổng chi tiêu $5,000+
+  - Đánh giá trung bình 4.5+
+  - Không vi phạm
+end note
+
+@enduml
+
+
+@startuml StateMachine-CarOwner
+!theme plain
+
+title Sơ Đồ State - Vòng Đời Car Owner Account
+
+[*] --> DaDangKy : Đăng Ký Làm Chủ Xe
+
+state DaDangKy {
+    DaDangKy : Entry / Tạo bản ghi chủ xe
+    DaDangKy : Entry / Tạo ownerID
+    DaDangKy : Do / Điền thông tin doanh nghiệp
+    DaDangKy : Exit / Gửi email xác thực
+}
+
+DaDangKy --> ChoTaiLieu : Chờ Tài Liệu
+
+state ChoTaiLieu {
+    ChoTaiLieu : Entry / Yêu cầu tài liệu:\n- CMND/CCCD\n- Giấy phép kinh doanh\n- Tài khoản ngân hàng
+    ChoTaiLieu : Do / Chờ tải lên
+}
+
+ChoTaiLieu --> DangXacMinh : Tài Liệu Đã Nộp
+ChoTaiLieu --> HetHan : Không Nộp (> 7 ngày)
+
+state DangXacMinh {
+    DangXacMinh : Entry / Chỉ định cho nhóm xác minh
+    DangXacMinh : Do / Admin kiểm tra tài liệu
+    DangXacMinh : Do / Kiểm tra lý lịch
+    DangXacMinh : Exit / Đưa ra quyết định
+}
+
+DangXacMinh --> DaDuyet : Tài Liệu Hợp Lệ
+DangXacMinh --> BiTuChoi : Tài Liệu Không Hợp Lệ
+DangXacMinh --> CanThemThongTin : Cần Thông Tin Bổ Sung
+
+state CanThemThongTin {
+    CanThemThongTin : Entry / Yêu cầu tài liệu cụ thể
+    CanThemThongTin : Do / Chờ nộp lại
+}
+
+CanThemThongTin --> DangXacMinh : Tài Liệu Bổ Sung Đã Nộp
+CanThemThongTin --> HetHan : Timeout (> 7 ngày)
+
+state DaDuyet {
+    DaDuyet : Entry / Kích hoạt tính năng chủ xe
+    DaDuyet : Entry / Gửi gói chào mừng
+    DaDuyet : Entry / Chỉ định quản lý tài khoản
+}
+
+DaDuyet --> ChuXeHoatDong : Thêm Xe Đầu Tiên
+
+state ChuXeHoatDong {
+    ChuXeHoatDong : Entry / Trạng thái hoạt động bình thường
+    ChuXeHoatDong : Do / Đăng & quản lý xe
+    ChuXeHoatDong : Do / Nhận booking
+    ChuXeHoatDong : Do / Kiếm thu nhập
+}
+
+ChuXeHoatDong --> ChuXePro : Đạt Chỉ Số Hiệu Suất
+ChuXeHoatDong --> CoNguyCoRuiRo : Không Có Booking > 60 Ngày
+ChuXeHoatDong --> BiTamNgung : Vi Phạm Chính Sách
+ChuXeHoatDong --> DangXemXet : Nhận Khiếu Nại
+
+state ChuXePro {
+    ChuXePro : Entry / Nâng cấp lên hạng Pro
+    ChuXePro : Entry / Mở khóa lợi ích:\n- Hoa hồng thấp hơn (8%)\n- Listing nổi bật\n- Hỗ trợ ưu tiên\n- Bảng phân tích
+    ChuXePro : Do / Duy trì trạng thái Pro
+}
+
+ChuXePro --> ChuXeHoatDong : Hạ Bậc (Hiệu Suất Giảm)
+ChuXePro --> BiTamNgung : Vi Phạm Nghiêm Trọng
+ChuXePro --> [*] : Đóng Tài Khoản
+
+state CoNguyCoRuiRo {
+    CoNguyCoRuiRo : Entry / Đánh dấu có nguy cơ
+    CoNguyCoRuiRo : Entry / Gửi hỗ trợ chủ động
+    CoNguyCoRuiRo : Do / Theo dõi hoạt động xe
+}
+
+CoNguyCoRuiRo --> ChuXeHoatDong : Booking Tiếp Tục
+CoNguyCoRuiRo --> KhongHoatDong : Không Hoạt Động > 90 Ngày
+
+state KhongHoatDong {
+    KhongHoatDong : Entry / Đánh dấu không hoạt động
+    KhongHoatDong : Entry / Ẩn xe khỏi tìm kiếm
+    KhongHoatDong : Do / Tạm dừng hoa hồng
+}
+
+KhongHoatDong --> ChuXeHoatDong : Chủ Xe Kích Hoạt Lại
+KhongHoatDong --> DaXoa : Yêu Cầu Đóng Tài Khoản
+
+state DangXemXet {
+    DangXemXet : Entry / Điều tra khiếu nại
+    DangXemXet : Do / Admin xem xét
+    DangXemXet : Do / Liên hệ chủ xe để giải thích
+}
+
+DangXemXet --> ChuXeHoatDong : Không Có Vấn Đề
+DangXemXet --> DaCanhCao : Vi Phạm Nhỏ
+DangXemXet --> BiTamNgung : Vi Phạm Lớn
+
+state DaCanhCao {
+    DaCanhCao : Entry / Đưa ra cảnh cáo chính thức
+    DaCanhCao : Entry / Đặt thời gian thử việc
+    DaCanhCao : Do / Theo dõi chặt chẽ
+}
+
+DaCanhCao --> ChuXeHoatDong : Vượt Qua Thử Việc
+DaCanhCao --> BiTamNgung : Vi Phạm Lặp Lại
+
+state BiTamNgung {
+    BiTamNgung : Entry / Vô hiệu hóa listing xe
+    BiTamNgung : Entry / Chặn booking mới
+    BiTamNgung : Entry / Thông báo chủ xe & khách
+    BiTamNgung : Do / Giải quyết vấn đề
+}
+
+BiTamNgung --> ChuXeHoatDong : Kháng Cáo Thành Công
+BiTamNgung --> BiCam : Vi Phạm Nghiêm Trọng/Lặp Lại
+
+state BiCam {
+    BiCam : Entry / Cấm vĩnh viễn
+    BiCam : Entry / Xóa tất cả xe
+    BiCam : Entry / Xử lý thanh toán cuối cùng
+    BiCam : Entry / Thêm vào danh sách đen
+}
+
+BiCam --> [*]
+
+state BiTuChoi {
+    BiTuChoi : Entry / Thông báo lý do từ chối
+    BiTuChoi : Entry / Cho phép đăng ký lại
+}
+
+BiTuChoi --> [*]
+
+state DaXoa {
+    DaXoa : Entry / Đóng tài khoản
+    DaXoa : Entry / Thanh toán cuối cùng
+    DaXoa : Entry / Lưu trữ dữ liệu
+}
+
+DaXoa --> [*]
+
+state HetHan {
+    HetHan : Entry / Tự động dọn dẹp
+}
+
+HetHan --> [*]
+
+note right of ChuXeHoatDong
+  **Yêu Cầu Hoạt Động:**
+  - Ít nhất 1 xe đã xác minh
+  - Phản hồi booking < 24h
+  - Duy trì đánh giá 4.0+
+  - Không có khoản thanh toán tồn đọng
+end note
+
+note right of ChuXePro
+  **Yêu Cầu Pro:**
+  - 5+ xe hoạt động
+  - 50+ booking hoàn thành
+  - Đánh giá trung bình 4.7+
+  - Tỷ lệ chấp nhận 95%+
+  - Tỷ lệ hủy <5%
+end note
+
+note right of BiTamNgung
+  **Lý Do Tạm Ngưng:**
+  - Tài liệu giả
+  - Không phản hồi booking
+  - Nhiều khiếu nại
+  - Tranh chấp thanh toán
+  - Vi phạm an toàn
+end note
+
+@enduml
+
+
+@startuml StateMachine-Admin
+!theme plain
+
+title Sơ Đồ State - Vòng Đời Admin Account
+
+[*] --> DaTao : Tạo Admin Account
+
+state DaTao {
+    DaTao : Entry / Tạo bản ghi admin
+    DaTao : Entry / Tạo adminID
+    DaTao : Entry / Đặt quyền mặc định
+    DaTao : Exit / Gửi email mời
+}
+
+DaTao --> ChoKichHoat : Chờ Kích Hoạt
+
+state ChoKichHoat {
+    ChoKichHoat : Entry / Tạo mã kích hoạt
+    ChoKichHoat : Do / Chờ thiết lập mật khẩu
+}
+
+ChoKichHoat --> HoatDong : Admin Đặt Mật Khẩu
+ChoKichHoat --> HetHan : Không Kích Hoạt (> 72h)
+
+state HoatDong {
+    HoatDong : Entry / Kích hoạt toàn quyền admin
+    HoatDong : Entry / Ghi log đăng nhập đầu tiên
+    HoatDong : Do / Thực hiện nhiệm vụ admin
+}
+
+HoatDong --> NghiPhep : Yêu Cầu Nghỉ Phép
+HoatDong --> BiTamNgung : Vấn Đề Bảo Mật
+HoatDong --> BiVoHieuHoa : Không Hoạt Động Lâu (> 90 ngày)
+
+state NghiPhep {
+    NghiPhep : Entry / Hạn chế truy cập tạm thời
+    NghiPhep : Entry / Chuyển nhiệm vụ khẩn
+    NghiPhep : Do / Quyền truy cập khẩn cấp giới hạn
+}
+
+NghiPhep --> HoatDong : Trở Lại Từ Nghỉ
+
+state BiTamNgung {
+    BiTamNgung : Entry / Thu hồi tất cả quyền truy cập
+    BiTamNgung : Entry / Thông báo đội bảo mật
+    BiTamNgung : Do / Đang điều tra
+}
+
+BiTamNgung --> HoatDong : Vấn Đề Đã Giải Quyết
+BiTamNgung --> BiChanDung : Xác Nhận Rò Rỉ Bảo Mật
+
+state BiVoHieuHoa {
+    BiVoHieuHoa : Entry / Vô hiệu hóa đăng nhập
+    BiVoHieuHoa : Entry / Giữ nhật ký kiểm tra
+}
+
+BiVoHieuHoa --> HoatDong : Kích Hoạt Lại Bởi Super Admin
+BiVoHieuHoa --> DaXoa : Xóa Vĩnh Viễn
+
+state BiChanDung {
+    BiChanDung : Entry / Thu hồi quyền truy cập vĩnh viễn
+    BiChanDung : Entry / Chuyển giao trách nhiệm
+    BiChanDung : Entry / Kiểm tra toàn diện
+}
+
+BiChanDung --> [*]
+
+state DaXoa {
+    DaXoa : Entry / Xóa mềm
+    DaXoa : Entry / Duy trì nhật ký kiểm tra
+}
+
+DaXoa --> [*]
+
+state HetHan {
+    HetHan : Entry / Tự động dọn dẹp
+}
+
+HetHan --> [*]
+
+note right of HoatDong
+  **Quyền Admin:**
+  - Quản lý người dùng
+  - Xác minh xe
+  - Giám sát booking
+  - Báo cáo tài chính
+  - Cấu hình hệ thống
+end note
+
+note right of BiTamNgung
+  **Nguyên Nhân Tạm Ngưng:**
+  - Nhiều lần đăng nhập thất bại
+  - Cố truy cập trái phép
+  - Nghi ngờ rò rỉ dữ liệu
+  - Vi phạm chính sách
+end note
+
+@enduml
+
+
+@startuml StateMachine-Staff
+!theme plain
+
+title Sơ Đồ State - Vòng Đời Staff Account
+
+[*] --> DaTuyenDung : Tuyển Dụng Nhân Viên
+
+state DaTuyenDung {
+    DaTuyenDung : Entry / Tạo bản ghi nhân viên
+    DaTuyenDung : Entry / Tạo staffID
+    DaTuyenDung : Entry / Chỉ định phòng ban
+    DaTuyenDung : Exit / Gửi gói onboarding
+}
+
+DaTuyenDung --> DangOnboarding : Bắt Đầu Onboarding
+
+state DangOnboarding {
+    DangOnboarding : Entry / Thiết lập tài khoản & công cụ
+    DangOnboarding : Do / Chương trình đào tạo
+    DangOnboarding : Do / Học hệ thống
+}
+
+DangOnboarding --> ThuViec : Hoàn Thành Đào Tạo
+DangOnboarding --> BiChanDung : Thất Bại Onboarding
+
+state ThuViec {
+    ThuViec : Entry / Bắt đầu thời gian thử việc (90 ngày)
+    ThuViec : Do / Theo dõi hiệu suất
+    ThuViec : Do / Đánh giá định kỳ
+}
+
+ThuViec --> HoatDong : Vượt Qua Thử Việc
+ThuViec --> BiChanDung : Không Vượt Qua Thử Việc
+
+state HoatDong {
+    HoatDong : Entry / Thành viên chính thức
+    HoatDong : Do / Xử lý ticket hỗ trợ
+    HoatDong : Do / Hỗ trợ khách hàng
+    HoatDong : Do / Giám sát hoạt động
+}
+
+HoatDong --> NghiPhep : Yêu Cầu Nghỉ Phép
+HoatDong --> DangDaoTao : Nâng Cao Kỹ Năng
+HoatDong --> DangXemXet : Vấn Đề Hiệu Suất
+HoatDong --> DaTangChuc : Hiệu Suất Xuất Sắc
+HoatDong --> BiTamNgung : Phát Hiện Vi Phạm
+
+state NghiPhep {
+    NghiPhep : Entry / Tạm thời không có mặt
+    NghiPhep : Entry / Chuyển ticket cho người khác
+    NghiPhep : Do / Đang nghỉ phép/ốm
+}
+
+NghiPhep --> HoatDong : Quay Lại Làm Việc
+
+state DangDaoTao {
+    DangDaoTao : Entry / Đăng ký đào tạo
+    DangDaoTao : Do / Học kỹ năng mới
+}
+
+DangDaoTao --> HoatDong : Hoàn Thành Đào Tạo
+
+state DaTangChuc {
+    DaTangChuc : Entry / Tăng trách nhiệm
+    DaTangChuc : Entry / Cập nhật quyền
+    DaTangChuc : Entry / Điều chỉnh lương
+}
+
+DaTangChuc --> HoatDong : Tiếp Tục Trong Vị Trí Mới
+
+state DangXemXet {
+    DangXemXet : Entry / Đánh giá hiệu suất
+    DangXemXet : Do / Điều tra
+    DangXemXet : Do / Thu thập phản hồi
+}
+
+DangXemXet --> HoatDong : Đánh Giá Qua
+DangXemXet --> CanCaiThien : Phát Hiện Vấn Đề
+DangXemXet --> BiChanDung : Vấn Đề Nghiêm Trọng
+
+state CanCaiThien {
+    CanCaiThien : Entry / Lập kế hoạch cải thiện
+    CanCaiThien : Entry / Chỉ định người hướng dẫn
+    CanCaiThien : Do / Kế hoạch 30-60-90 ngày
+}
+
+CanCaiThien --> HoatDong : Cải Thiện Thành Công
+CanCaiThien --> BiChanDung : Không Cải Thiện
+
+state BiTamNgung {
+    BiTamNgung : Entry / Thu hồi quyền truy cập
+    BiTamNgung : Entry / Chờ điều tra
+}
+
+BiTamNgung --> HoatDong : Vấn Đề Đã Giải Quyết
+BiTamNgung --> BiChanDung : Xác Nhận Vi Phạm
+
+state DaThoiViec {
+    DaThoiViec : Entry / Bắt đầu thời gian báo trước
+    DaThoiViec : Do / Chuyển giao kiến thức
+    DaThoiViec : Do / Phỏng vấn nghỉ việc
+}
+
+DaThoiViec --> HoanTatOffboard : Hoàn Thành Thời Gian Báo Trước
+
+state BiChanDung {
+    BiChanDung : Entry / Chấm dứt ngay lập tức
+    BiChanDung : Entry / Thu hồi tất cả quyền truy cập
+    BiChanDung : Entry / Thủ tục nghỉ việc
+}
+
+BiChanDung --> HoanTatOffboard : Admin Xử Lý
+
+state HoanTatOffboard {
+    HoanTatOffboard : Entry / Trả thiết bị
+    HoanTatOffboard : Entry / Thanh toán cuối cùng
+    HoanTatOffboard : Entry / Lưu trữ hồ sơ
+}
+
+HoanTatOffboard --> [*]
+
+note right of HoatDong
+  **Các Phòng Ban:**
+  - Hỗ trợ khách hàng
+  - Vận hành
+  - Tài chính
+  - Kỹ thuật
+end note
+
+note right of ThuViec
+  **Tiêu Chí Đánh Giá:**
+  - Thời gian giải quyết ticket
+  - Sự hài lòng của khách hàng
+  - Kiến thức hệ thống
+  - Phối hợp nhóm
+end note
+
+note right of CanCaiThien
+  **Chỉ Số PIP:**
+  - Thời gian phản hồi < 5 phút
+  - Tỷ lệ giải quyết > 80%
+  - Điểm CSAT > 4.0
+  - Điểm chất lượng > 85%
+end note
+
+@enduml

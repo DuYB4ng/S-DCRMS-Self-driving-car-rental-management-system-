@@ -1,20 +1,25 @@
-// src/api/paymentApi.js
-import api from "./client";
+const API_BASE = "/api/payment";
 
-// Lấy toàn bộ payment (nếu cần dùng sau này)
+// Lấy danh sách tất cả payment
 export const getAllPayments = async () => {
-  const res = await api.get("/api/payment");
+  const res = await axiosClient.get(API_BASE);
   return res.data;
 };
 
-// Tạo payment mới gắn với 1 booking
+// Tạo mới payment
 export const createPayment = async (data) => {
-  const res = await api.post("/api/payment", data);
+  const res = await axiosClient.post(API_BASE, data);
   return res.data;
 };
 
-// src/api/paymentApi.js
-export const createVnPayPayment = async (data) => {
-  const res = await api.post("/api/payment/create-vnpay", data);
-  return res.data; // { paymentId, paymentUrl, status }
+// Cập nhật payment
+export const updatePayment = async (id, data) => {
+  const res = await axiosClient.put(`${API_BASE}/${id}`, data);
+  return res.data;
+};
+
+// Xóa payment
+export const deletePayment = async (id) => {
+  const res = await axiosClient.delete(`${API_BASE}/${id}`);
+  return res.data;
 };

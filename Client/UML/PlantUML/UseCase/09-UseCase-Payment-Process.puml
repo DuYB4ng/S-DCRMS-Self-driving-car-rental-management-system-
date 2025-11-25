@@ -1,0 +1,208 @@
+@startuml UseCase-Payment-Process
+!theme plain
+title Sơ Đồ Use Case Chi Tiết - Quy Trình Thanh Toán
+
+actor "Khách Hàng" as Customer #B4D7FF
+actor "Chủ Xe" as CarOwner #FFE5B4
+actor "Hệ Thống" as System #E0E0E0
+actor "Cổng Thanh Toán" as PaymentGateway #E0E0E0
+actor "Ngân Hàng" as Bank #D3D3D3
+actor "Admin" as Admin #FFB4B4
+
+rectangle "Quy Trình Thanh Toán" {
+    
+    package "1. Khởi Tạo Thanh Toán" #E6F3FF {
+        usecase UC1 as "Tạo Payment Request"
+        usecase UC2 as "Tính Tổng Số Tiền"
+        usecase UC3 as "Áp Dụng Mã Giảm Giá"
+        usecase UC4 as "Hiển Thị Chi Tiết Giá"
+        usecase UC5 as "Lock Số Tiền"
+    }
+    
+    package "2. Chọn Phương Thức" #D4EDFF {
+        usecase UC6 as "Hiển Thị Phương Thức"
+        usecase UC7 as "Chọn Thẻ Tín Dụng"
+        usecase UC8 as "Chọn Ví Điện Tử"
+        usecase UC9 as "Chọn Chuyển Khoản"
+        usecase UC10 as "Lưu Thông Tin Thanh Toán"
+    }
+    
+    package "3. Xử Lý Thanh Toán" #B3E5FC {
+        usecase UC11 as "Gửi Request Đến Gateway"
+        usecase UC12 as "Xác Thực 3D Secure"
+        usecase UC13 as "Kiểm Tra Số Dư"
+        usecase UC14 as "Kiểm Tra Fraud"
+        usecase UC15 as "Authorization"
+    }
+    
+    package "4. Xác Nhận Giao Dịch" #81D4FA {
+        usecase UC16 as "Hold Funds"
+        usecase UC17 as "Tạo Transaction ID"
+        usecase UC18 as "Cập Nhật Booking Status"
+        usecase UC19 as "Gửi Confirmation"
+        usecase UC20 as "Tạo Hóa Đơn
+        ---
+        extension point:
+        Apply Cashback"
+        usecase UC20A as "Áp Dụng Cashback
+        ---
+        extension point:
+        VIP Bonus"
+    }
+    
+    package "5. Settlement" #4FC3F7 {
+        usecase UC21 as "Capture Payment"
+        usecase UC22 as "Bank Clearing"
+        usecase UC23 as "Tính Commission"
+        usecase UC24 as "Chuyển Tiền Cho Chủ Xe"
+        usecase UC25 as "Cập Nhật Balance"
+    }
+    
+    package "6. Hoàn Tiền" #29B6F6 {
+        usecase UC26 as "Yêu Cầu Hoàn Tiền"
+        usecase UC27 as "Xác Minh Policy"
+        usecase UC28 as "Tính Số Tiền Hoàn"
+        usecase UC29 as "Xử Lý Refund"
+        usecase UC30 as "Xác Nhận Hoàn Tiền"
+    }
+    
+    package "7. Báo Cáo & Đối Soát" #03A9F4 {
+        usecase UC31 as "Xem Lịch Sử Giao Dịch"
+        usecase UC32 as "Xuất Báo Cáo"
+        usecase UC33 as "Đối Soát Với Gateway"
+        usecase UC34 as "Đối Soát Với Ngân Hàng"
+        usecase UC35 as "Xem Dashboard Tài Chính"
+    }
+    
+    package "Xử Lý Lỗi" #FFE082 {
+        usecase UCX1 as "Thanh Toán Thất Bại"
+        usecase UCX2 as "Retry Payment"
+        usecase UCX3 as "Insufficient Funds"
+        usecase UCX4 as "Fraud Detected"
+        usecase UCX5 as "Timeout"
+        usecase UCX6 as "Refund Failed"
+    }
+}
+
+' Khởi tạo
+Customer --> UC1
+System --> UC1
+UC1 ..> UC2 : <<include>>
+UC2 ..> UC3 : <<extend>>
+UC3 ..> UC4 : <<include>>
+UC4 ..> UC5 : <<include>>
+
+' Chọn phương thức
+UC5 ..> UC6 : <<include>>
+Customer --> UC6
+UC6 ..> UC7 : <<extend>>
+UC6 ..> UC8 : <<extend>>
+UC6 ..> UC9 : <<extend>>
+UC7 ..> UC10 : <<include>>
+UC8 ..> UC10 : <<include>>
+UC9 ..> UC10 : <<include>>
+
+' Xử lý
+UC10 ..> UC11 : <<include>>
+UC11 ..> PaymentGateway : <<integrate>>
+UC11 ..> UC12 : <<include>>
+UC12 ..> UC13 : <<include>>
+UC13 ..> Bank : <<integrate>>
+UC13 ..> UC14 : <<include>>
+UC14 ..> UC15 : <<include>>
+
+' Xác nhận
+UC15 ..> UC16 : <<include>>
+UC16 ..> UC17 : <<include>>
+UC17 ..> UC18 : <<include>>
+UC18 ..> UC19 : <<include>>
+UC19 ..> UC20 : <<include>>
+UC20 ..> UC20A : <<extend>>
+
+' Settlement
+UC20 ..> UC21 : <<include>>
+UC21 ..> UC22 : <<include>>
+UC22 ..> Bank : <<integrate>>
+UC22 ..> UC23 : <<include>>
+UC23 ..> UC24 : <<include>>
+UC24 ..> UC25 : <<include>>
+
+' Hoàn tiền
+Customer --> UC26
+Admin --> UC26
+UC26 ..> UC27 : <<include>>
+UC27 ..> UC28 : <<include>>
+UC28 ..> UC29 : <<include>>
+UC29 ..> PaymentGateway : <<integrate>>
+UC29 ..> UC30 : <<include>>
+
+' Báo cáo
+Customer --> UC31
+CarOwner --> UC31
+Admin --> UC32
+Admin --> UC33
+Admin --> UC34
+CarOwner --> UC35
+Admin --> UC35
+
+' Xử lý lỗi
+UC15 ..> UCX1 : <<extend>>
+UCX1 ..> UCX2 : <<include>>
+UC13 ..> UCX3 : <<extend>>
+UC14 ..> UCX4 : <<extend>>
+UC11 ..> UCX5 : <<extend>>
+UC29 ..> UCX6 : <<extend>>
+
+note right of UC2
+  Tính toán:
+  - Giá xe x số ngày
+  - Phí dịch vụ (10%)
+  - Bảo hiểm
+  - Giảm giá
+  - Thuế
+end note
+
+note right of UC14
+  Fraud Detection:
+  - Địa điểm bất thường
+  - Số tiền lớn
+  - Nhiều thử lại
+  - Thẻ đáng ngờ
+end note
+
+note right of UC23
+  Commission:
+  - Standard: 10%
+  - Pro Owner: 8%
+  - VIP Owner: 5%
+end note
+
+note right of UC27
+  Refund Policy:
+  - Hủy > 24h: 100%
+  - Hủy 12-24h: 80%
+  - Hủy 2-12h: 50%
+  - Hủy < 2h: 0%
+end note
+
+note right of UCX2
+  Retry Logic:
+  - Lần 1: Ngay lập tức
+  - Lần 2: 5 phút
+  - Lần 3: 15 phút
+  - Max: 3 lần
+end note
+
+note right of UC20A
+  **Condition:**
+  - Thanh toán thành công
+  - Tổng giá trị > $100
+  **Extension Point:**
+  - Cashback 2% cho Standard
+  - Cashback 5% cho VIP
+  - Cashback 10% cho Pro VIP
+  **Precondition:**
+  - Tài khoản đã xác thực
+end note
+
+@enduml

@@ -1,0 +1,193 @@
+@startuml UseCase-Booking-Process
+!theme plain
+title Sơ Đồ Use Case Chi Tiết - Quy Trình Booking
+
+actor "Khách Hàng" as Customer #B4D7FF
+actor "Chủ Xe" as CarOwner #FFE5B4
+actor "Hệ Thống" as System #E0E0E0
+actor "Cổng Thanh Toán" as PaymentGateway #E0E0E0
+actor "Dịch Vụ Thông Báo" as NotificationService #E0E0E0
+
+rectangle "Quy Trình Booking Xe" {
+    
+    package "1. Tạo Booking" #E6F3FF {
+        usecase UC1 as "Khách Hàng Tìm Kiếm Xe"
+        usecase UC2 as "Xem Chi Tiết Xe"
+        usecase UC3 as "Chọn Ngày Giờ Thuê"
+        usecase UC4 as "Tính Tổng Chi Phí"
+        usecase UC5 as "Tạo Yêu Cầu Booking"
+    }
+    
+    package "2. Xác Nhận Booking" #D4EDFF {
+        usecase UC6 as "Gửi Thông Báo Cho Chủ Xe"
+        usecase UC7 as "Chủ Xe Xem Yêu Cầu"
+        usecase UC8 as "Chủ Xe Chấp Nhận/Từ Chối"
+        usecase UC9 as "Khách Nhận Kết Quả"
+    }
+    
+    package "3. Thanh Toán" #B3E5FC {
+        usecase UC10 as "Chọn Phương Thức Thanh Toán"
+        usecase UC11 as "Xử Lý Thanh Toán"
+        usecase UC12 as "Xác Nhận Thanh Toán"
+        usecase UC13 as "Tạo Hóa Đơn"
+        usecase UC14 as "Gửi Biên Lai"
+    }
+    
+    package "4. Check-in" #81D4FA {
+        usecase UC15 as "Tạo QR Code Check-in"
+        usecase UC16 as "Khách Quét QR"
+        usecase UC17 as "Xác Minh Danh Tính"
+        usecase UC18 as "Mở Khóa Xe"
+        usecase UC19 as "Kiểm Tra Tình Trạng Xe"
+        usecase UC20 as "Bắt Đầu GPS Tracking"
+    }
+    
+    package "5. Trong Quá Trình Thuê" #4FC3F7 {
+        usecase UC21 as "Monitor GPS Real-time"
+        usecase UC22 as "Theo Dõi Km Đã Đi"
+        usecase UC23 as "Phát Hiện Vi Phạm"
+        usecase UC24 as "Gửi Cảnh Báo"
+        usecase UC25 as "Yêu Cầu Gia Hạn
+        ---
+        extension point:
+        Tính Phí Gia Hạn"
+        usecase UC25A as "Tích Điểm Thưởng
+        ---
+        extension point:
+        Reward Points"
+    }
+    
+    package "6. Check-out" #29B6F6 {
+        usecase UC26 as "Tạo QR Code Check-out"
+        usecase UC27 as "Khách Quét QR Check-out"
+        usecase UC28 as "Chủ Xe Kiểm Tra Xe"
+        usecase UC29 as "Báo Cáo Hư Hỏng (Nếu Có)"
+        usecase UC30 as "Tính Phí Cuối Cùng"
+    }
+    
+    package "7. Hoàn Tất" #03A9F4 {
+        usecase UC31 as "Xử Lý Thanh Toán Cuối"
+        usecase UC32 as "Chuyển Tiền Cho Chủ Xe"
+        usecase UC33 as "Gửi Yêu Cầu Đánh Giá"
+        usecase UC34 as "Khách Đánh Giá"
+        usecase UC35 as "Lưu Lịch Sử Booking"
+    }
+    
+    package "Xử Lý Ngoại Lệ" #FFE082 {
+        usecase UCX1 as "Hủy Booking"
+        usecase UCX2 as "Hoàn Tiền"
+        usecase UCX3 as "Xử Lý Tranh Chấp"
+        usecase UCX4 as "Báo Mất Xe"
+        usecase UCX5 as "Xử Lý No-Show"
+        usecase UCX6 as "Xử Lý Quá Giờ"
+    }
+}
+
+' Quy trình chính
+Customer --> UC1
+UC1 ..> UC2 : <<include>>
+UC2 ..> UC3 : <<include>>
+UC3 ..> UC4 : <<include>>
+UC4 ..> UC5 : <<include>>
+
+UC5 ..> UC6 : <<include>>
+UC6 ..> NotificationService : <<integrate>>
+
+CarOwner --> UC7
+UC7 ..> UC8 : <<include>>
+UC8 ..> UC9 : <<include>>
+
+UC9 ..> UC10 : <<include>>
+Customer --> UC10
+UC10 ..> UC11 : <<include>>
+UC11 ..> PaymentGateway : <<integrate>>
+UC11 ..> UC12 : <<include>>
+UC12 ..> UC13 : <<include>>
+UC13 ..> UC14 : <<include>>
+
+UC12 ..> UC15 : <<include>>
+System --> UC15
+Customer --> UC16
+UC16 ..> UC17 : <<include>>
+UC17 ..> UC18 : <<include>>
+UC18 ..> UC19 : <<include>>
+UC19 ..> UC20 : <<include>>
+UC18 ..> UC25A : <<extend>>
+
+System --> UC21
+UC21 ..> UC22 : <<include>>
+UC22 ..> UC23 : <<extend>>
+UC23 ..> UC24 : <<include>>
+Customer --> UC25
+
+UC12 ..> UC26 : <<include>>
+Customer --> UC27
+UC27 ..> UC28 : <<include>>
+CarOwner --> UC28
+UC28 ..> UC29 : <<extend>>
+UC29 ..> UC30 : <<include>>
+
+UC30 ..> UC31 : <<include>>
+UC31 ..> UC32 : <<include>>
+UC32 ..> UC33 : <<include>>
+Customer --> UC34
+UC34 ..> UC35 : <<include>>
+
+' Xử lý ngoại lệ
+Customer --> UCX1
+CarOwner --> UCX1
+UCX1 ..> UCX2 : <<include>>
+UC29 ..> UCX3 : <<extend>>
+CarOwner --> UCX4
+UC27 ..> UCX5 : <<extend>>
+UC27 ..> UCX6 : <<extend>>
+
+note right of UC5
+  Status: Pending
+  Timeout: 24h
+end note
+
+note right of UC12
+  Status: Paid
+  Generate QR Code
+end note
+
+note right of UC18
+  Status: InProgress
+  Start GPS tracking
+end note
+
+note right of UC30
+  Tính phí:
+  - Km vượt
+  - Giờ vượt
+  - Hư hỏng
+end note
+
+note right of UCX2
+  Chính sách hoàn tiền:
+  - > 24h: 100%
+  - > 12h: 80%
+  - > 2h: 50%
+  - < 2h: 0%
+end note
+
+note right of UC25A
+  **Condition:**
+  - Booking thành công
+  - Không có vi phạm
+  **Extension Point:**
+  - +100 điểm cho booking
+  - +50 điểm nếu check-in đúng giờ
+  - x2 điểm nếu là VIP
+end note
+
+note right of UC25
+  **Condition:**
+  - Còn < 2 giờ trước khi hết hạn
+  - Xe vẫn available
+  **Extension Point:**
+  - Tính phí +20% mỗi giờ gia hạn
+end note
+
+@enduml

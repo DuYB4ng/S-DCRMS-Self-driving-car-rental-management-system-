@@ -1,0 +1,331 @@
+@startuml ERDiagram-SDCRMS
+!theme plain
+
+title Sơ Đồ Entity-Relationship - Database Schema SDCRMS
+
+' Entities
+
+entity "Users" as users {
+    * userID : INT <<PK>>
+    --
+    * email : NVARCHAR(255) <<UNIQUE>>
+    * passwordHash : NVARCHAR(255)
+    * phoneNumber : NVARCHAR(20) <<UNIQUE>>
+    firstName : NVARCHAR(100)
+    lastName : NVARCHAR(100)
+    dateOfBirth : DATE
+    * userType : ENUM(Customer, CarOwner, Staff, Admin)
+    * status : ENUM(Active, Suspended, Banned, Inactive)
+    profileImageURL : NVARCHAR(500)
+    nationalID : NVARCHAR(50)
+    * createdAt : DATETIME
+    updatedAt : DATETIME
+    lastLoginAt : DATETIME
+    emailVerified : BIT
+}
+
+entity "Customers" as customers {
+    * customerID : INT <<PK>>
+    --
+    * userID : INT <<FK>>
+    driverLicenseNumber : NVARCHAR(50) <<UNIQUE>>
+    licenseExpiryDate : DATE
+    loyaltyPoints : INT
+    totalBookings : INT
+    cancelledBookings : INT
+    * verificationStatus : ENUM(Pending, Verified, Rejected)
+}
+
+entity "CarOwners" as carowners {
+    * carOwnerID : INT <<PK>>
+    --
+    * userID : INT <<FK>>
+    businessName : NVARCHAR(200)
+    businessRegistrationNumber : NVARCHAR(50)
+    bankAccountNumber : NVARCHAR(50)
+    bankName : NVARCHAR(100)
+    totalCars : INT
+    totalEarnings : DECIMAL(18,2)
+    averageRating : DECIMAL(3,2)
+    * verificationStatus : ENUM(Pending, Verified, Rejected)
+}
+
+entity "Staff" as staff {
+    * staffID : INT <<PK>>
+    --
+    * userID : INT <<FK>>
+    employeeID : NVARCHAR(50) <<UNIQUE>>
+    * department : ENUM(Support, Operations, Finance)
+    * role : NVARCHAR(100)
+    hireDate : DATE
+    salary : DECIMAL(18,2)
+}
+
+entity "Admins" as admins {
+    * adminID : INT <<PK>>
+    --
+    * userID : INT <<FK>>
+    * superAdmin : BIT
+    permissions : NVARCHAR(MAX) -- JSON array
+}
+
+entity "Cars" as cars {
+    * carID : INT <<PK>>
+    --
+    * carOwnerID : INT <<FK>>
+    * make : NVARCHAR(50)
+    * model : NVARCHAR(50)
+    * year : INT
+    * vin : NVARCHAR(17) <<UNIQUE>>
+    * licensePlate : NVARCHAR(20) <<UNIQUE>>
+    color : NVARCHAR(30)
+    * carType : ENUM(Sedan, SUV, Truck, Van, Luxury)
+    * transmissionType : ENUM(Automatic, Manual)
+    * fuelType : ENUM(Petrol, Diesel, Electric, Hybrid)
+    seatingCapacity : INT
+    * pricePerDay : DECIMAL(10,2)
+    pricePerHour : DECIMAL(10,2)
+    * location : GEOGRAPHY -- GPS coordinates
+    address : NVARCHAR(500)
+    city : NVARCHAR(100)
+    * status : ENUM(Available, Booked, Rented, Maintenance, Inactive)
+    totalKilometers : INT
+    features : NVARCHAR(MAX) -- JSON array
+    * createdAt : DATETIME
+    updatedAt : DATETIME
+    * verificationStatus : ENUM(Pending, Approved, Rejected)
+}
+
+entity "CarImages" as carimages {
+    * imageID : INT <<PK>>
+    --
+    * carID : INT <<FK>>
+    * imageURL : NVARCHAR(500)
+    * imageType : ENUM(Exterior, Interior, Document)
+    isPrimary : BIT
+    uploadedAt : DATETIME
+}
+
+entity "Bookings" as bookings {
+    * bookingID : INT <<PK>>
+    --
+    * customerID : INT <<FK>>
+    * carID : INT <<FK>>
+    * startDate : DATETIME
+    * endDate : DATETIME
+    pickupLocation : NVARCHAR(500)
+    dropoffLocation : NVARCHAR(500)
+    * totalPrice : DECIMAL(18,2)
+    * status : ENUM(Pending, Confirmed, Paid, InProgress, Completed, Cancelled, Expired)
+    specialRequests : NVARCHAR(MAX)
+    qrCodeCheckIn : NVARCHAR(500)
+    qrCodeCheckOut : NVARCHAR(500)
+    actualCheckInTime : DATETIME
+    actualCheckOutTime : DATETIME
+    actualDistance : INT -- kilometers
+    * createdAt : DATETIME
+    updatedAt : DATETIME
+    cancelledAt : DATETIME
+    cancellationReason : NVARCHAR(MAX)
+}
+
+entity "Payments" as payments {
+    * paymentID : INT <<PK>>
+    --
+    * bookingID : INT <<FK>>
+    * amount : DECIMAL(18,2)
+    * paymentMethod : ENUM(CreditCard, EWallet, BankTransfer, Cash)
+    * paymentStatus : ENUM(Pending, Completed, Failed, Refunded, PartialRefund)
+    transactionID : NVARCHAR(100) <<UNIQUE>>
+    paymentGateway : NVARCHAR(50) -- VNPay, Momo, Stripe
+    * paymentDate : DATETIME
+    refundAmount : DECIMAL(18,2)
+    refundDate : DATETIME
+    refundReason : NVARCHAR(MAX)
+}
+
+entity "Reviews" as reviews {
+    * reviewID : INT <<PK>>
+    --
+    * bookingID : INT <<FK>>
+    * customerID : INT <<FK>>
+    * carID : INT <<FK>>
+    * rating : INT -- 1-5
+    comment : NVARCHAR(MAX)
+    * reviewDate : DATETIME
+    carOwnerResponse : NVARCHAR(MAX)
+    responseDate : DATETIME
+}
+
+entity "Maintenance" as maintenance {
+    * maintenanceID : INT <<PK>>
+    --
+    * carID : INT <<FK>>
+    * maintenanceType : ENUM(Regular, Repair, Inspection, Emergency)
+    description : NVARCHAR(MAX)
+    * scheduledDate : DATETIME
+    completedDate : DATETIME
+    cost : DECIMAL(18,2)
+    mechanicName : NVARCHAR(100)
+    * status : ENUM(Scheduled, InProgress, Completed, Cancelled)
+}
+
+entity "Notifications" as notifications {
+    * notificationID : INT <<PK>>
+    --
+    * userID : INT <<FK>>
+    * notificationType : ENUM(Booking, Payment, Review, System, Promotion)
+    * title : NVARCHAR(200)
+    * message : NVARCHAR(MAX)
+    * sentDate : DATETIME
+    readDate : DATETIME
+    * isRead : BIT
+    relatedEntityID : INT -- bookingID, paymentID, etc.
+}
+
+entity "SupportTickets" as supporttickets {
+    * ticketID : INT <<PK>>
+    --
+    * userID : INT <<FK>>
+    assignedStaffID : INT <<FK>>
+    * category : ENUM(Technical, Billing, Booking, Dispute, Other)
+    * subject : NVARCHAR(200)
+    * description : NVARCHAR(MAX)
+    * priority : ENUM(Low, Medium, High, Critical)
+    * status : ENUM(Open, InProgress, Resolved, Closed)
+    * createdAt : DATETIME
+    updatedAt : DATETIME
+    resolvedAt : DATETIME
+}
+
+entity "TicketMessages" as ticketmessages {
+    * messageID : INT <<PK>>
+    --
+    * ticketID : INT <<FK>>
+    * senderID : INT <<FK>> -- userID
+    * messageContent : NVARCHAR(MAX)
+    * sentAt : DATETIME
+    attachmentURL : NVARCHAR(500)
+}
+
+entity "FraudDetectionLogs" as fraudlogs {
+    * fraudLogID : INT <<PK>>
+    --
+    userID : INT <<FK>>
+    bookingID : INT <<FK>>
+    * detectedAt : DATETIME
+    * riskScore : DECIMAL(5,2) -- 0-100
+    * riskFactors : NVARCHAR(MAX) -- JSON
+    * actionTaken : ENUM(None, Flagged, Blocked, Reported)
+    investigatedBy : INT <<FK>> -- staffID
+    resolution : NVARCHAR(MAX)
+}
+
+entity "AuditLogs" as auditlogs {
+    * auditLogID : INT <<PK>>
+    --
+    * userID : INT <<FK>>
+    * action : NVARCHAR(100)
+    * tableName : NVARCHAR(100)
+    * recordID : INT
+    oldValue : NVARCHAR(MAX) -- JSON
+    newValue : NVARCHAR(MAX) -- JSON
+    * timestamp : DATETIME
+    ipAddress : NVARCHAR(45)
+}
+
+entity "Promotions" as promotions {
+    * promotionID : INT <<PK>>
+    --
+    * code : NVARCHAR(50) <<UNIQUE>>
+    * description : NVARCHAR(500)
+    * discountType : ENUM(Percentage, FixedAmount)
+    * discountValue : DECIMAL(10,2)
+    * startDate : DATETIME
+    * endDate : DATETIME
+    maxUsage : INT
+    currentUsage : INT
+    minBookingAmount : DECIMAL(18,2)
+    * isActive : BIT
+}
+
+entity "PromotionUsage" as promotionusage {
+    * usageID : INT <<PK>>
+    --
+    * promotionID : INT <<FK>>
+    * customerID : INT <<FK>>
+    * bookingID : INT <<FK>>
+    * usedAt : DATETIME
+    discountApplied : DECIMAL(18,2)
+}
+
+' Relationships
+
+users ||--o{ customers : "1 user là 1 customer"
+users ||--o{ carowners : "1 user là 1 car owner"
+users ||--o{ staff : "1 user là 1 staff"
+users ||--o{ admins : "1 user là 1 admin"
+users ||--o{ notifications : "nhận nhiều"
+users ||--o{ supporttickets : "tạo nhiều"
+users ||--o{ auditlogs : "có nhiều"
+
+carowners ||--o{ cars : "sở hữu nhiều"
+
+cars ||--o{ carimages : "có nhiều"
+cars ||--o{ bookings : "được booking nhiều lần"
+cars ||--o{ reviews : "có nhiều"
+cars ||--o{ maintenance : "có nhiều"
+
+customers ||--o{ bookings : "tạo nhiều"
+customers ||--o{ reviews : "viết nhiều"
+customers ||--o{ promotionusage : "sử dụng nhiều"
+
+bookings ||--|| payments : "có 1 payment chính"
+bookings ||--o| reviews : "có 0 hoặc 1"
+bookings ||--o{ fraudlogs : "có thể bị flag"
+
+promotions ||--o{ promotionusage : "được sử dụng nhiều lần"
+
+supporttickets ||--o| staff : "được assign cho"
+supporttickets ||--o{ ticketmessages : "có nhiều"
+
+users ||--o{ ticketmessages : "gửi nhiều"
+
+staff ||--o{ fraudlogs : "điều tra nhiều"
+
+note right of users
+  **Bảng Users - Trung Tâm**
+  Lưu tất cả user types
+  Sử dụng userType để phân biệt
+  Inheritance pattern: Single Table
+end note
+
+note right of bookings
+  **Bảng Bookings - Core Business**
+  Trạng thái lifecycle phức tạp
+  QR codes cho check-in/check-out
+  Track actual vs planned times
+end note
+
+note right of payments
+  **Bảng Payments**
+  Support multiple gateways
+  Handle refunds (full & partial)
+  Link to external transaction IDs
+end note
+
+note right of fraudlogs
+  **Fraud Detection**
+  AI/ML risk scoring
+  Real-time monitoring
+  Investigation workflow
+end note
+
+note right of auditlogs
+  **Audit Trail**
+  GDPR compliance
+  Track all changes
+  Immutable logs
+end note
+
+@enduml

@@ -24,6 +24,16 @@ namespace OwnerCarService.Controllers
             return Ok(cars);
         }
 
+        // GET: api/car/available
+        // Trả về danh sách xe đang hoạt động & không bảo trì
+        [HttpGet("available")]
+        [ProducesResponseType(typeof(IEnumerable<CarDTO>), 200)]
+        public async Task<IActionResult> GetAvailableCars()
+        {
+            var cars = await _carService.LayTatCaXeKhongBaoTriAsync();
+            return Ok(cars);
+        }
+
         // GET: api/car/{id}
         [HttpGet("{id}")]
         [ProducesResponseType(typeof(CarDTO), 200)]

@@ -1,0 +1,157 @@
+@startuml UseCase-CarOwner
+!theme plain
+title Sơ Đồ Use Case - Chức Năng Chủ Xe
+
+actor "Chủ Xe" as CarOwner #FFE5B4
+actor "Cổng Thanh Toán" as PaymentGateway #E0E0E0
+actor "Dịch Vụ Thông Báo" as NotificationService #E0E0E0
+actor "Hệ Thống GPS" as GPSService #E0E0E0
+actor "Dịch Vụ Xác Thực" as VerificationService #E0E0E0
+
+rectangle "Hệ Thống SDCRMS - Chủ Xe" {
+    
+    package "Quản Lý Xe" #FFFACD {
+        usecase UC1 as "Đăng Ký & Quản Lý Xe"
+        usecase UC2 as "Quản Lý Giá & Lịch"
+        usecase UC5 as "Theo Dõi Sử Dụng & Bảo Trì"
+        usecase UC78 as "Cập Nhật Tình Trạng Xe"
+        usecase UC79 as "Quản Lý Hình Ảnh & Mô Tả"
+        usecase UC86 as "Theo Dõi Vị Trí Xe (GPS)"
+        usecase UC87 as "Quản Lý Tài Liệu Xe"
+    }
+    
+    package "Quản Lý Đặt Xe & Khách Hàng" #FFF4E6 {
+        usecase UC65 as "Quản Lý Đặt Xe"
+        usecase UC67 as "Xác Nhận/Từ Chối Đặt Xe"
+        usecase UC68 as "Quản Lý Khách Hàng"
+        usecase UC80 as "Xem Đánh Giá Từ Khách"
+        usecase UC81 as "Phản Hồi Yêu Cầu Khách Hàng"
+        usecase UC88 as "Xác Minh Khách Hàng"
+    }
+    
+    package "Thu Nhập & Báo Cáo" #FFE4B5 {
+        usecase UC7 as "Quản Lý Thanh Toán & Lịch Sử"
+        usecase UC82 as "Xem Báo Cáo Doanh Thu"
+        usecase UC83 as "Xuất Báo Cáo Thuế"
+        usecase UC89 as "Xem Thống Kê Hiệu Suất Xe"
+        usecase UC90 as "So Sánh Giá Thị Trường"
+    }
+    
+    package "Chính Sách & Bảo Hiểm" #FFE7CC {
+        usecase UC91 as "Thiết Lập Chính Sách Cho Thuê"
+        usecase UC92 as "Quản Lý Bảo Hiểm Xe"
+        usecase UC93 as "Quản Lý Khuyến Mãi & Giảm Giá"
+    }
+    
+    package "Dashboard & Giám Sát" #FFF0DB {
+        usecase UC94 as "Xem Dashboard Tổng Quan"
+        usecase UC95 as "Giám Sát Real-time"
+    }
+    
+    package "Thông Báo & Tương Tác" #FFF8DC {
+        usecase UC9 as "Nhận Thông Báo & Phản Hồi"
+        usecase UC84 as "Thiết Lập Thông Báo Tự Động"
+        usecase UC85 as "Chat Với Khách Hàng"
+    }
+    
+    package "Chức Năng Chung" #F5F5F5 {
+        usecase UC34 as "Đăng Nhập/Đăng Xuất"
+        usecase UC35 as "Cập Nhật Hồ Sơ"
+        usecase UC36 as "Đổi Mật Khẩu"
+    }
+}
+
+' Car Owner Relationships
+CarOwner --> UC1
+CarOwner --> UC2
+CarOwner --> UC5
+CarOwner --> UC78
+CarOwner --> UC79
+CarOwner --> UC86
+CarOwner --> UC87
+CarOwner --> UC7
+CarOwner --> UC82
+CarOwner --> UC83
+CarOwner --> UC89
+CarOwner --> UC90
+CarOwner --> UC91
+CarOwner --> UC92
+CarOwner --> UC93
+CarOwner --> UC94
+CarOwner --> UC95
+CarOwner --> UC9
+CarOwner --> UC84
+CarOwner --> UC85
+CarOwner --> UC34
+CarOwner --> UC35
+CarOwner --> UC36
+CarOwner --> UC65
+CarOwner --> UC67
+CarOwner --> UC68
+CarOwner --> UC80
+CarOwner --> UC81
+CarOwner --> UC88
+
+' External Systems Integration
+UC7 ..> PaymentGateway : <<tích hợp>>
+UC9 ..> NotificationService : <<tích hợp>>
+UC84 ..> NotificationService : <<tích hợp>>
+UC85 ..> NotificationService : <<tích hợp>>
+UC86 ..> GPSService : <<tích hợp>>
+UC88 ..> VerificationService : <<tích hợp>>
+UC95 ..> GPSService : <<tích hợp>>
+
+' Include Relationships
+UC1 ..> UC2 : <<include>>
+UC1 ..> UC79 : <<include>>
+UC1 ..> UC87 : <<include>>
+UC65 ..> UC67 : <<include>>
+UC68 ..> UC65 : <<include>>
+UC7 ..> UC82 : <<include>>
+UC9 ..> UC84 : <<include>>
+UC94 ..> UC82 : <<include>>
+UC94 ..> UC89 : <<include>>
+UC94 ..> UC95 : <<include>>
+UC67 ..> UC88 : <<include>>
+
+' Extend Relationships
+UC5 ..> UC1 : <<extend>>
+UC78 ..> UC1 : <<extend>>
+UC80 ..> UC68 : <<extend>>
+UC81 ..> UC68 : <<extend>>
+UC83 ..> UC82 : <<extend>>
+UC86 ..> UC95 : <<extend>>
+UC93 ..> UC2 : <<extend>>
+UC92 ..> UC1 : <<extend>>
+
+' Dependencies
+UC65 --> UC1 : kiểm tra tình trạng
+UC65 --> UC2 : kiểm tra lịch
+UC65 --> UC91 : áp dụng chính sách
+UC67 --> UC9 : thông báo
+UC67 --> UC84 : tự động thông báo
+UC68 --> UC65 : liên quan
+UC7 --> UC65 : từ đặt xe
+UC81 --> UC85 : trò chuyện
+UC80 --> UC81 : có thể phản hồi
+UC89 --> UC82 : phân tích từ
+UC90 --> UC93 : điều chỉnh giá
+UC92 --> UC91 : liên quan
+UC95 --> UC86 : hiển thị vị trí
+
+note right of CarOwner
+  Chủ xe có thể:
+  - Dashboard tổng quan & giám sát real-time
+  - Đăng ký xe với tài liệu đầy đủ
+  - Quản lý giá, lịch & khuyến mãi
+  - Theo dõi GPS & tình trạng xe
+  - Xác minh & quản lý khách hàng
+  - Xác nhận/từ chối đặt xe
+  - Thiết lập chính sách & bảo hiểm
+  - Xem doanh thu & so sánh thị trường
+  - Phân tích hiệu suất từng xe
+  - Nhận thông báo & chat khách hàng
+  - Xuất báo cáo thuế
+end note
+
+@enduml

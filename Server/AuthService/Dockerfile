@@ -3,7 +3,7 @@ FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
 # 1️⃣ Copy firebase file TRƯỚC (để tận dụng cache)
-COPY firebase-adminsdk.json ./firebase-adminsdk.json
+COPY FireBase/FireBaseToken.json ./FireBaseToken.json
 
 # 2️⃣ Copy file csproj riêng trước để tận dụng cache layer của Docker
 COPY *.csproj ./
@@ -21,8 +21,7 @@ WORKDIR /app
 
 # 5️⃣ Copy từ build stage
 COPY --from=build /app/publish .
-COPY --from=build /src/firebase-adminsdk.json /app/firebase-adminsdk.json
-
+COPY --from=build /src/FireBase/FireBaseToken.json /app/FireBaseToken.json
 # 6️⃣ Cấu hình cổng chạy ứng dụng
 ENV ASPNETCORE_URLS=http://+:8089
 ENV ASPNETCORE_ENVIRONMENT=Development

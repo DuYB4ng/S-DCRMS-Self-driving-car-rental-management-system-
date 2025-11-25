@@ -1,0 +1,600 @@
+@startuml API-Architecture
+!theme plain
+
+title Sơ Đồ API - Kiến Trúc RESTful API SDCRMS
+
+package "Authentication & Authorization" {
+    [POST /api/auth/register] as AuthRegister
+    [POST /api/auth/login] as AuthLogin
+    [POST /api/auth/logout] as AuthLogout
+    [POST /api/auth/refresh-token] as AuthRefresh
+    [POST /api/auth/forgot-password] as AuthForgot
+    [POST /api/auth/reset-password] as AuthReset
+    [GET /api/auth/verify-email/{token}] as AuthVerify
+}
+
+package "User Management" {
+    [GET /api/users/profile] as UserProfile
+    [PUT /api/users/profile] as UserUpdateProfile
+    [GET /api/users/{userId}] as UserGetById
+    [DELETE /api/users/{userId}] as UserDelete
+    [PUT /api/users/{userId}/password] as UserChangePass
+    [POST /api/users/{userId}/avatar] as UserUploadAvatar
+}
+
+package "Customer APIs" {
+    [GET /api/customers/{customerId}] as CustomerGet
+    [PUT /api/customers/{customerId}] as CustomerUpdate
+    [POST /api/customers/{customerId}/driver-license] as CustomerLicense
+    [GET /api/customers/{customerId}/bookings] as CustomerBookings
+    [GET /api/customers/{customerId}/loyalty-points] as CustomerPoints
+}
+
+package "Car Owner APIs" {
+    [GET /api/car-owners/{ownerId}] as OwnerGet
+    [PUT /api/car-owners/{ownerId}] as OwnerUpdate
+    [POST /api/car-owners/{ownerId}/verify-business] as OwnerVerify
+    [GET /api/car-owners/{ownerId}/earnings] as OwnerEarnings
+    [GET /api/car-owners/{ownerId}/statistics] as OwnerStats
+}
+
+package "Car Management" {
+    [GET /api/cars] as CarList
+    [GET /api/cars/{carId}] as CarGet
+    [POST /api/cars] as CarCreate
+    [PUT /api/cars/{carId}] as CarUpdate
+    [DELETE /api/cars/{carId}] as CarDelete
+    [POST /api/cars/{carId}/images] as CarUploadImages
+    [DELETE /api/cars/{carId}/images/{imageId}] as CarDeleteImage
+    [GET /api/cars/search] as CarSearch
+    [GET /api/cars/{carId}/availability] as CarAvailability
+    [PUT /api/cars/{carId}/status] as CarUpdateStatus
+}
+
+package "Booking APIs" {
+    [GET /api/bookings] as BookingList
+    [GET /api/bookings/{bookingId}] as BookingGet
+    [POST /api/bookings] as BookingCreate
+    [PUT /api/bookings/{bookingId}] as BookingUpdate
+    [DELETE /api/bookings/{bookingId}] as BookingCancel
+    [POST /api/bookings/{bookingId}/confirm] as BookingConfirm
+    [POST /api/bookings/{bookingId}/reject] as BookingReject
+    [POST /api/bookings/{bookingId}/check-in] as BookingCheckIn
+    [POST /api/bookings/{bookingId}/check-out] as BookingCheckOut
+    [POST /api/bookings/{bookingId}/extend] as BookingExtend
+    [GET /api/bookings/{bookingId}/qr-code] as BookingQR
+}
+
+package "Payment APIs" {
+    [GET /api/payments/{paymentId}] as PaymentGet
+    [POST /api/payments] as PaymentCreate
+    [POST /api/payments/{paymentId}/process] as PaymentProcess
+    [POST /api/payments/{paymentId}/refund] as PaymentRefund
+    [GET /api/payments/callback/{gateway}] as PaymentCallback
+    [GET /api/payments/{paymentId}/receipt] as PaymentReceipt
+    [GET /api/payments/history] as PaymentHistory
+}
+
+package "Review APIs" {
+    [GET /api/reviews] as ReviewList
+    [GET /api/reviews/{reviewId}] as ReviewGet
+    [POST /api/reviews] as ReviewCreate
+    [PUT /api/reviews/{reviewId}] as ReviewUpdate
+    [DELETE /api/reviews/{reviewId}] as ReviewDelete
+    [POST /api/reviews/{reviewId}/response] as ReviewResponse
+    [GET /api/cars/{carId}/reviews] as CarReviews
+}
+
+package "Notification APIs" {
+    [GET /api/notifications] as NotifList
+    [GET /api/notifications/{notificationId}] as NotifGet
+    [PUT /api/notifications/{notificationId}/read] as NotifMarkRead
+    [PUT /api/notifications/read-all] as NotifReadAll
+    [DELETE /api/notifications/{notificationId}] as NotifDelete
+}
+
+package "Support APIs" {
+    [GET /api/support/tickets] as TicketList
+    [GET /api/support/tickets/{ticketId}] as TicketGet
+    [POST /api/support/tickets] as TicketCreate
+    [PUT /api/support/tickets/{ticketId}] as TicketUpdate
+    [POST /api/support/tickets/{ticketId}/messages] as TicketMessage
+    [PUT /api/support/tickets/{ticketId}/close] as TicketClose
+}
+
+package "Admin APIs" {
+    [GET /api/admin/users] as AdminUsers
+    [PUT /api/admin/users/{userId}/suspend] as AdminSuspend
+    [PUT /api/admin/users/{userId}/ban] as AdminBan
+    [GET /api/admin/cars/pending-verification] as AdminCarsPending
+    [PUT /api/admin/cars/{carId}/approve] as AdminCarApprove
+    [PUT /api/admin/cars/{carId}/reject] as AdminCarReject
+    [GET /api/admin/reports/revenue] as AdminRevenue
+    [GET /api/admin/reports/statistics] as AdminStats
+    [GET /api/admin/fraud-logs] as AdminFraud
+}
+
+package "Promotion APIs" {
+    [GET /api/promotions] as PromoList
+    [GET /api/promotions/{code}] as PromoGet
+    [POST /api/promotions/validate] as PromoValidate
+    [POST /api/promotions] as PromoCreate
+    [PUT /api/promotions/{promotionId}] as PromoUpdate
+    [DELETE /api/promotions/{promotionId}] as PromoDelete
+}
+
+package "Real-time APIs - WebSocket" {
+    [WS /ws/notifications] as WSNotif
+    [WS /ws/gps-tracking/{carId}] as WSGPS
+    [WS /ws/chat/{ticketId}] as WSChat
+}
+
+note right of AuthRegister
+  **POST /api/auth/register**
+  Request Body:
+  {
+    "email": "string",
+    "password": "string",
+    "firstName": "string",
+    "lastName": "string",
+    "phoneNumber": "string",
+    "userType": "Customer|CarOwner"
+  }
+  Response: 201 Created
+  {
+    "userId": "int",
+    "token": "string"
+  }
+end note
+
+note right of CarSearch
+  **GET /api/cars/search**
+  Query Parameters:
+  - location: string (GPS coords)
+  - startDate: datetime
+  - endDate: datetime
+  - carType: enum
+  - priceMin: decimal
+  - priceMax: decimal
+  - features: array
+  - radius: int (km)
+  
+  Response: 200 OK
+  {
+    "cars": [...]
+    "total": int,
+    "page": int
+  }
+end note
+
+note right of BookingCreate
+  **POST /api/bookings**
+  Request Body:
+  {
+    "carId": int,
+    "startDate": datetime,
+    "endDate": datetime,
+    "pickupLocation": string,
+    "specialRequests": string
+  }
+  Response: 201 Created
+  {
+    "bookingId": int,
+    "status": "Pending",
+    "totalPrice": decimal
+  }
+end note
+
+note right of PaymentProcess
+  **POST /api/payments/{paymentId}/process**
+  Request Body:
+  {
+    "paymentMethod": "CreditCard|EWallet|BankTransfer",
+    "cardNumber": "string", (if card)
+    "walletProvider": "VNPay|Momo", (if wallet)
+    "bankCode": "string" (if bank transfer)
+  }
+  Response: 200 OK
+  {
+    "status": "Processing",
+    "redirectUrl": "string" (for 3DS)
+  }
+end note
+
+note right of WSGPS
+  **WebSocket: GPS Tracking**
+  Connect: /ws/gps-tracking/{carId}
+  Auth: Bearer token required
+  
+  Server -> Client:
+  {
+    "timestamp": datetime,
+    "latitude": decimal,
+    "longitude": decimal,
+    "speed": decimal,
+    "heading": decimal,
+    "batteryLevel": int
+  }
+  
+  Frequency: Every 30 seconds
+end note
+
+@enduml
+
+
+@startuml API-AuthFlow
+!theme plain
+
+title Sơ Đồ API - Luồng Xác Thực JWT
+
+participant "Client" as client
+participant "API Gateway" as gateway
+participant "Auth Service" as auth
+participant "Redis Cache" as redis
+participant "Database" as db
+
+== Registration Flow ==
+
+client -> gateway: POST /api/auth/register
+activate gateway
+gateway -> auth: Forward request
+activate auth
+auth -> db: INSERT user record
+db --> auth: User created
+auth -> auth: Hash password (BCrypt)
+auth -> auth: Generate verification token
+auth -> redis: SETEX token (48h TTL)
+auth -> auth: Send verification email
+auth --> gateway: 201 Created + userId
+gateway --> client: Response
+
+note right of auth
+  Password requirements:
+  - Min 8 chars
+  - 1 uppercase, 1 lowercase
+  - 1 number, 1 special char
+end note
+
+== Email Verification ==
+
+client -> gateway: GET /api/auth/verify-email/{token}
+gateway -> auth: Verify token
+auth -> redis: GET token
+redis --> auth: Token data
+auth -> db: UPDATE emailVerified = true
+auth -> redis: DEL token
+auth --> gateway: 200 OK
+gateway --> client: Email verified
+
+== Login Flow ==
+
+client -> gateway: POST /api/auth/login\n{email, password}
+gateway -> auth: Authenticate
+auth -> db: SELECT user WHERE email
+db --> auth: User data
+auth -> auth: Verify password hash
+auth -> auth: Generate JWT access token (15 min)
+auth -> auth: Generate refresh token (7 days)
+auth -> redis: SETEX refresh_token (7 days)
+auth -> db: UPDATE lastLoginAt
+auth --> gateway: 200 OK + tokens
+gateway --> client: {accessToken, refreshToken, user}
+
+note right of auth
+  JWT Payload:
+  {
+    "sub": userId,
+    "email": "...",
+    "role": "Customer",
+    "exp": timestamp
+  }
+  
+  Signature: HMAC-SHA256
+  Secret: From environment
+end note
+
+== Authenticated Request ==
+
+client -> gateway: GET /api/users/profile\nAuthorization: Bearer {accessToken}
+gateway -> gateway: Extract & verify JWT
+gateway -> redis: CHECK token blacklist
+redis --> gateway: Not blacklisted
+gateway -> auth: Validate token
+auth --> gateway: Valid
+gateway -> gateway: Decode user claims
+gateway -> gateway: Forward with userId
+
+note right of gateway
+  JWT Validation:
+  1. Signature verification
+  2. Expiration check
+  3. Issuer check
+  4. Not in blacklist
+end note
+
+== Token Refresh ==
+
+client -> gateway: POST /api/auth/refresh-token\n{refreshToken}
+gateway -> auth: Validate refresh token
+auth -> redis: GET refresh_token
+redis --> auth: Token data
+auth -> auth: Verify token signature
+auth -> auth: Generate new access token
+auth -> redis: SETEX new refresh (7 days)
+auth -> redis: DEL old refresh
+auth --> gateway: 200 OK + new tokens
+gateway --> client: {accessToken, refreshToken}
+
+== Logout ==
+
+client -> gateway: POST /api/auth/logout\n{refreshToken}
+gateway -> auth: Revoke tokens
+auth -> redis: SADD token_blacklist accessToken
+auth -> redis: DEL refresh_token
+auth --> gateway: 200 OK
+gateway --> client: Logged out
+
+note right of redis
+  Blacklist Strategy:
+  - Add to Redis Set
+  - TTL = remaining token lifetime
+  - Auto-expire when token expires
+end note
+
+== Forgot Password ==
+
+client -> gateway: POST /api/auth/forgot-password\n{email}
+gateway -> auth: Request reset
+auth -> db: SELECT user WHERE email
+db --> auth: User exists
+auth -> auth: Generate reset token (6 digits)
+auth -> redis: SETEX reset_token (15 min)
+auth -> auth: Send SMS/Email with code
+auth --> gateway: 200 OK
+gateway --> client: Reset code sent
+
+== Reset Password ==
+
+client -> gateway: POST /api/auth/reset-password\n{token, newPassword}
+gateway -> auth: Verify & reset
+auth -> redis: GET reset_token
+redis --> auth: Valid token
+auth -> auth: Hash new password
+auth -> db: UPDATE passwordHash
+auth -> redis: DEL reset_token
+auth -> redis: SADD token_blacklist (all user tokens)
+auth --> gateway: 200 OK
+gateway --> client: Password changed
+
+@enduml
+
+
+@startuml API-ErrorHandling
+!theme plain
+
+title Sơ Đồ API - Error Handling & Response Format
+
+note as ResponseFormat
+  **Standard API Response Structure**
+  
+  Success Response (2xx):
+  {
+    "success": true,
+    "data": { ... },
+    "message": "Operation successful",
+    "timestamp": "2025-11-18T10:00:00Z"
+  }
+  
+  Error Response (4xx, 5xx):
+  {
+    "success": false,
+    "error": {
+      "code": "ERROR_CODE",
+      "message": "Human readable message",
+      "details": [
+        {
+          "field": "email",
+          "issue": "Invalid format"
+        }
+      ]
+    },
+    "timestamp": "2025-11-18T10:00:00Z",
+    "traceId": "abc123xyz"
+  }
+end note
+
+package "HTTP Status Codes" {
+    rectangle "200 OK" as OK {
+        note
+        GET request thành công
+        Update/Delete thành công
+        end note
+    }
+    
+    rectangle "201 Created" as Created {
+        note
+        Resource mới được tạo
+        POST request thành công
+        end note
+    }
+    
+    rectangle "204 No Content" as NoContent {
+        note
+        DELETE thành công
+        Không có data trả về
+        end note
+    }
+    
+    rectangle "400 Bad Request" as BadRequest {
+        note
+        Validation errors
+        Invalid input format
+        Missing required fields
+        
+        Example codes:
+        - INVALID_INPUT
+        - MISSING_FIELD
+        - VALIDATION_FAILED
+        end note
+    }
+    
+    rectangle "401 Unauthorized" as Unauthorized {
+        note
+        Missing authentication
+        Invalid token
+        Token expired
+        
+        Example codes:
+        - TOKEN_MISSING
+        - TOKEN_INVALID
+        - TOKEN_EXPIRED
+        end note
+    }
+    
+    rectangle "403 Forbidden" as Forbidden {
+        note
+        Authenticated but no permission
+        Resource access denied
+        
+        Example codes:
+        - PERMISSION_DENIED
+        - INSUFFICIENT_ROLE
+        end note
+    }
+    
+    rectangle "404 Not Found" as NotFound {
+        note
+        Resource không tồn tại
+        Endpoint không tồn tại
+        
+        Example codes:
+        - RESOURCE_NOT_FOUND
+        - ENDPOINT_NOT_FOUND
+        end note
+    }
+    
+    rectangle "409 Conflict" as Conflict {
+        note
+        Duplicate resource
+        Business rule violation
+        
+        Example codes:
+        - DUPLICATE_EMAIL
+        - BOOKING_CONFLICT
+        - CAR_UNAVAILABLE
+        end note
+    }
+    
+    rectangle "422 Unprocessable Entity" as Unprocessable {
+        note
+        Semantic errors
+        Business logic validation failed
+        
+        Example codes:
+        - INVALID_DATE_RANGE
+        - INSUFFICIENT_BALANCE
+        - BOOKING_IN_PAST
+        end note
+    }
+    
+    rectangle "429 Too Many Requests" as RateLimit {
+        note
+        Rate limit exceeded
+        
+        Headers:
+        X-RateLimit-Limit: 100
+        X-RateLimit-Remaining: 0
+        X-RateLimit-Reset: 1637251200
+        
+        Example codes:
+        - RATE_LIMIT_EXCEEDED
+        end note
+    }
+    
+    rectangle "500 Internal Server Error" as ServerError {
+        note
+        Unexpected server error
+        Exception không được handle
+        
+        Example codes:
+        - INTERNAL_ERROR
+        - DATABASE_ERROR
+        end note
+    }
+    
+    rectangle "503 Service Unavailable" as ServiceUnavailable {
+        note
+        Service đang maintenance
+        External service down
+        
+        Example codes:
+        - SERVICE_MAINTENANCE
+        - PAYMENT_GATEWAY_DOWN
+        end note
+    }
+}
+
+package "Error Code Examples" {
+    note as AuthErrors
+    **Authentication Errors**
+    - AUTH001: Invalid credentials
+    - AUTH002: Account suspended
+    - AUTH003: Account banned
+    - AUTH004: Email not verified
+    - AUTH005: Password reset required
+    end note
+    
+    note as BookingErrors
+    **Booking Errors**
+    - BOOK001: Car not available
+    - BOOK002: Booking conflict
+    - BOOK003: Invalid date range
+    - BOOK004: Booking in the past
+    - BOOK005: Maximum rental exceeded (30 days)
+    - BOOK006: Minimum rental not met (3 hours)
+    end note
+    
+    note as PaymentErrors
+    **Payment Errors**
+    - PAY001: Payment failed
+    - PAY002: Insufficient funds
+    - PAY003: Card declined
+    - PAY004: Payment timeout
+    - PAY005: Gateway error
+    - PAY006: Refund not allowed
+    end note
+    
+    note as ValidationErrors
+    **Validation Errors**
+    - VAL001: Email format invalid
+    - VAL002: Phone number invalid
+    - VAL003: Driver license expired
+    - VAL004: VIN format invalid
+    - VAL005: File size too large (max 5MB)
+    - VAL006: Unsupported file type
+    end note
+}
+
+package "Rate Limiting Strategy" {
+    note as RateLimits
+    **Rate Limits by Endpoint**
+    
+    Public Endpoints:
+    - /api/auth/login: 5 req/min
+    - /api/auth/register: 3 req/hour
+    - /api/cars/search: 60 req/min
+    
+    Authenticated:
+    - Default: 100 req/min
+    - /api/bookings: 30 req/min
+    - /api/payments: 10 req/min
+    
+    Admin:
+    - No limit (monitoring only)
+    
+    Implementation: Redis sliding window
+    Key pattern: rate_limit:{userId}:{endpoint}
+    end note
+}
+
+@enduml

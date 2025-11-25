@@ -10,7 +10,7 @@ class CarDetailView extends StatelessWidget {
   final DateTime receiveDate;
   final DateTime returnDate;
 
-  CarDetailView({
+  const CarDetailView({super.key, 
     required this.car,
     required this.receiveDate,
     required this.returnDate,
@@ -42,7 +42,7 @@ class CarDetailView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Service lấy review theo car
-    final ReviewService _reviewService = ReviewService();
+    final ReviewService reviewService = ReviewService();
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -274,7 +274,7 @@ class CarDetailView extends StatelessWidget {
                         ),
                         const SizedBox(height: 8),
                         FutureBuilder(
-                          future: _reviewService.getReviewsByCar(
+                          future: reviewService.getReviewsByCar(
                             car["carID"] as int,
                           ),
                           builder: (context, snapshot) {

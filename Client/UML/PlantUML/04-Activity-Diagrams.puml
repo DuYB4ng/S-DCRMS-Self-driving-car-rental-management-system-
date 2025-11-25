@@ -1,0 +1,515 @@
+@startuml Activity-Customer-Booking
+!theme plain
+
+title Activity 1: Quy Trình Đặt Xe Của Khách Hàng
+
+start
+:Khách Hàng Mở App;
+
+if (Người Dùng Đã Đăng Nhập?) then (Không)
+  :Đăng Nhập/Đăng Ký;
+else (Có)
+endif
+
+:Tìm Kiếm Xe;
+:Nhập Tiêu Chí:
+* Vị Trí
+* Ngày
+* Loại Xe;
+
+:Hiển Thị Xe Có Sẵn;
+
+while (Tìm được xe phù hợp?) is (Chưa)
+  :Tinh Chỉnh Tìm Kiếm;
+  :Hiển Thị Xe Có Sẵn;
+endwhile (Rồi)
+
+:Chọn Xe;
+:Xem Chi Tiết Xe;
+
+if (Xe Còn Trống?) then (Không)
+  #pink:Xe Đã Hết;
+  stop
+else (Có)
+  :Điền Form Đặt Xe:
+  * Điểm Nhận
+  * Điểm Trả
+  * Thông Tin Liên Hệ;
+  
+  while (Form hợp lệ?) is (Không)
+    #pink:Hiện Lỗi Validation;
+  endwhile (Có)
+  
+  :Xem Lại Tóm Tắt;
+  
+  if (Xác Nhận Đặt Xe?) then (Không)
+    stop
+  else (Có)
+    :Tạo Booking
+    Status: Pending;
+    
+    :Xử Lý Thanh Toán;
+    
+    if (Thanh Toán Thành Công?) then (Không)
+      #pink:Thanh Toán Thất Bại;
+      
+      if (Thử Lại?) then (Có)
+        :Thử Lại Thanh Toán;
+        stop
+      else (Không)
+        :Hủy Booking;
+        stop
+      endif
+    else (Có)
+      :Cập Nhật Booking
+      Status: Confirmed;
+      
+      :Cập Nhật Car
+      Status: Rented;
+      
+      :Gửi Thông Báo:
+      * Email
+      * SMS
+      * Push Notification;
+      
+      :Thông Báo Chủ Xe;
+      
+      #lightgreen:Hiện Thông Báo Thành Công
+      & Chi Tiết Đặt Xe;
+      
+      stop
+    endif
+  endif
+endif
+
+@enduml
+
+@startuml Activity-CarOwner-RegisterCar
+!theme plain
+
+title Activity 2: Chủ Xe - Đăng Ký Xe Mới
+
+start
+:Chủ Xe Đăng Nhập;
+:Vào Dashboard;
+:Nhấn "Thêm Xe Mới";
+
+:Điền Thông Tin Cơ Bản:
+* Tên, Hãng, Model
+* Năm, Biển Số
+* Loại Xe, Màu;
+
+:Điền Thông Số:
+* Số Ghế, Nhiên Liệu
+* Hộp Số
+* Tính Năng;
+
+:Đặt Giá:
+* Giá Theo Ngày
+* Giá Tuần/Tháng
+* Tiền Cọc;
+
+:Upload Ảnh Xe:
+* Ngoại Thất 4 góc
+* Nội Thất
+* Bảng Điều Khiển;
+
+:Upload Tài Liệu:
+* Đăng Ký
+* Bảo Hiểm
+* Giấy Kiểm Định;
+
+:Đặt Lịch Sẵn Có;
+:Xem Lại Thông Tin;
+
+while (Tất Cả Trường Đầy Đủ?) is (Sai)
+  #pink:Hiện Trường Thiếu;
+  :Quay Lại Điền;
+endwhile (Đúng)
+
+:Gửi Xác Minh;
+
+:Tạo Car Record
+Status: Pending Verification;
+
+:Thông Báo Admin;
+:Chờ Admin Duyệt;
+
+if (Admin Phê Duyệt?) then (Từ Chối)
+  #pink:Thông Báo Chủ Xe:
+  Lý Do Từ Chối;
+  stop
+else (Chấp Nhận)
+  :Cập Nhật Car Status:
+  Available;
+  
+  :Thông Báo Chủ Xe:
+  Xe Đã Duyệt;
+  
+  :Thêm Vào Search Index;
+  
+  #lightgreen:Thành Công:
+  Xe Đã Đăng Tin;
+  
+  stop
+endif
+
+@enduml
+
+@startuml Activity-CheckIn-CheckOut
+!theme plain
+
+title Activity 3: Luồng Check-in & Check-out
+
+|Khách Hàng|
+start
+:Ngày Bắt Đầu Booking;
+
+|System|
+:Gửi Nhắc Check-in;
+
+|Khách Hàng|
+:Khách Đến Điểm Nhận;
+:Mở App Mobile;
+:Xem Chi Tiết Booking;
+:Nhấn "Check-in";
+:Quét QR Code Xe;
+
+if (QR Code Hợp Lệ?) then (Không)
+  #pink:Hiện Thông Báo Lỗi;
+  stop
+else (Có)
+  if (Vị Trí Đúng?) then (Không)
+    #pink:Cảnh Báo Sai Vị Trí;
+    
+    if (Liên Hệ Hỗ Trợ?) then (Có)
+      :Tạo Support Ticket;
+      stop
+    else (Không)
+      stop
+    endif
+  else (Có)
+    :Kiểm Tra Tình Trạng Xe;
+    :Chụp Ảnh Ban Đầu;
+    
+    if (Có Vấn Đề?) then (Có)
+      :Ghi Nhận Vấn Đề Có Sẵn;
+      |System|
+      :Thông Báo Chủ Xe;
+      |Khách Hàng|
+    endif
+    
+    :Hoàn Tất Check-in;
+    
+    |System|
+    :Cập Nhật Booking:
+    Status: InProgress;
+    
+    |Khách Hàng|
+    :Mở Khóa Xe Digital;
+    
+    #lightgreen:Thành Công:
+    Chúc Bạn Đi Vui!;
+    
+    :Khách Sử Dụng Xe;
+    
+    |System|
+    :Gửi Nhắc Check-out;
+    
+    |Khách Hàng|
+    :Về Điểm Trả;
+    :Nhấn "Check-out";
+    :Kiểm Tra Xe Lại;
+    :Chụp Ảnh Cuối;
+    :Điền Báo Cáo Tình Trạng;
+    
+    if (Có Hư Hỏng Mới?) then (Có)
+      :Báo Cáo Hư Hỏng;
+      :Upload Ảnh Chứng Cứ;
+      
+      |System|
+      :Thông Báo Chủ Xe;
+      :Xử Lý Trừ Tiền Cọc;
+      |Khách Hàng|
+    endif
+    
+    :Hoàn Tất Check-out;
+    
+    |System|
+    :Cập Nhật Booking:
+    Status: Completed;
+    
+    :Cập Nhật Car:
+    Status: Available;
+    
+    :Hoàn Tiền Cọc;
+    :Yêu Cầu Đánh Giá;
+    
+    |Khách Hàng|
+    #lightgreen:Hiện Thông Báo Thành Công;
+    
+    stop
+  endif
+endif
+
+@enduml
+
+@startuml Activity-Admin-FraudDetection
+!theme plain
+
+title Activity 4: Admin - Phát Hiện & Giải Quyết Gian Lận
+
+|System Monitor|
+start
+:Giám Sát Hệ Thống;
+:Thu Thập Dữ Liệu Hoạt Động;
+:Phân Tích Mẫu AI/ML;
+
+if (Phát Hiện Bất Thường?) then (Không)
+  :Tiếp Tục Giám Sát;
+  stop
+else (Có)
+  :Tính Điểm Rủi Ro;
+  
+  if (Mức Độ Nghiêm Trọng?) then (Thấp)
+    :Ghi Nhật Alert Để Xem;
+    stop
+  else (Trung Bình/Cao)
+    :Tạo Fraud Alert;
+    
+    :Thu Thập Bằng Chứng:
+    * Lịch Sử Giao Dịch
+    * Địa Chỉ IP
+    * Thông Tin Thiết Bị
+    * Mẫu Hành Vi;
+    
+    |Admin|
+    :Thông Báo Admin;
+    :Admin Xem Xét Alert;
+    
+    :Xem Chi Tiết Đầy Đủ:
+    * Hồ Sơ User
+    * Nhật Ký Hoạt Động
+    * Chỉ Số Rủi Ro;
+    
+    :Điều Tra Lịch Sử User;
+    
+    if (Là Gian Lận?) then (Không)
+      #lightgreen:Đánh Dấu An Toàn;
+      stop
+    else (Có)
+      #pink:Xác Nhận Gian Lận;
+      
+      if (Loại Hành Động?) then (Đình Chỉ)
+        :Đình Chỉ Account Tạm Thời;
+        
+        |System|
+        :Thông Báo User:
+        Account Bị Đình Chỉ;
+        
+        |Admin|
+        :Ghi Nhật Hành Động;
+        stop
+      else (Cấm)
+        :Cấm Account Vĩnh Viễn;
+        :Hoàn Tiền Cho User Bị Ảnh Hưởng;
+        
+        |System|
+        :Thông Báo User:
+        Account Bị Cấm;
+        
+        |Admin|
+        :Thêm Vào Blacklist;
+        :Ghi Nhật Hành Động;
+        :Cập Nhật ML Model;
+        stop
+      endif
+    endif
+  endif
+endif
+
+@enduml
+
+@startuml Activity-Staff-SupportTicket
+!theme plain
+
+title Activity 5: Nhân Viên - Xử Lý Ticket Hỗ Trợ
+
+|Khách Hàng|
+start
+:Khách Báo Cáo Vấn Đề;
+
+|System|
+:Tạo Support Ticket;
+:Thông Báo Nhân Viên;
+
+|Nhân Viên|
+:Nhân Viên Xem Ticket;
+
+if (Độ Ưu Tiên Ticket?) then (Cao/Khẩn)
+  :Giao Cho Senior Staff;
+else (Bình Thường/Thấp)
+  :Giao Cho Staff Rảnh;
+endif
+
+:Điều Tra Vấn Đề;
+
+if (Loại Vấn Đề?) then (Kỹ Thuật)
+  :Kiểm Tra Tài Liệu Kỹ Thuật;
+elseif (Thanh Toán) then
+  :Kiểm Tra Bản Ghi Payment;
+  
+  if (Liên Hệ Nhà Cung Cấp Thanh Toán?) then (Có)
+    :Liên Hệ Hỗ Trợ Nhà Cung Cấp;
+    :Chờ Phản Hồi;
+  endif
+elseif (Booking) then
+  :Kiểm Tra Hệ Thống Booking;
+  
+  if (Cần Thông Tin Từ Chủ Xe?) then (Có)
+    :Liên Hệ Chủ Xe;
+    :Chờ Phản Hồi;
+  endif
+else (Tài Khoản)
+  :Kiểm Tra Hồ Sơ User;
+endif
+
+:Tìm Giải Pháp;
+
+if (Tìm Thấy Giải Pháp?) then (Không)
+  :Leo Thang Đến Admin;
+  |Admin|
+  :Thông Báo Admin;
+  :Admin Xử Lý Vấn Đề;
+  :Admin Cung Cấp Giải Pháp;
+  |Nhân Viên|
+endif
+
+:Trả Lời Khách;
+
+|Khách Hàng|
+:Gửi Phản Hồi:
+* Giải Thích
+* Các Bước Giải Quyết
+* Thời Gian;
+
+if (Khách Hài Lòng?) then (Chưa)
+  :Khách Hỏi Thêm;
+  stop
+else (Rồi)
+  |Nhân Viên|
+  :Triển Khai Giải Pháp;
+  
+  :Cập Nhật Ticket Status:
+  Resolved;
+  
+  |Khách Hàng|
+  :Gửi Xác Nhận Cho Khách;
+  :Yêu Cầu Đánh Giá Ticket;
+  
+  |Nhân Viên|
+  :Đóng Ticket;
+  :Cập Nhật Thống Kê Hiệu Suất;
+  
+  stop
+endif
+
+@enduml
+
+@startuml Activity-Payment-Processing
+!theme plain
+
+title Activity 6: Luồng Xử Lý Thanh Toán
+
+start
+:Khởi Tạo Thanh Toán;
+
+if (Số Tiền Hợp Lệ?) then (Không)
+  #pink:Hiện Thông Báo Lỗi;
+  stop
+else (Có)
+  :Tạo Payment Record
+  Status: Pending;
+  
+  :Khách Chọn Phương Thức Thanh Toán;
+  
+  if (Phương Thức Thanh Toán?) then (Thẻ Tín Dụng)
+    :Nhập Thông Tin Thẻ;
+    
+    if (Thẻ Hợp Lệ?) then (Không)
+      #pink:Hiện Lỗi Thẻ;
+      stop
+    endif
+  elseif (Chuyển Khoản) then
+    :Hiện Thông Tin Tài Khoản;
+    :Khách Upload Chứng Từ;
+    :Staff Xác Minh Thủ Công;
+    
+    if (Xác Minh Thành Công?) then (Không)
+      #pink:Từ Chối;
+      stop
+    endif
+  elseif (Ví Điện Tử) then
+    :Chuyển Đến Ví Điện Tử;
+    :Khách Xác Thực;
+    
+    if (Xác Thực Thành Công?) then (Không)
+      #pink:Hiện Lỗi;
+      stop
+    endif
+  else (Tiền Mặt)
+    :Lên Lịch Thanh Toán Mặt;
+    :Chờ Thanh Toán Trực Tiếp;
+    :Đã Nhận Tiền;
+  endif
+  
+  :Xử Lý Thanh Toán;
+  :Gửi Đến Payment Gateway;
+  
+  :Cập Nhật Payment Status:
+  Processing;
+  
+  :Ngân Hàng Xử Lý;
+  
+  if (Phản Hồi Ngân Hàng?) then (Chấp Nhận)
+    #lightgreen:Thanh Toán Thành Công;
+    
+    :Cập Nhật Payment Status:
+    Completed;
+    
+    :Cập Nhật Booking Status:
+    Confirmed;
+    
+    :Tính Hoa Hồng Platform;
+    :Tính Thu Nhập Chủ Xe;
+    :Tạo Invoice;
+    :Gửi Email Biên Lai;
+    :Thông Báo Chủ Xe;
+    :Cập Nhật Revenue Analytics;
+    
+    stop
+  else (Từ Chối)
+    #pink:Thanh Toán Thất Bại;
+    
+    :Cập Nhật Payment Status:
+    Failed;
+    
+    :Ghi Nhật Lý Do Thất Bại;
+    :Thông Báo Khách;
+    
+    if (Đề Xuất Thử Lại?) then (Có)
+      :Thử Lại;
+      stop
+    else (Không)
+      :Hủy Booking;
+      
+      if (Đã Đặt Cọc?) then (Có)
+        :Xử Lý Hoàn Tiền;
+      endif
+      
+      stop
+    endif
+  endif
+endif
+
+@enduml
