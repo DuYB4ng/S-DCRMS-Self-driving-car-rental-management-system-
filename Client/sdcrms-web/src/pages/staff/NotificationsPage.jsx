@@ -2,23 +2,21 @@
 import React, { useState } from "react";
 import axiosClient from "../../api/axiosClient";
 
-type Audience = "all" | "staff" | "owners" | "customers";
-
-const NotificationsPage: React.FC = () => {
+const NotificationsPage = () => {
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
-  const [audience, setAudience] = useState<Audience>("all");
-  const [channel, setChannel] = useState<"inapp" | "email" | "both">("inapp");
+  const [audience, setAudience] = useState("all");
+  const [channel, setChannel] = useState("inapp");
   const [isSending, setIsSending] = useState(false);
-  const [success, setSuccess] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(null);
+  const [error, setError] = useState(null);
 
   const styles = {
     page: {
       padding: "24px 32px",
       backgroundColor: "#f3f4f6",
       minHeight: "100vh",
-      boxSizing: "border-box" as const,
+      boxSizing: "border-box",
     },
     title: {
       margin: 0,
@@ -72,14 +70,14 @@ const NotificationsPage: React.FC = () => {
       borderRadius: 10,
       border: "1px solid #d1d5db",
       fontSize: "14px",
-      resize: "vertical" as const,
+      resize: "vertical",
       marginBottom: 12,
     },
     selectRow: {
       display: "flex",
       gap: 10,
       marginBottom: 12,
-      flexWrap: "wrap" as const,
+      flexWrap: "wrap",
     },
     select: {
       flex: 1,
@@ -145,7 +143,7 @@ const NotificationsPage: React.FC = () => {
     previewMessageBody: {
       fontSize: "14px",
       color: "#111827",
-      whiteSpace: "pre-line" as const,
+      whiteSpace: "pre-line",
     },
     previewMeta: {
       marginTop: 8,
@@ -171,7 +169,7 @@ const NotificationsPage: React.FC = () => {
       setSuccess("Đã gửi thông báo tới toàn hệ thống.");
       setTitle("");
       setMessage("");
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
       setError(err.message ?? "Gửi thông báo thất bại, vui lòng thử lại.");
     } finally {
@@ -214,7 +212,7 @@ const NotificationsPage: React.FC = () => {
               <select
                 style={styles.select}
                 value={audience}
-                onChange={(e) => setAudience(e.target.value as Audience)}
+                onChange={(e) => setAudience(e.target.value)}
               >
                 <option value="all">
                   Tất cả (nhân viên + chủ xe + khách hàng)
@@ -229,9 +227,7 @@ const NotificationsPage: React.FC = () => {
               <select
                 style={styles.select}
                 value={channel}
-                onChange={(e) =>
-                  setChannel(e.target.value as "inapp" | "email" | "both")
-                }
+                onChange={(e) => setChannel(e.target.value)}
               >
                 <option value="inapp">Thông báo trong hệ thống</option>
                 <option value="email">Email</option>

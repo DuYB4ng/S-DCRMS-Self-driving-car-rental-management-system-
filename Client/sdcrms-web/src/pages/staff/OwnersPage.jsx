@@ -1,51 +1,45 @@
-import React, { useMemo, useState, type FormEvent } from "react";
+import React, { useMemo, useState } from "react";
+// Nếu sau này dùng API thật thì mở comment dòng dưới
 // import axiosClient from "../api/axiosClient";
-
-type Customer = {
-  id: number;
-  name: string;
-  phone: string;
-  rentals: number; // số lần thuê
-};
 
 const PAGE_SIZE = 5;
 
-const CustomersPage: React.FC = () => {
-  const [customers, setCustomers] = useState<Customer[]>([
-    { id: 1, name: "Lê Văn C", phone: "0912 345 678", rentals: 2 },
-    { id: 2, name: "Phạm Thị D", phone: "0987 654 321", rentals: 5 },
+const OwnersPage = () => {
+  const [owners, setOwners] = useState([
+    { id: 1, name: "Nguyễn Văn A", phone: "0901 234 567", cars: 3 },
+    { id: 2, name: "Trần Thị B", phone: "0902 345 678", cars: 5 },
+    // Có thể thêm dữ liệu mẫu nếu muốn test phân trang
   ]);
 
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [form, setForm] = useState({ name: "", phone: "", rentals: "" });
+  const [form, setForm] = useState({ name: "", phone: "", cars: "" });
   const [error, setError] = useState("");
 
-  const filteredCustomers = useMemo(() => {
+  // Lọc theo tên hoặc SĐT
+  const filteredOwners = useMemo(() => {
     const keyword = search.trim().toLowerCase();
-    if (!keyword) return customers;
-    return customers.filter(
-      (c) =>
-        c.name.toLowerCase().includes(keyword) ||
-        c.phone.replace(/\s/g, "").includes(keyword.replace(/\s/g, ""))
+    if (!keyword) return owners;
+    return owners.filter(
+      (o) =>
+        o.name.toLowerCase().includes(keyword) ||
+        o.phone.replace(/\s/g, "").includes(keyword.replace(/\s/g, ""))
     );
-  }, [customers, search]);
+  }, [owners, search]);
 
-  const totalPages = Math.max(
-    1,
-    Math.ceil(filteredCustomers.length / PAGE_SIZE)
-  );
+  // Phân trang
+  const totalPages = Math.max(1, Math.ceil(filteredOwners.length / PAGE_SIZE));
 
   const pageData = useMemo(() => {
     const safePage = Math.min(page, totalPages);
     const start = (safePage - 1) * PAGE_SIZE;
-    return filteredCustomers.slice(start, start + PAGE_SIZE);
-  }, [filteredCustomers, page, totalPages]);
+    return filteredOwners.slice(start, start + PAGE_SIZE);
+  }, [filteredOwners, page, totalPages]);
 
   const openModal = () => {
-    setForm({ name: "", phone: "", rentals: "" });
+    setForm({ name: "", phone: "", cars: "" });
     setError("");
     setIsModalOpen(true);
   };
@@ -54,53 +48,52 @@ const CustomersPage: React.FC = () => {
     setIsModalOpen(false);
   };
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
-    if (!form.name || !form.phone || !form.rentals) {
+    if (!form.name || !form.phone || !form.cars) {
       setError("Vui lòng nhập đầy đủ thông tin.");
       return;
     }
 
-    const rentalsNumber = Number(form.rentals);
-    if (Number.isNaN(rentalsNumber) || rentalsNumber < 0) {
-      setError("Số lần thuê phải là số không âm.");
+    const carsNumber = Number(form.cars);
+    if (Number.isNaN(carsNumber) || carsNumber < 0) {
+      setError("Số lượng xe phải là số không âm.");
       return;
     }
 
     try {
-      // Nếu dùng API:
-      // const res = await axiosClient.post<Customer>("/staff/customers", {
+      // Nếu sau này gọi API thật:
+      // const res = await axiosClient.post<Owner>("/staff/owners", {
       //   name: form.name,
       //   phone: form.phone,
-      //   rentals: rentalsNumber,
+      //   cars: carsNumber,
       // });
-      // const newCustomer = res.data;
+      // const newOwner = res.data;
 
-      const newCustomer: Customer = {
-        id: customers.length ? customers[customers.length - 1].id + 1 : 1,
+      const newOwner = {
+        id: owners.length ? owners[owners.length - 1].id + 1 : 1,
         name: form.name,
         phone: form.phone,
-        rentals: rentalsNumber,
+        cars: carsNumber,
       };
 
-      setCustomers((prev) => [...prev, newCustomer]);
+      setOwners((prev) => [...prev, newOwner]);
       setIsModalOpen(false);
-      setPage(totalPages);
+      setPage(totalPages); // nhảy về trang cuối để thấy record mới
     } catch (err) {
       console.error(err);
-      setError("Không thể tạo khách hàng. Vui lòng thử lại.");
+      setError("Không thể tạo chủ xe. Vui lòng thử lại.");
     }
   };
 
-  // Styles tái sử dụng giống OwnersPage
   const styles = {
     page: {
       padding: "24px 32px",
       backgroundColor: "#f3f4f6",
       minHeight: "100vh",
-      boxSizing: "border-box" as const,
+      boxSizing: "border-box",
     },
     card: {
       maxWidth: 900,
@@ -147,11 +140,11 @@ const CustomersPage: React.FC = () => {
     },
     table: {
       width: "100%",
-      borderCollapse: "collapse" as const,
+      borderCollapse: "collapse",
       marginTop: 8,
     },
     th: {
-      textAlign: "left" as const,
+      textAlign: "left",
       fontSize: 14,
       fontWeight: 600,
       padding: "10px 12px",
@@ -189,7 +182,7 @@ const CustomersPage: React.FC = () => {
       cursor: "not-allowed",
     },
     modalBackdrop: {
-      position: "fixed" as const,
+      position: "fixed",
       inset: 0,
       backgroundColor: "rgba(15,23,42,0.35)",
       display: "flex",
@@ -213,7 +206,7 @@ const CustomersPage: React.FC = () => {
     modalField: {
       marginBottom: 10,
       display: "flex",
-      flexDirection: "column" as const,
+      flexDirection: "column",
       gap: 4,
     },
     modalInput: {
@@ -257,7 +250,7 @@ const CustomersPage: React.FC = () => {
     <div style={styles.page}>
       <div style={styles.card}>
         <div style={styles.headerRow}>
-          <h1 style={styles.title}>Quản lý khách hàng</h1>
+          <h1 style={styles.title}>Quản lý chủ xe</h1>
 
           <div style={styles.actionsRow}>
             <input
@@ -270,7 +263,7 @@ const CustomersPage: React.FC = () => {
               }}
             />
             <button type="button" style={styles.addButton} onClick={openModal}>
-              + Thêm khách hàng
+              + Thêm chủ xe
             </button>
           </div>
         </div>
@@ -278,32 +271,33 @@ const CustomersPage: React.FC = () => {
         <table style={styles.table}>
           <thead>
             <tr>
-              <th style={styles.th}>Tên khách</th>
+              <th style={styles.th}>Tên chủ xe</th>
               <th style={styles.th}>SĐT</th>
-              <th style={styles.th}>Số lần thuê</th>
+              <th style={styles.th}>Số lượng xe</th>
             </tr>
           </thead>
           <tbody>
-            {pageData.map((c) => (
-              <tr key={c.id}>
-                <td style={styles.td}>{c.name}</td>
-                <td style={styles.td}>{c.phone}</td>
-                <td style={styles.td}>{c.rentals}</td>
+            {pageData.map((o) => (
+              <tr key={o.id}>
+                <td style={styles.td}>{o.name}</td>
+                <td style={styles.td}>{o.phone}</td>
+                <td style={styles.td}>{o.cars}</td>
               </tr>
             ))}
             {pageData.length === 0 && (
               <tr>
                 <td style={styles.td} colSpan={3}>
-                  Không có khách hàng nào phù hợp.
+                  Không có chủ xe nào phù hợp.
                 </td>
               </tr>
             )}
           </tbody>
         </table>
 
+        {/* Phân trang */}
         <div style={styles.paginationRow}>
           <span>
-            Tổng: <b>{filteredCustomers.length}</b> khách – Trang {page}/
+            Tổng: <b>{filteredOwners.length}</b> chủ xe – Trang {page}/
             {totalPages}
           </span>
           <div style={styles.paginationButtons}>
@@ -333,6 +327,7 @@ const CustomersPage: React.FC = () => {
         </div>
       </div>
 
+      {/* Modal thêm chủ xe */}
       {isModalOpen && (
         <div style={styles.modalBackdrop} onClick={closeModal}>
           <div
@@ -341,7 +336,7 @@ const CustomersPage: React.FC = () => {
               e.stopPropagation();
             }}
           >
-            <h2 style={styles.modalTitle}>Thêm khách hàng mới</h2>
+            <h2 style={styles.modalTitle}>Thêm chủ xe mới</h2>
             <form onSubmit={handleSubmit}>
               <div style={styles.modalField}>
                 <label>Họ tên</label>
@@ -366,14 +361,14 @@ const CustomersPage: React.FC = () => {
                 />
               </div>
               <div style={styles.modalField}>
-                <label>Số lần thuê</label>
+                <label>Số lượng xe</label>
                 <input
                   style={styles.modalInput}
                   type="number"
                   min={0}
-                  value={form.rentals}
+                  value={form.cars}
                   onChange={(e) =>
-                    setForm((f) => ({ ...f, rentals: e.target.value }))
+                    setForm((f) => ({ ...f, cars: e.target.value }))
                   }
                   required
                 />
@@ -401,4 +396,4 @@ const CustomersPage: React.FC = () => {
   );
 };
 
-export default CustomersPage;
+export default OwnersPage;

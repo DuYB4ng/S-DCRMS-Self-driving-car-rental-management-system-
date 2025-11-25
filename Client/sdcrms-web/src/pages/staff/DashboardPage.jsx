@@ -1,6 +1,6 @@
 import React from "react";
 
-const DashboardPage: React.FC = () => {
+const DashboardPage = () => {
   // dữ liệu mẫu, sau này bạn thay bằng API thật
   const totalOwners = 12;
   const totalCustomers = 158;
@@ -11,7 +11,7 @@ const DashboardPage: React.FC = () => {
       padding: "24px 32px",
       backgroundColor: "#f3f4f6",
       minHeight: "100vh",
-      boxSizing: "border-box" as const,
+      boxSizing: "border-box",
     },
     title: {
       margin: 0,

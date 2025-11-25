@@ -1,13 +1,7 @@
-// src/pages/ReportsPage.tsx
 import React, { useState } from "react";
 
-type Filter = {
-  fromDate: string;
-  toDate: string;
-};
-
-const ReportsPage: React.FC = () => {
-  const [filter, setFilter] = useState<Filter>({
+const ReportsPage = () => {
+  const [filter, setFilter] = useState({
     fromDate: "",
     toDate: "",
   });
@@ -30,7 +24,7 @@ const ReportsPage: React.FC = () => {
       padding: "24px 32px",
       backgroundColor: "#f3f4f6",
       minHeight: "100vh",
-      boxSizing: "border-box" as const,
+      boxSizing: "border-box",
     },
     title: {
       margin: 0,
@@ -49,7 +43,7 @@ const ReportsPage: React.FC = () => {
       alignItems: "center",
       gap: 12,
       marginBottom: 16,
-      flexWrap: "wrap" as const,
+      flexWrap: "wrap",
     },
     filterLabel: {
       fontSize: "14px",
@@ -105,11 +99,11 @@ const ReportsPage: React.FC = () => {
     },
     table: {
       width: "100%",
-      borderCollapse: "collapse" as const,
+      borderCollapse: "collapse",
       fontSize: "14px",
     },
     th: {
-      textAlign: "left" as const,
+      textAlign: "left",
       padding: "10px 16px",
       backgroundColor: "#eff6ff",
       color: "#1f2937",
