@@ -3,11 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase";
 
-export default function Login() {
+export default function LoginUnified() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [tab, setTab] = useState("admin"); // "admin" | "user"
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
@@ -16,23 +17,28 @@ export default function Login() {
     setLoading(true);
 
     try {
-      // Login với Firebase Auth
       const userCredential = await signInWithEmailAndPassword(
         auth,
         email,
         password
       );
-
-      // Lấy Firebase ID Token
       const token = await userCredential.user.getIdToken();
-      console.log("Firebase Token:", token);
-
-      // Decode token để lấy custom claims (role)
       const tokenResult = await userCredential.user.getIdTokenResult();
-      const role =
-        tokenResult.claims.role || tokenResult.claims.admin ? "Admin" : "Staff";
 
-      // Lưu token vào localStorage
+      // Nếu role là Admin thì là admin, còn lại (User, Staff, ...) đều vào staff dashboard
+      let role = "Staff";
+      if (tokenResult.claims.role === "Admin") {
+        role = "Admin";
+      } else if (
+        tokenResult.claims.role === "User" ||
+        tokenResult.claims.role === "Staff"
+      ) {
+        role = "Staff";
+      } else {
+        // fallback: nếu không có role hoặc role khác, vẫn cho vào staff
+        role = "Staff";
+      }
+
       localStorage.setItem("adminToken", token);
       localStorage.setItem(
         "adminUser",
@@ -44,11 +50,12 @@ export default function Login() {
       );
 
       alert("Đăng nhập thành công!");
-      navigate("/");
+      if (role === "Admin") {
+        navigate("/admin");
+      } else {
+        navigate("/staff/dashboard");
+      }
     } catch (err) {
-      console.error("Login error:", err);
-
-      // Xử lý lỗi Firebase
       let errorMessage = "Đăng nhập thất bại";
       if (
         err.code === "auth/invalid-credential" ||
@@ -60,7 +67,6 @@ export default function Login() {
       } else if (err.code === "auth/invalid-email") {
         errorMessage = "Email không hợp lệ";
       }
-
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -68,24 +74,8 @@ export default function Login() {
   };
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center relative overflow-hidden"
-      style={{
-        background:
-          "linear-gradient(135deg, #2E7D9A 0%, #3498DB 50%, #5DADE2 100%)",
-      }}
-    >
-      {/* Background decorative elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/10 rounded-full blur-3xl"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-white/10 rounded-full blur-3xl"></div>
-      </div>
-
-      <form
-        onSubmit={handleLogin}
-        className="bg-white p-8 rounded-2xl shadow-2xl max-w-md w-full mx-4 relative z-10 backdrop-blur-sm"
-      >
-        {/* Logo */}
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-gradient-to-br from-[#2E7D9A] to-[#5DADE2]">
+      <div className="bg-white p-8 rounded-2xl shadow-2xl max-w-md w-full mx-4 relative z-10 backdrop-blur-sm">
         <div className="flex justify-center mb-6">
           <div className="w-20 h-20 bg-gradient-to-br from-[#2E7D9A] to-[#3498DB] rounded-full flex items-center justify-center shadow-lg">
             <svg
@@ -97,46 +87,67 @@ export default function Login() {
             </svg>
           </div>
         </div>
-
-        <h2 className="text-3xl font-bold text-gray-800 mb-2 text-center">
-          S-DCRMS
-        </h2>
-        <p className="text-gray-500 text-sm text-center mb-6">
-          Self-Driving Car Rental Management System
-        </p>
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          className="border-2 border-gray-200 rounded-lg w-full mb-3 p-3 focus:ring-2 focus:ring-[#2E7D9A] focus:border-[#2E7D9A] outline-none transition-all"
-        />
-        <input
-          type="password"
-          placeholder="Mật khẩu"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          className="border-2 border-gray-200 rounded-lg w-full mb-4 p-3 focus:ring-2 focus:ring-[#2E7D9A] focus:border-[#2E7D9A] outline-none transition-all"
-        />
-        <button
-          disabled={loading}
-          className="bg-gradient-to-r from-[#2E7D9A] to-[#3498DB] hover:from-[#26697F] hover:to-[#2E7D9A] text-white px-4 py-3 rounded-lg w-full font-semibold disabled:bg-gray-400 transition-all shadow-lg hover:shadow-xl"
-        >
-          {loading ? "Đang đăng nhập..." : "Đăng nhập"}
-        </button>
-        {error && (
-          <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-red-600 text-sm text-center">{error}</p>
-          </div>
-        )}
-        <div className="mt-6 pt-4 border-t border-gray-200">
-          <p className="text-gray-400 text-xs text-center">
-            🔒 Đăng nhập bằng Firebase Authentication
-          </p>
+        <div className="flex mb-6">
+          <button
+            className={`flex-1 py-2 rounded-l-lg font-semibold transition-all ${
+              tab === "admin"
+                ? "bg-[#2E7D9A] text-white"
+                : "bg-gray-100 text-gray-600"
+            }`}
+            onClick={() => setTab("admin")}
+            type="button"
+          >
+            Admin
+          </button>
+          <button
+            className={`flex-1 py-2 rounded-r-lg font-semibold transition-all ${
+              tab === "user"
+                ? "bg-[#3498DB] text-white"
+                : "bg-gray-100 text-gray-600"
+            }`}
+            onClick={() => setTab("user")}
+            type="button"
+          >
+            User/Staff
+          </button>
         </div>
-      </form>
+        <form onSubmit={handleLogin}>
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            className="border-2 border-gray-200 rounded-lg w-full mb-3 p-3 focus:ring-2 focus:ring-[#2E7D9A] focus:border-[#2E7D9A] outline-none transition-all"
+          />
+          <input
+            type="password"
+            placeholder="Mật khẩu"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            className="border-2 border-gray-200 rounded-lg w-full mb-4 p-3 focus:ring-2 focus:ring-[#2E7D9A] focus:border-[#2E7D9A] outline-none transition-all"
+          />
+          <button
+            disabled={loading}
+            className="bg-gradient-to-r from-[#2E7D9A] to-[#3498DB] hover:from-[#26697F] hover:to-[#2E7D9A] text-white px-4 py-3 rounded-lg w-full font-semibold disabled:bg-gray-400 transition-all shadow-lg hover:shadow-xl"
+          >
+            {loading
+              ? "Đang đăng nhập..."
+              : `Đăng nhập ${tab === "admin" ? "Admin" : "User"}`}
+          </button>
+          {error && (
+            <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-600 text-sm text-center">{error}</p>
+            </div>
+          )}
+          <div className="mt-6 pt-4 border-t border-gray-200">
+            <p className="text-gray-400 text-xs text-center">
+              🔒 Đăng nhập bằng Firebase Authentication
+            </p>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
