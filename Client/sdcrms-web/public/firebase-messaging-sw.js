@@ -11,15 +11,14 @@ importScripts(
 // Khởi tạo Firebase trong service worker
 // Lấy config từ Firebase Console > Project Settings
 firebase.initializeApp({
-  apiKey: "AIzaSyBZ8qElzq9wZbDnfK0wljm3qfTPce53WUw",
-  authDomain: "fir-dcrms.firebaseapp.com",
-  projectId: "fir-dcrms",
-  storageBucket: "fir-dcrms.firebasestorage.app",
-  messagingSenderId: "958372819801",
-  appId: "1:958372819801:web:708e1f07eefa4a4f595248",
-  measurementId: "G-X316WX1DST"
+  apiKey: "AIzaSyBvz7YPG7ER4kf4Wj7T9GQVOqzMVIA8S8o",
+  authDomain: "sdcrms-49dfb.firebaseapp.com",
+  projectId: "sdcrms-49dfb",
+  storageBucket: "sdcrms-49dfb.appspot.com",
+  messagingSenderId: "491044052539",
+  appId: "1:491044052539:web:01224e03dda4164b3b861e",
+  measurementId: "G-GQ1X82DRGP",
 });
-
 
 const messaging = firebase.messaging();
 
