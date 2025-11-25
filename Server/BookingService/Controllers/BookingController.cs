@@ -45,42 +45,37 @@ namespace BookingService.Controllers
 
         [HttpPost]
         [AllowAnonymous]
-        public async Task<IActionResult> Create([FromBody] CreateBookingDto bookingDto)
+        public async Task<IActionResult> Create(
+            [FromBody] CreateBookingDto bookingDto,
+            [FromQuery] string? firebaseUid)  
         {
             int customerId;
 
-            var firebaseUid =
-                User.FindFirst("firebaseUid")?.Value ??
-                User.FindFirst("user_id")?.Value;
-
+            // ===== 1. Xác định customerId theo firebaseUid (DEV MODE) =====
             if (string.IsNullOrEmpty(firebaseUid))
             {
-                // DEV MODE
-                customerId = 1;
+                return BadRequest("firebaseUid is required in dev mode");
             }
-            else
+
+            var customer = await _customerClient.GetByFirebaseUidAsync(firebaseUid);
+            if (customer == null)
             {
-                var customer = await _customerClient.GetByFirebaseUidAsync(firebaseUid);
-                if (customer == null)
-                    return BadRequest(new { message = "Customer profile not found" });
-
-                customerId = customer.CustomerId;
+                return BadRequest(new { message = "Customer profile not found" });
             }
 
-                    // 1) Validate thời gian
+            customerId = customer.CustomerId;
+
+            // ===== 2. Validate thời gian =====
             if (bookingDto.EndDate <= bookingDto.StartDate)
             {
                 return BadRequest(new { message = "Thời gian trả xe phải sau thời gian nhận xe." });
             }
 
-            // (tùy chọn) dọn pending booking hết hạn nếu bạn đang dùng chức năng này
-            // await RemoveExpiredPendingBookings(); // nếu method này đã có sẵn ở cuối controller
-
-            // 2) Kiểm tra trùng lịch với booking khác
+            // ===== 3. Kiểm tra trùng lịch =====
             var hasOverlapBooking = await _context.Bookings
                 .AnyAsync(b =>
                     b.CarId == bookingDto.CarId &&
-                    b.Status != BookingStatuses.Cancelled && // bỏ qua booking đã hủy
+                    b.Status != BookingStatuses.Cancelled &&
                     b.StartDate < bookingDto.EndDate &&
                     b.EndDate > bookingDto.StartDate);
 
@@ -92,19 +87,13 @@ namespace BookingService.Controllers
                 });
             }
 
-            // 3) (Tùy chọn) Kiểm tra bảo trì nếu muốn làm ở backend luôn
-            //  - Cách đơn giản nhất: khi tạo/sửa Maintenance (Status = true) thì cập nhật luôn trạng thái xe (vd: isAvailable/State = false)
-            //  - Lúc đó Flutter lọc theo isAvailable/State là đủ.
-            //  Nếu muốn gọi thẳng sang OwnerCarService để check Maintenance thì ta sẽ làm thêm HttpClient giống CustomerClient.
-
-            // 4) Nếu không trùng -> tạo booking như cũ
+            // ===== 4. Tạo booking =====
             var bookingModel = await _bookingRepo.createAsync(bookingDto, customerId);
 
             return CreatedAtAction(nameof(GetById),
                 new { id = bookingModel.BookingID },
                 bookingModel.ToBookingDto());
         }
-
 
         [HttpPut]
         [Route("{id}")]
@@ -257,6 +246,35 @@ namespace BookingService.Controllers
                 _context.Bookings.RemoveRange(expired);
                 await _context.SaveChangesAsync();
             }
+        }
+
+        // GET: api/Booking/my
+        [HttpGet("my")]
+        public async Task<IActionResult> GetMyBookings([FromQuery] string? firebaseUid)
+        {
+            if (string.IsNullOrEmpty(firebaseUid))
+            {
+                return BadRequest("firebaseUid is required in dev mode");
+            }
+
+            // Lấy customer theo firebaseUid
+            var customer = await _customerClient.GetByFirebaseUidAsync(firebaseUid);
+            if (customer == null)
+            {
+                return BadRequest(new { message = "Customer profile not found" });
+            }
+
+            var customerId = customer.CustomerId;
+
+            await CleanupExpiredPendingBookingsAsync();
+
+            var bookings = await _context.Bookings
+                .Where(b => b.CustomerId == customerId)
+                .OrderByDescending(b => b.CreatedAt)
+                .ToListAsync();
+
+            var dtoBooking = bookings.Select(b => b.ToBookingDto());
+            return Ok(dtoBooking);
         }
 
     }

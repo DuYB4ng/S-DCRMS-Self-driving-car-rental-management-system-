@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
+import '../services/booking_service.dart';
 
 class OrdersViewModel extends ChangeNotifier {
+  // Dùng BookingService để lấy danh sách booking của customer
+  final BookingService bookingService = BookingService();
+
+  // Vẫn giữ ApiService cho các action check-in / check-out
   final ApiService api = ApiService();
 
   bool isLoading = false;
@@ -14,7 +19,7 @@ class OrdersViewModel extends ChangeNotifier {
     if (isLoadedOnce) return;
 
     isLoadedOnce = true;
-    return refreshOrders(); // dùng cơ chế load mới
+    await refreshOrders();
   }
 
   // 👉 Load lại dữ liệu mỗi lần người dùng yêu cầu (ấn nút, quay lại màn hình, ...)
@@ -23,15 +28,16 @@ class OrdersViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final res = await api.get("/booking");
+      // CHỈ lấy booking của customer hiện tại
+      final res = await bookingService.getMyBookings();
       orders = res.data;
       errorMessage = null;
     } catch (e) {
       errorMessage = "Không thể tải danh sách đơn hàng.";
+    } finally {
+      isLoading = false;
+      notifyListeners();
     }
-
-    isLoading = false;
-    notifyListeners();
   }
 
   /// CUSTOMER check-in booking
@@ -59,14 +65,6 @@ class OrdersViewModel extends ChangeNotifier {
 
   // 👉 Pull-to-refresh khi dùng RefreshIndicator
   Future<void> pullToRefresh() async {
-    try {
-      final res = await api.get("/booking");
-      orders = res.data;
-      errorMessage = null;
-    } catch (e) {
-      errorMessage = "Không thể tải danh sách đơn hàng.";
-    }
-
-    notifyListeners();
+    await refreshOrders();
   }
 }

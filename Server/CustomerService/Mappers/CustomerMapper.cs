@@ -22,6 +22,7 @@ namespace CustomerService.Mappers
         {
             return new Customer
             {
+                FirebaseUid    = customerDto.FirebaseUid,
                 DrivingLicense= customerDto.DrivingLicense,
                 LicenseIssueDate = customerDto.LicenseIssueDate,
                 LicenseExpiryDate = customerDto.LicenseExpiryDate

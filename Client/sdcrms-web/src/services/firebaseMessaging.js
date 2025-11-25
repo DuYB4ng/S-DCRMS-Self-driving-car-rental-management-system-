@@ -6,10 +6,8 @@ const messaging = getMessaging(app);
 
 // Firebase Cloud Messaging VAPID key từ Firebase Console
 // Project Settings > Cloud Messaging > Web Push certificates
-const VAPID_KEY =
-  BCaDgN_o2PEgtLLSU6ThlYmBnlQS0a3liPEj_y_uUnFGupkWphlpcq3wvv7XHaswZM -
-  jNc3Gekcd4TsLwIi -
-  GRE;
+const VAPID_KEY = "BCaDgN_o2PEgtLLSU6ThlYmBnlQS0a3liPEj_y_uUnFGupkWphlpcq3wvv7XHaswZM";
+
 
 /**
  * Request notification permission và lấy FCM token
@@ -23,10 +21,7 @@ export const requestNotificationPermission = async () => {
 
       // Lấy FCM registration token
       const token = await getToken(messaging, {
-        vapidKey:
-          BCaDgN_o2PEgtLLSU6ThlYmBnlQS0a3liPEj_y_uUnFGupkWphlpcq3wvv7XHaswZM -
-          jNc3Gekcd4TsLwIi -
-          GRE,
+        vapidKey: "BCaDgN_o2PEgtLLSU6ThlYmBnlQS0a3liPEj_y_uUnFGupkWphlpcq3wvv7XHaswZM",
       });
 
       if (token) {

@@ -3,8 +3,7 @@ import {
   BellIcon,
   CheckIcon,
   Trash2Icon,
-  XIcon,
-  PlusIcon,
+  PlusIcon, // Đã xóa XIcon thừa
   RadioIcon,
   Edit2Icon,
 } from "lucide-react";
@@ -36,32 +35,35 @@ const NotificationPage = () => {
 
   const filters = ["Tất cả", "Chưa đọc", "Đã đọc"];
 
-  // Lấy notification từ FCM
   const { notification } = useNotifications();
 
-  // Load all notifications
+  // --- SỬA 1: Đảm bảo luôn set mảng (Array) ---
   const loadNotifications = async () => {
     try {
       setLoading(true);
       setError("");
       const data = await getAllNotifications();
-      setNotifications(data);
+      // Nếu data null/undefined thì gán mảng rỗng []
+      setNotifications(Array.isArray(data) ? data : []);
     } catch (err) {
-      setError(err.message);
+      console.error(err);
+      setError(err.message || "Lỗi tải thông báo");
+      setNotifications([]); // Gán mảng rỗng khi lỗi
     } finally {
       setLoading(false);
     }
   };
 
-  // Load user-specific notifications
   const loadUserNotifications = async (userId) => {
     try {
       setLoading(true);
       setError("");
       const data = await getUserNotifications(userId);
-      setNotifications(data);
+      setNotifications(Array.isArray(data) ? data : []);
     } catch (err) {
+      console.error(err);
       setError(err.message);
+      setNotifications([]);
     } finally {
       setLoading(false);
     }
@@ -71,7 +73,6 @@ const NotificationPage = () => {
     loadNotifications();
   }, []);
 
-  // Khi nhận được FCM push thì tự động gọi lại API để cập nhật danh sách thông báo
   useEffect(() => {
     if (notification) {
       loadNotifications();
@@ -79,7 +80,6 @@ const NotificationPage = () => {
     // eslint-disable-next-line
   }, [notification]);
 
-  // Handle filter by user
   const handleFilter = () => {
     if (filterUserId.trim()) {
       loadUserNotifications(filterUserId);
@@ -88,7 +88,6 @@ const NotificationPage = () => {
     }
   };
 
-  // Handle create notification
   const handleCreateNotification = async (e) => {
     e.preventDefault();
     try {
@@ -105,7 +104,6 @@ const NotificationPage = () => {
     }
   };
 
-  // Handle broadcast notification
   const handleBroadcast = async (e) => {
     e.preventDefault();
     try {
@@ -125,9 +123,9 @@ const NotificationPage = () => {
     }
   };
 
-  // Handle update notification
   const handleUpdateNotification = async (e) => {
     e.preventDefault();
+    if (!editingNotification) return; // Safety check
     try {
       setLoading(true);
       await updateNotification(editingNotification.notificationID, {
@@ -146,7 +144,6 @@ const NotificationPage = () => {
     }
   };
 
-  // Handle mark as read
   const handleMarkAsRead = async (id) => {
     try {
       await markAsRead(id);
@@ -156,11 +153,15 @@ const NotificationPage = () => {
     }
   };
 
-  // Handle mark all as read
   const markAllAsRead = async () => {
+    // Safety check: notifications phải là mảng
+    const safeNotifications = Array.isArray(notifications) ? notifications : [];
     try {
-      for (const notif of notifications.filter((n) => !n.read)) {
-        await markAsRead(notif.notificationID);
+      for (const notif of safeNotifications.filter((n) => !n.read)) {
+        if (notif?.notificationID) {
+          // Kiểm tra ID tồn tại
+          await markAsRead(notif.notificationID);
+        }
       }
       loadNotifications();
     } catch (err) {
@@ -168,7 +169,6 @@ const NotificationPage = () => {
     }
   };
 
-  // Handle delete
   const handleDelete = async (id) => {
     if (window.confirm("Bạn có chắc muốn xóa thông báo này?")) {
       try {
@@ -180,12 +180,14 @@ const NotificationPage = () => {
     }
   };
 
-  // Handle delete all
   const deleteAll = async () => {
+    const safeNotifications = Array.isArray(notifications) ? notifications : [];
     if (window.confirm("Bạn có chắc muốn xóa tất cả thông báo?")) {
       try {
-        for (const notif of notifications) {
-          await deleteNotification(notif.notificationID);
+        for (const notif of safeNotifications) {
+          if (notif?.notificationID) {
+            await deleteNotification(notif.notificationID);
+          }
         }
         loadNotifications();
       } catch (err) {
@@ -194,19 +196,17 @@ const NotificationPage = () => {
     }
   };
 
-  // Handle edit
   const handleEdit = (notification) => {
     setEditingNotification(notification);
     setFormData({
-      userID: notification.userID,
-      title: notification.title,
-      message: notification.message,
+      userID: notification.userID || "", // Fallback nếu null
+      title: notification.title || "",
+      message: notification.message || "",
     });
     setShowCreateForm(true);
     setShowBroadcastForm(false);
   };
 
-  // Reset form
   const resetForm = () => {
     setShowCreateForm(false);
     setShowBroadcastForm(false);
@@ -215,7 +215,11 @@ const NotificationPage = () => {
   };
 
   const getTimeAgo = (timestamp) => {
+    if (!timestamp) return "";
     const date = new Date(timestamp);
+    // Kiểm tra ngày hợp lệ
+    if (isNaN(date.getTime())) return "Ngày không hợp lệ";
+
     const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
     if (seconds < 60) return "Vừa xong";
     const minutes = Math.floor(seconds / 60);
@@ -226,14 +230,18 @@ const NotificationPage = () => {
     return `${days} ngày trước`;
   };
 
-  const filteredNotifications = notifications.filter((notif) => {
+  // --- SỬA 2: Lọc an toàn ---
+  const safeNotifications = Array.isArray(notifications) ? notifications : [];
+
+  const filteredNotifications = safeNotifications.filter((notif) => {
+    if (!notif) return false;
     if (selectedFilter === "Tất cả") return true;
     if (selectedFilter === "Chưa đọc") return !notif.read;
     if (selectedFilter === "Đã đọc") return notif.read;
     return true;
   });
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  const unreadCount = safeNotifications.filter((n) => !n?.read).length;
 
   return (
     <div className="p-6 bg-secondary min-h-screen">
@@ -247,6 +255,8 @@ const NotificationPage = () => {
             </span>
           )}
         </div>
+
+        {/* ... (Phần nút bấm giữ nguyên) ... */}
         <div className="flex flex-wrap gap-3">
           <button
             onClick={() => {
@@ -292,7 +302,7 @@ const NotificationPage = () => {
         </div>
       )}
 
-      {/* Create/Edit Form */}
+      {/* Forms (Giữ nguyên phần Form, chỉ render lại phần Input cho gọn nếu cần) */}
       {(showCreateForm || editingNotification) && (
         <div className="bg-white rounded-xl shadow-md p-6 mb-6">
           <h2 className="text-xl font-bold text-textPrimary mb-4">
@@ -306,6 +316,7 @@ const NotificationPage = () => {
             }
             className="space-y-4"
           >
+            {/* Form Inputs code của bạn ở đây giữ nguyên */}
             {!editingNotification && (
               <div>
                 <label className="block text-sm font-medium text-textPrimary mb-2">
@@ -377,9 +388,9 @@ const NotificationPage = () => {
         </div>
       )}
 
-      {/* Broadcast Form */}
       {showBroadcastForm && (
         <div className="bg-green-50 border-2 border-success rounded-xl shadow-md p-6 mb-6">
+          {/* Broadcast form code giữ nguyên */}
           <h2 className="text-xl font-bold text-green-600 mb-4 flex items-center gap-2">
             <RadioIcon className="w-6 h-6" />
             Gửi thông báo tới tất cả
@@ -428,6 +439,7 @@ const NotificationPage = () => {
 
       {/* Filter by User ID */}
       <div className="bg-white rounded-lg p-4 mb-6 shadow-md">
+        {/* Filter inputs giữ nguyên */}
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1">
             <label className="block text-sm font-medium text-textPrimary mb-2">
@@ -461,7 +473,6 @@ const NotificationPage = () => {
         </div>
       </div>
 
-      {/* Filters */}
       <div className="bg-white rounded-lg p-4 mb-6 shadow-md">
         <div className="flex flex-wrap gap-2">
           {filters.map((filter) => (
@@ -480,7 +491,7 @@ const NotificationPage = () => {
         </div>
       </div>
 
-      {/* Notifications List */}
+      {/* Notifications List - SỬA 3: Render an toàn hơn với ?. */}
       <div className="space-y-3">
         {loading && notifications.length === 0 ? (
           <div className="text-center py-12 bg-white rounded-xl">
@@ -495,56 +506,54 @@ const NotificationPage = () => {
             </p>
           </div>
         ) : (
-          filteredNotifications.map((notif) => (
+          filteredNotifications.map((notif, idx) => (
             <div
-              key={notif.notificationID}
+              key={notif?.notificationID || idx} // Fallback key nếu không có ID
               className={`bg-white rounded-xl shadow-md hover:shadow-lg transition overflow-hidden ${
-                !notif.read ? "border-l-4 border-primary" : ""
+                !notif?.read ? "border-l-4 border-primary" : ""
               }`}
             >
               <div className="p-5">
                 <div className="flex items-start gap-4">
-                  {/* Icon */}
                   <div
                     className={`w-12 h-12 rounded-lg ${
-                      !notif.read ? "bg-primary" : "bg-gray-300"
+                      !notif?.read ? "bg-primary" : "bg-gray-300"
                     } flex items-center justify-center text-2xl flex-shrink-0`}
                   >
                     🔔
                   </div>
 
-                  {/* Content */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-3 mb-2">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <h3
                             className={`font-bold text-textPrimary ${
-                              !notif.read ? "text-primary" : ""
+                              !notif?.read ? "text-primary" : ""
                             }`}
                           >
-                            {notif.title}
+                            {notif?.title || "(Không có tiêu đề)"}
                           </h3>
-                          {!notif.read && (
+                          {!notif?.read && (
                             <span className="w-2 h-2 bg-primary rounded-full"></span>
                           )}
                         </div>
                         <span className="bg-purple-50 text-purple-600 text-xs px-2 py-1 rounded-full font-medium inline-block">
-                          User ID: {notif.userID}
+                          User ID: {notif?.userID ?? "-"}
                         </span>
                       </div>
                     </div>
 
                     <p className="text-textSecondary text-sm mb-3">
-                      {notif.message}
+                      {notif?.message || ""}
                     </p>
 
                     <div className="flex items-center justify-between">
                       <p className="text-xs text-textSecondary">
-                        {getTimeAgo(notif.createdAt)}
+                        {getTimeAgo(notif?.createdAt)}
                       </p>
                       <div className="flex gap-2">
-                        {!notif.read && (
+                        {!notif?.read && notif?.notificationID && (
                           <button
                             onClick={() =>
                               handleMarkAsRead(notif.notificationID)
@@ -555,20 +564,24 @@ const NotificationPage = () => {
                             <CheckIcon className="w-4 h-4" />
                           </button>
                         )}
-                        <button
-                          onClick={() => handleEdit(notif)}
-                          className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition"
-                          title="Chỉnh sửa"
-                        >
-                          <Edit2Icon className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(notif.notificationID)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
-                          title="Xóa"
-                        >
-                          <Trash2Icon className="w-4 h-4" />
-                        </button>
+                        {notif?.notificationID && (
+                          <button
+                            onClick={() => handleEdit(notif)}
+                            className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition"
+                            title="Chỉnh sửa"
+                          >
+                            <Edit2Icon className="w-4 h-4" />
+                          </button>
+                        )}
+                        {notif?.notificationID && (
+                          <button
+                            onClick={() => handleDelete(notif.notificationID)}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
+                            title="Xóa"
+                          >
+                            <Trash2Icon className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>

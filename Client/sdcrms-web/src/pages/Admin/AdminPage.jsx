@@ -383,7 +383,7 @@ const AdminPage = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {admins.length === 0 ? (
+              {Array.isArray(admins) && admins.length === 0 ? (
                 <tr>
                   <td
                     colSpan="5"
@@ -393,7 +393,7 @@ const AdminPage = () => {
                   </td>
                 </tr>
               ) : (
-                admins.map((admin) => (
+                (Array.isArray(admins) ? admins : []).map((admin) => (
                   <tr key={admin.userID} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       {admin.userID}
