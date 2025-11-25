@@ -15,7 +15,7 @@ const OwnerCarPage = () => {
 
   const loadData = async () => {
     const data = await getAllOwnerCars();
-    setOwnerCars(data);
+    setOwnerCars(Array.isArray(data) ? data : []);
   };
 
   useEffect(() => {
@@ -63,7 +63,7 @@ const OwnerCarPage = () => {
       )}
 
       <OwnerCarTable
-        ownerCars={ownerCars}
+        ownerCars={Array.isArray(ownerCars) ? ownerCars : []}
         onEdit={(oc) => {
           setEditing(oc);
           setShowForm(true);

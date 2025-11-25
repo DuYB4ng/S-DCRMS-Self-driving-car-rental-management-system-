@@ -18,7 +18,7 @@ const OwnerCarPage = React.lazy(() => import("./pages/Admin/OwnerCarPage"));
 const Login = React.lazy(() => import("./pages/Login"));
 const AdminPage = React.lazy(() => import("./pages/Admin/AdminPage"));
 const NotificationPage = React.lazy(() =>
-  import("./pages/Admin/NotificationPage")
+  import("./pages/Admin/AdminNotificationPage")
 );
 const SystemMonitoringPage = React.lazy(() =>
   import("./pages/Admin/SystemMonitoringPage")
