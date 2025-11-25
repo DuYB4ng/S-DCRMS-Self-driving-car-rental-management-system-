@@ -40,6 +40,15 @@ class OrdersView extends StatelessWidget {
               itemBuilder: (context, index) {
                 final order = vm.orders[index] as Map<String, dynamic>;
 
+                // 🔹 Lấy danh sách review từ API (Booking có List<Review> Reviews)
+                final List<dynamic> reviews =
+                    (order["reviews"] as List?) ??
+                    []; // nếu null thì dùng list rỗng
+                final bool hasReview = reviews.isNotEmpty;
+                final Map<String, dynamic>? firstReview = hasReview
+                    ? reviews.first as Map<String, dynamic>
+                    : null;
+
                 return GestureDetector(
                   onTap: () {
                     Navigator.push(
@@ -64,6 +73,7 @@ class OrdersView extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // ===== Thông tin đơn =====
                         Text(
                           "Đơn #${order["bookingID"]}",
                           style: const TextStyle(
@@ -75,14 +85,39 @@ class OrdersView extends StatelessWidget {
                         Text("Nhận xe: ${order["startDate"]}"),
                         Text("Trả xe: ${order["endDate"]}"),
                         const SizedBox(height: 6),
-                        _statusTag(order["status"]),
+                        _statusTag(order["status"] ?? ""),
                         const SizedBox(height: 8),
 
-                        // 👉 Nút Thanh toán mới
+                        // ===== Nếu đã có review -> hiện review trong card =====
+                        if (hasReview) ...[
+                          const Divider(),
+                          const Text(
+                            "Đánh giá của bạn",
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              const Icon(Icons.star, size: 16),
+                              const SizedBox(width: 4),
+                              Text("${firstReview?["rating"] ?? 0}/5"),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            firstReview?["comment"] ?? "",
+                            style: const TextStyle(fontStyle: FontStyle.italic),
+                          ),
+                          const SizedBox(height: 8),
+                        ],
+
+                        // ===== Nút Thanh toán =====
                         _buildPayButton(context, order),
 
-                        // các nút khác (Check-in / Check-out / Đánh giá)
+                        // ===== Nút Check-in / Check-out =====
                         _buildActionButton(context, vm, order),
+
+                        // ===== Nút Đánh giá (sẽ chỉnh ở bước 2 để ẩn nếu đã review) =====
                         _buildReviewButton(context, vm, order),
                       ],
                     ),
@@ -155,16 +190,23 @@ class OrdersView extends StatelessWidget {
     final bookingId = order["bookingID"] as int?;
     final checkOut = order["checkOut"] as bool? ?? false;
 
+    // 🔹 Lấy list review từ order
+    final List<dynamic> reviews = (order["reviews"] as List?) ?? [];
+    final bool hasReview = reviews.isNotEmpty;
+
     // Chỉ show nút REVIEW khi:
-    // - booking đã Completed
+    // - có bookingId
+    // - status = Completed
     // - đã CheckOut = true
-    if (bookingId == null || status != "Completed" || !checkOut) {
+    // - CHƯA có review nào
+    if (bookingId == null || status != "Completed" || !checkOut || hasReview) {
       return const SizedBox.shrink();
     }
 
     return Align(
       alignment: Alignment.centerRight,
       child: TextButton(
+        child: const Text("Đánh giá"),
         onPressed: () async {
           final result = await showDialog<_ReviewDialogResult>(
             context: context,
@@ -184,14 +226,16 @@ class OrdersView extends StatelessWidget {
               const SnackBar(content: Text("Gửi đánh giá thành công")),
             );
 
+            // 🔹 Load lại list đơn để:
+            // - lấy review vừa tạo
+            // - ẩn luôn nút "Đánh giá"
             await vm.refreshOrders();
           } catch (e) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text("Gửi đánh giá thất bại: $e")),
+              const SnackBar(content: Text("Có lỗi khi gửi đánh giá")),
             );
           }
         },
-        child: const Text("Đánh giá"),
       ),
     );
   }
