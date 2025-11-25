@@ -63,3 +63,15 @@ Server/AuthService/firebase-adminsdk.json
 Server/NotificationService/src/main/resources/firebase/serviceAccountKey.json
 
 influx_data/
+node_modules
+Client/sdcrms-web/admin-cli/serviceAccountKey.json
+Server/UserService/FireBase
+Server/OwnerService/FireBase
+Server/NotificationService/FireBase
+Server/Gateway/FireBase
+Server/BookingService/FireBase
+Server/CustomerService/FireBase
+Server/AuthService/FireBase
+Server/AdminService/FireBase
+Server/OwnerCarService/FireBase
+
