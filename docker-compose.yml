@@ -12,7 +12,7 @@ services:
     depends_on:
       - ownercarservice
       - kafka
-      - staffservice
+
       - bookingservice
       - customerservice
       - userservice
@@ -21,7 +21,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
       - OWNER_CAR_SERVICE_URL=http://ownercarservice:8081
-      - STAFF_SERVICE_URL=http://staffservice:8084
+
       - BOOKING_SERVICE_URL=http://bookingservice:8083
       - CUSTOMER_SERVICE_URL=http://customerservice:8085
       - USER_SERVICE_URL=http://customerservice:8086
@@ -133,22 +133,7 @@ services:
     networks:
       - sdcrms-network
 
-  # ==========================
-  # staffServices Microservice
-  # ==========================
-  staffservice:
-    build:
-      context: ./Server/staffMicroService
-    ports:
-      - "8004:8084"
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=http://+:8084
-      - ConnectionStrings__DefaultConnection=Server=sqlserver-staff;Database=StaffDB;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;Encrypt=False;
-    depends_on:
-      - sqlserver-staff
-    networks:
-      - sdcrms-network
+
   # ==========================
   # OwnerCar Consumer (Kafka -> SQL)
   # ==========================
@@ -216,19 +201,7 @@ services:
     volumes:
       - sqlserver-booking-data:/var/opt/mssql
 
-  sqlserver-staff:
-    image: mcr.microsoft.com/mssql/server:2022-latest
-    container_name: sqlserver-staff
-    environment:
-      - SA_PASSWORD=YourStrong!Passw0rd
-      - ACCEPT_EULA=Y
-    ports:
-      - "1434:1433"
-    volumes:
-      - ./entrypoint.sh:/entrypoint.sh
-    command: /bin/bash /entrypoint.sh
-    networks:
-      - sdcrms-network
+
 
   sqlserver-customer:
     image: mcr.microsoft.com/mssql/server:2022-latest
@@ -243,24 +216,7 @@ services:
     volumes:
       - sqlserver-customer-data:/var/opt/mssql
 
-  # ==========================
-  # React Frontend (Vite)
-  # ==========================
-  web-client:
-    build:
-      context: ./Client/sdcrms-web
-      dockerfile: Dockerfile
-    container_name: sdcrms-client
-    ports:
-      - "5173:80"
-    stdin_open: true
-    tty: true
-    networks:
-      - sdcrms-network
-    environment:
-      - VITE_API_BASE_URL=http://apigateway:8080/api
-    depends_on:
-      - apigateway
+
 
   # ==========================
   # Zookeeper (Kafka dependency)
@@ -382,5 +338,5 @@ networks:
 volumes:
   mysql-data:
   sqlserver-booking-data:
-  sqlstaff_data:
+
   sqlserver-customer-data:

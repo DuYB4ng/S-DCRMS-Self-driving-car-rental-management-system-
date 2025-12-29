@@ -80,10 +80,14 @@ class LoginView extends StatelessWidget {
                     vm.setLoading(false);
 
                     if (result) {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (_) => HomeNavigation()),
-                      );
+                      if (vm.role == "OwnerCar") {
+                        Navigator.pushReplacementNamed(context, "/owner-home");
+                      } else {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (_) => HomeNavigation()),
+                        );
+                      }
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text("Sai tài khoản hoặc mật khẩu")),

@@ -1,64 +1,112 @@
 {
   "Routes": [
     {
-      "DownstreamPathTemplate": "/api/admin/{everything}",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [{ "Host": "adminservice", "Port": 8081 }],
-      "UpstreamPathTemplate": "/api/admin/{everything}",
-      "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "PATCH"]
-    },
-    {
       "DownstreamPathTemplate": "/api/auth/{everything}",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [{ "Host": "adminservice", "Port": 8081 }],
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "authservice",
+          "Port": 8089
+        }
+      ],
       "UpstreamPathTemplate": "/api/auth/{everything}",
-      "UpstreamHttpMethod": ["GET", "POST"]
+      "UpstreamHttpMethod": [
+        "GET",
+        "POST"
+      ]
     },
     {
       "DownstreamPathTemplate": "/api/notification/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "notificationservice", "Port": 8082 }
+        {
+          "Host": "notificationservice",
+          "Port": 8082
+        }
       ],
       "UpstreamPathTemplate": "/api/notification/{everything}",
-      "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE"]
+      "UpstreamHttpMethod": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ]
     },
     {
       "DownstreamPathTemplate": "/api/fcm/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "notificationservice", "Port": 8082 }
+        {
+          "Host": "notificationservice",
+          "Port": 8082
+        }
       ],
       "UpstreamPathTemplate": "/api/fcm/{everything}",
-      "UpstreamHttpMethod": ["GET", "POST", "DELETE"]
+      "UpstreamHttpMethod": [
+        "GET",
+        "POST",
+        "DELETE"
+      ]
     },
     {
       "DownstreamPathTemplate": "/api/user/{everything}",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [{ "Host": "userservice", "Port": 8082 }],
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "userservice",
+          "Port": 8082
+        }
+      ],
       "UpstreamPathTemplate": "/api/user/{everything}",
-      "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "PATCH"]
+      "UpstreamHttpMethod": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE",
+        "PATCH"
+      ]
     },
     {
       "DownstreamPathTemplate": "/api/sync-firebase-users",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [{ "Host": "userservice", "Port": 8082 }],
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "userservice",
+          "Port": 8082
+        }
+      ],
       "UpstreamPathTemplate": "/api/sync-firebase-users",
-      "UpstreamHttpMethod": ["POST"]
+      "UpstreamHttpMethod": [
+        "POST"
+      ]
     },
     {
       "DownstreamPathTemplate": "/api/firebase-users",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [{ "Host": "userservice", "Port": 8082 }],
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "userservice",
+          "Port": 8082
+        }
+      ],
       "UpstreamPathTemplate": "/api/firebase-users",
-      "UpstreamHttpMethod": ["GET"]
+      "UpstreamHttpMethod": [
+        "GET"
+      ]
     },
     {
       "DownstreamPathTemplate": "/api/users/sync",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [{ "Host": "userservice", "Port": 8082 }],
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "userservice",
+          "Port": 8082
+        }
+      ],
       "UpstreamPathTemplate": "/api/users/sync",
-      "UpstreamHttpMethod": ["POST"]
+      "UpstreamHttpMethod": [
+        "POST"
+      ]
     }
   ],
   "GlobalConfiguration": {

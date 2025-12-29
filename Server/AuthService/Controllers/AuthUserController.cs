@@ -97,7 +97,7 @@ namespace AuthService.Services
                 return NotFound(new { message = "User không tồn tại trong AuthDB" });
             }
 
-            user.Role = request.Role;  // ví dụ: "Staff", "Admin", "OwnerCar", "Customer"
+            user.Role = request.Role;  // ví dụ: "OwnerCar", "Customer"
             await _authUserRepository.UpdateAsync(user);
 
             return Ok(new

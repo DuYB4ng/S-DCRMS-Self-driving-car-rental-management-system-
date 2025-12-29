@@ -11,6 +11,7 @@ import 'viewmodels/order_detail_viewmodel.dart';
 import 'views/login_view.dart';
 import 'views/register_view.dart';
 import 'views/home/home_navigation.dart';
+import 'views/owner/owner_home_view.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -46,6 +47,7 @@ class MyApp extends StatelessWidget {
         "/login": (_) => LoginView(),
         "/register": (_) => RegisterView(),
         "/home": (_) => HomeNavigation(),
+        "/owner-home": (_) => const OwnerHomeView(),
       },
     );
   }

@@ -36,4 +36,21 @@ class AuthService {
       return null;
     }
   }
+  
+  /// Gọi API AuthService /api/auth/verifyToken để xác thực và lấy role
+  Future<Map<String, dynamic>?> verifyToken(String idToken) async {
+    try {
+      final response = await _api.post("/auth/verifyToken", {
+        "idToken": idToken,
+      });
+
+      if (response.statusCode == 200 && response.data != null) {
+        return response.data as Map<String, dynamic>;
+      }
+      return null;
+    } catch (e) {
+      print("AuthService.verifyToken error: $e");
+      return null;
+    }
+  }
 }
