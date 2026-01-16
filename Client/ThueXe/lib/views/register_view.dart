@@ -124,13 +124,25 @@ class RegisterView extends StatelessWidget {
                   ),
                   onPressed: vm.isLoading
                       ? null
-                      : () => vm.register(
-                          emailController.text.trim(),
-                          displayNameController.text.trim(),
-                          passController.text.trim(),
-                          rePassController.text.trim(),
-                          vm.selectedRole, // Dùng role từ VM
-                        ),
+                      : () async {
+                          bool success = await vm.register(
+                            emailController.text.trim(),
+                            displayNameController.text.trim(),
+                            passController.text.trim(),
+                            rePassController.text.trim(),
+                            vm.selectedRole,
+                          );
+
+                          if (success && context.mounted) {
+                            if (vm.selectedRole == "OwnerCar") {
+                              Navigator.pushNamedAndRemoveUntil(
+                                  context, "/owner-home", (route) => false);
+                            } else {
+                              Navigator.pushNamedAndRemoveUntil(
+                                  context, "/home", (route) => false);
+                            }
+                          }
+                        },
                   child: vm.isLoading
                       ? CircularProgressIndicator(color: Colors.white)
                       : Text(

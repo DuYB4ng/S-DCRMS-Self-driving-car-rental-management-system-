@@ -80,7 +80,7 @@ class LoginView extends StatelessWidget {
                     vm.setLoading(false);
 
                     if (result) {
-                      if (vm.role == "OwnerCar") {
+                      if (vm.role == "OwnerCar" || vm.role == "Owner") {
                         Navigator.pushReplacementNamed(context, "/owner-home");
                       } else {
                         Navigator.pushReplacement(

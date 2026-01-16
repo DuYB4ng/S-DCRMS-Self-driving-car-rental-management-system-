@@ -46,7 +46,7 @@ namespace AuthService.Services
                     FirebaseUid = firebaseUser.Uid,
                     Email = firebaseUser.Email,
                     DisplayName = firebaseUser.DisplayName,
-                    Role = "User",
+                    Role = request.Role ?? "Customer", // Use requested role or default
                     CreatedAt = DateTime.UtcNow
                 };
                 await _authUserRepository.AddAsync(authUser);
