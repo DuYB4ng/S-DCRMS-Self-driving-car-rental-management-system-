@@ -10,6 +10,7 @@ class AuthService {
     required String email,
     required String displayName,
     required String password,
+    required String role,
   }) async {
     try {
       final response = await _api.post("/auth/signup", {
@@ -17,6 +18,7 @@ class AuthService {
         "password": password,
         "confirmPassword": password,
         "displayName": displayName,
+        "role": role,
       });
 
       final data = response.data;

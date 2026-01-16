@@ -9,12 +9,19 @@ class RegisterViewModel extends ChangeNotifier {
 
   bool isLoading = false;
   String? errorMessage;
+  String selectedRole = "Customer";
+
+  void setRole(String role) {
+    selectedRole = role;
+    notifyListeners();
+  }
 
   Future<bool> register(
     String email,
-    String displayName, // 👈 đổi tên tham số
+    String displayName,
     String pass,
     String rePass,
+    String role, // 👈 thêm role
   ) async {
     errorMessage = null;
 
@@ -39,8 +46,9 @@ class RegisterViewModel extends ChangeNotifier {
     // 1. Gọi AuthService để đăng ký
     final uid = await _authService.register(
       email: email,
-      displayName: displayName, // 👈 truyền tên hiển thị
+      displayName: displayName,
       password: pass,
+      role: role, // 👈 truyền role xuống service
     );
 
     if (uid == null) {

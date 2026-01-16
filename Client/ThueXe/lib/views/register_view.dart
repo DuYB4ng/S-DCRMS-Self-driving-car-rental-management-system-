@@ -77,6 +77,32 @@ class RegisterView extends StatelessWidget {
                 isPass: true,
               ),
 
+              SizedBox(height: 12),
+              
+              /// Role Selection
+              DropdownButtonFormField<String>(
+                value: "Customer", // Mặc định là Customer
+                decoration: InputDecoration(
+                  labelText: "Bạn là ai?",
+                  fillColor: Colors.grey.shade100,
+                  filled: true,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+                items: [
+                  DropdownMenuItem(value: "Customer", child: Text("Khách thuê xe")),
+                  DropdownMenuItem(value: "OwnerCar", child: Text("Chủ xe")),
+                ],
+                onChanged: (val) {
+                  // Bạn có thể lưu vào ViewModel nếu cần, hoặc dùng Controller
+                  // Ở đây ta dùng biến tạm hoặc truyền thẳng vào hàm register
+                  // VM cần 1 biến để lưu role này
+                  vm.setRole(val ?? "Customer");
+                },
+              ),
+
               SizedBox(height: 20),
 
               /// Error Message
@@ -103,6 +129,7 @@ class RegisterView extends StatelessWidget {
                           displayNameController.text.trim(),
                           passController.text.trim(),
                           rePassController.text.trim(),
+                          vm.selectedRole, // Dùng role từ VM
                         ),
                   child: vm.isLoading
                       ? CircularProgressIndicator(color: Colors.white)
