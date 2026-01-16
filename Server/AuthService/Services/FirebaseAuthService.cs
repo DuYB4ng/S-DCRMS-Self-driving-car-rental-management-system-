@@ -45,5 +45,17 @@ namespace AuthService.Services
             var decodedToken = await _auth.VerifyIdTokenAsync(idToken);
             return decodedToken.Uid;
         }
+
+        // ✅ Lấy tất cả user từ Firebase
+        public async Task<List<UserRecord>> GetAllUsersAsync()
+        {
+            var users = new List<UserRecord>();
+            var pagedEnumerable = _auth.ListUsersAsync(null);
+            await foreach (var user in pagedEnumerable)
+            {
+                users.Add(user);
+            }
+            return users;
+        }
     }
 }

@@ -11,6 +11,8 @@ namespace AuthService.Repositories
         Task<AuthUser> AddAsync(AuthUser user);
         Task UpdateAsync(AuthUser user);
         Task SaveChangesAsync();
+        Task<List<AuthUser>> GetAllAsync(); // ✅ Lấy tất cả user trong DB
+        Task DeleteAsync(AuthUser user); // ✅ Xóa user
     }
 
     public class AuthUserRepository : IAuthUserRepository
@@ -49,6 +51,17 @@ namespace AuthService.Repositories
 
         public async Task SaveChangesAsync()
         {
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<List<AuthUser>> GetAllAsync()
+        {
+            return await _context.AuthUsers.ToListAsync();
+        }
+
+        public async Task DeleteAsync(AuthUser user)
+        {
+            _context.AuthUsers.Remove(user);
             await _context.SaveChangesAsync();
         }
     }
