@@ -16,6 +16,7 @@ services:
       - bookingservice
       - customerservice
       - userservice
+      - itsservice
 
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
@@ -25,6 +26,7 @@ services:
       - BOOKING_SERVICE_URL=http://bookingservice:8083
       - CUSTOMER_SERVICE_URL=http://customerservice:8085
       - USER_SERVICE_URL=http://customerservice:8086
+      - ITS_SERVICE_URL=http://itsservice:8090
 
       - KAFKA__BootstrapServers=kafka:9092
       - KAFKA__Topic=car_location
@@ -130,6 +132,22 @@ services:
     depends_on:
       sqlserver-customer:
         condition: service_started
+    networks:
+      - sdcrms-network
+
+  # ==========================
+  # ITS Microservice (Traffic Sign)
+  # ==========================
+  itsservice:
+    build:
+      context: ./Server/ITSService
+      dockerfile: Dockerfile
+    container_name: itsservice
+    ports:
+      - "8090:8090"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8090
     networks:
       - sdcrms-network
 

@@ -8,6 +8,7 @@ using OwnerCarService.Services;
 using Pomelo.EntityFrameworkCore.MySql;
 using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 using Redis.Shared.Extensions;
+using OwnerCarService.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -95,6 +96,8 @@ using (var scope = app.Services.CreateScope())
         Console.WriteLine("🗄️ Checking database state...");
         db.Database.Migrate(); // 👈 Dòng này sẽ tự tạo DB nếu chưa tồn tại
         Console.WriteLine("✅ Database created or already up to date.");
+        
+        DbInitializer.Initialize(db);
     }
     catch (Exception ex)
     {

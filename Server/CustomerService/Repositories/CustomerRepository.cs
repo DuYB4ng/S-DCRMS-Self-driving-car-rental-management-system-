@@ -58,8 +58,25 @@ namespace CustomerService.Repositories
         }
         public async Task<Customer?> GetByFirebaseUidAsync(string firebaseUid)
         {
-            return await _context.Customers
+            var customer = await _context.Customers
                 .FirstOrDefaultAsync(c => c.FirebaseUid == firebaseUid);
+
+            if (customer == null)
+            {
+                // Auto-create for Dev/Testing if missing
+                customer = new Customer
+                {
+                    FirebaseUid = firebaseUid,
+                    DrivingLicense = "TEST_LICENSE_" + new Random().Next(1000, 9999),
+                    LicenseIssueDate = DateTime.Now.AddYears(-2),
+                    LicenseExpiryDate = DateTime.Now.AddYears(10),
+                    // Add other required defaults if any
+                };
+                _context.Customers.Add(customer);
+                await _context.SaveChangesAsync();
+            }
+
+            return customer;
         }
 
     }
