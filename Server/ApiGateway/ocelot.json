@@ -59,6 +59,51 @@
       }
     },
     {
+      "DownstreamPathTemplate": "/images/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "ownercarservice",
+          "Port": 8081
+        }
+      ],
+      "UpstreamPathTemplate": "/images/{everything}",
+      "UpstreamHttpMethod": [
+        "GET"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/upload",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "ownercarservice",
+          "Port": 8081
+        }
+      ],
+      "UpstreamPathTemplate": "/api/upload",
+      "UpstreamHttpMethod": [
+        "POST"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/ownercar/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "ownercarservice",
+          "Port": 8081
+        }
+      ],
+      "UpstreamPathTemplate": "/api/ownercar/{everything}",
+      "UpstreamHttpMethod": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ]
+    },
+    {
       "DownstreamPathTemplate": "/api/car/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [

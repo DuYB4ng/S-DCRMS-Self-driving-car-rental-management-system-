@@ -3,6 +3,7 @@ import '../services/api_service.dart';
 
 class CarListViewModel extends ChangeNotifier {
   final ApiService api = ApiService();
+  String get baseUrl => api.baseUrl;
 
   bool isLoading = false;
   String? errorMessage;

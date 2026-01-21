@@ -35,6 +35,13 @@ public class AppDbContext : DbContext
         {
             entity.Property(e => e.Deposit).HasPrecision(18, 2);
             entity.Property(e => e.PricePerDay).HasPrecision(18, 2);
+            
+            // Convert List<string> <-> JSON string
+            entity.Property(e => e.imageUrls)
+                .HasConversion(
+                    v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
+                    v => System.Text.Json.JsonSerializer.Deserialize<List<string>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new List<string>()
+                );
         });
 
         modelBuilder.Entity<Maintenance>(entity =>

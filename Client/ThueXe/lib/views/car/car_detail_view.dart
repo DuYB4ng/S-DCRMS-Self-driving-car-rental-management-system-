@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-
+import 'package:provider/provider.dart';
+import '../../viewmodels/car_list_viewmodel.dart';
 import '../../services/booking_service.dart';
 import '../booking/booking_confirm_view.dart';
 import '../../services/review_service.dart';
@@ -60,7 +61,7 @@ class CarDetailView extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             /// ======== ẢNH SLIDER =========
-            _imageSlider(car["imageUrls"]),
+            _imageSlider(context, car["imageUrls"]),
 
             Padding(
               padding: const EdgeInsets.all(16),
@@ -371,7 +372,7 @@ class CarDetailView extends StatelessWidget {
   }
 
   /// ============ IMAGE SLIDER ============
-  Widget _imageSlider(List<dynamic>? images) {
+  Widget _imageSlider(BuildContext context, List<dynamic>? images) {
     if (images == null || images.isEmpty) {
       return Image.network(
         "https://via.placeholder.com/350x200",
@@ -381,13 +382,18 @@ class CarDetailView extends StatelessWidget {
       );
     }
 
+    final baseUrl = context.read<CarListViewModel>().baseUrl;
+
     return SizedBox(
       height: 220,
       child: PageView.builder(
         itemCount: images.length,
         itemBuilder: (context, index) {
+          final imgUrl = images[index];
           return Image.network(
-            images[index],
+            imgUrl.startsWith("http")
+                ? imgUrl
+                : "${baseUrl.replaceAll('/api', '')}$imgUrl",
             width: double.infinity,
             height: 220,
             fit: BoxFit.cover,

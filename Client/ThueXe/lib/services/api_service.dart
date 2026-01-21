@@ -16,6 +16,8 @@ class ApiService {
     );
   }
 
+  String get baseUrl => _dio.options.baseUrl;
+
   /// Lấy Firebase ID Token
   Future<String?> _getFirebaseToken() async {
     return await FirebaseAuth.instance.currentUser?.getIdToken();
@@ -52,6 +54,57 @@ class ApiService {
       data: data,
       queryParameters: queryParameters,
       options: Options(headers: {"Authorization": "Bearer $token"}),
+    );
+  }
+  
+  /// ======================
+  /// PUT
+  /// ======================
+  Future<Response> put(
+    String path,
+    Map<String, dynamic> data, {
+    Map<String, dynamic>? queryParameters,
+  }) async {
+    final token = await _getFirebaseToken();
+
+    return await _dio.put(
+      path,
+      data: data,
+      queryParameters: queryParameters,
+      options: Options(headers: {"Authorization": "Bearer $token"}),
+    );
+  }
+
+  /// ======================
+  /// DELETE
+  /// ======================
+  Future<Response> delete(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+  }) async {
+    final token = await _getFirebaseToken();
+
+    return await _dio.delete(
+      path,
+      queryParameters: queryParameters,
+      options: Options(headers: {"Authorization": "Bearer $token"}),
+    );
+  }
+
+  /// ======================
+  /// UPLOAD (Multipart)
+  /// ======================
+  Future<Response> uploadImage(String path, FormData formData) async {
+    final token = await _getFirebaseToken();
+
+    return await _dio.post(
+      path,
+      data: formData,
+      options: Options(
+        headers: {
+          "Authorization": "Bearer $token",
+        },
+      ),
     );
   }
 }

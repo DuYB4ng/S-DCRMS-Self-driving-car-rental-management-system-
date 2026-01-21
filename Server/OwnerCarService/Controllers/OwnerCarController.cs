@@ -35,6 +35,16 @@ namespace OwnerCarService.Controllers
             return ownerCar == null ? NotFound() : Ok(ownerCar);
         }
 
+        // 🔍 Lấy chủ xe theo Firebase UID
+        [HttpGet("by-uid/{uid}")]
+        [Cache(300)]
+        public async Task<IActionResult> GetOwnerCarByFirebaseUid(string uid)
+        {
+            var ownerCar = await _ownerCarService.LayOwnerCarTheoFirebaseUidAsync(uid);
+            return ownerCar == null ? NotFound() : Ok(ownerCar);
+        }
+
+
         // ➕ Tạo chủ xe mới
         [HttpPost]
         [CacheEvict("OwnerCarController:GetAllOwnerCars*")]

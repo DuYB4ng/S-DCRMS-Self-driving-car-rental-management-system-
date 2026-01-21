@@ -92,6 +92,8 @@ services:
         condition: service_started
       redis:
         condition: service_healthy
+    volumes:
+      - ./Server/OwnerCarService/wwwroot:/app/wwwroot
     networks:
       - sdcrms-network
 

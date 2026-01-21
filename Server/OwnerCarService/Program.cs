@@ -94,8 +94,10 @@ using (var scope = app.Services.CreateScope())
     try
     {
         Console.WriteLine("🗄️ Checking database state...");
-        db.Database.Migrate(); // 👈 Dòng này sẽ tự tạo DB nếu chưa tồn tại
-        Console.WriteLine("✅ Database created or already up to date.");
+        // db.Database.Migrate(); // Cannot use Migrate without dotnet ef tool to generate migrations
+        db.Database.EnsureDeleted(); // TEMPORARY: Reset DB to apply schema changes (imageUrls)
+        db.Database.EnsureCreated(); // Creates DB based on current AppDbContext
+        Console.WriteLine("✅ Database created.");
         
         DbInitializer.Initialize(db);
     }
@@ -117,6 +119,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseStaticFiles();
 app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();

@@ -100,7 +100,7 @@ class _CarListViewState extends State<CarListView> {
               );
             },
 
-            child: _carItem(car),
+            child: _carItem(car, vm.baseUrl),
           );
         },
       ),
@@ -110,7 +110,7 @@ class _CarListViewState extends State<CarListView> {
   /// ===============================
   ///  WIDGET ITEM XE (UI từng chiếc)
   /// ===============================
-  Widget _carItem(dynamic car) {
+  Widget _carItem(dynamic car, String baseUrl) {
     return Container(
       margin: EdgeInsets.only(bottom: 18),
       decoration: BoxDecoration(
@@ -132,7 +132,9 @@ class _CarListViewState extends State<CarListView> {
             borderRadius: BorderRadius.vertical(top: Radius.circular(14)),
             child: Image.network(
               (car["imageUrls"] != null && car["imageUrls"].isNotEmpty)
-                  ? car["imageUrls"][0]
+                  ? (car["imageUrls"][0].startsWith("http")
+                      ? car["imageUrls"][0]
+                      : "${baseUrl.replaceAll('/api', '')}${car["imageUrls"][0]}")
                   : "https://via.placeholder.com/300x180",
               height: 180,
               width: double.infinity,

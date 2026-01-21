@@ -8,6 +8,7 @@ import 'viewmodels/register_viewmodel.dart';
 import 'viewmodels/home_viewmodel.dart';
 import 'viewmodels/orders_viewmodel.dart';
 import 'viewmodels/order_detail_viewmodel.dart';
+import 'viewmodels/owner_car_viewmodel.dart';
 import 'views/login_view.dart';
 import 'views/register_view.dart';
 import 'views/home/home_navigation.dart';
@@ -26,6 +27,7 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => OrderDetailViewModel()),
         ChangeNotifierProvider(create: (_) => CarListViewModel()),
         ChangeNotifierProvider(create: (_) => ProfileViewModel()),
+        ChangeNotifierProvider(create: (_) => OwnerCarViewModel()),
 
       ],
       child: const MyApp(),

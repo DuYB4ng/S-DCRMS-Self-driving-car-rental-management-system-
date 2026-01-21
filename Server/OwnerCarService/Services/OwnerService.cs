@@ -21,6 +21,8 @@ namespace OwnerCarService.Services
         Task<OwnerCarDTO?> LayOwnerCarTheoIdAsync(int ownerCarId);
         [Cache(300)]
         Task<IEnumerable<CarDTO>> LayTatCaXeCuaOwnerCarIdAsync(int ownerCarId);
+        Task<OwnerCarDTO?> LayOwnerCarTheoFirebaseUidAsync(string firebaseUid);
+
         Task<OwnerCarDTO?> ThemOwnerCarAsync(CreateOwnerCarDTO ownerCarDto);
         [Cache(300)]
         Task<CarDTO?> LayXeTheoIdAsync(int carId);
@@ -162,6 +164,11 @@ namespace OwnerCarService.Services
             }
 
             return await _ownerCarRepository.XoaOwnerCarAsync(ownerCarId);
+        }
+        public async Task<OwnerCarDTO?> LayOwnerCarTheoFirebaseUidAsync(string firebaseUid)
+        {
+            var ownerCar = await _ownerCarRepository.LayOwnerCarTheoFirebaseUidAsync(firebaseUid);
+            return ownerCar == null ? null : _mapper.Map<OwnerCarDTO>(ownerCar);
         }
     }
 }
