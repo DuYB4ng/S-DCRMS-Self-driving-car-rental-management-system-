@@ -176,6 +176,38 @@ services:
       - sdcrms-network
 
   # ==========================
+  # Mosquitto (MQTT Broker)
+  # ==========================
+  mosquitto:
+    image: eclipse-mosquitto:2.0
+    container_name: mosquitto
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./Server/Mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
+    networks:
+      - sdcrms-network
+
+  # ==========================
+  # AI Service (Python/YOLO)
+  # ==========================
+  aiservice:
+    build:
+      context: ./Server/AIService
+    container_name: aiservice
+    ports:
+      - "8002:8002"
+    environment:
+      - MQTT_BROKER=mosquitto
+      - MQTT_PORT=1883
+    depends_on:
+      - mosquitto
+    networks:
+      - sdcrms-network
+
+
+  # ==========================
   # MySQL Database
   # ==========================
   db:

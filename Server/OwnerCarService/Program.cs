@@ -71,9 +71,11 @@ builder.Services.AddCors(options =>
 builder.Services.AddScoped<ICarRepository, CarRepository>();
 builder.Services.AddScoped<IOwnerCarRepository, OwnerCarRepository>();
 builder.Services.AddScoped<IMaintenanceRepository, MaintenanceRepository>();
+builder.Services.AddScoped<ICarCalendarRepository, CarCalendarRepository>();
 
 // Đăng ký Services
 builder.Services.AddScoped<ICarService, CarService>();
+builder.Services.AddScoped<ICarCalendarService, CarCalendarService>();
 
 // builder.Services.AddScoped<IOwnerCarService, OwnerCarService.Services.OwnerCarService>();
 builder.Services.AddScoped<IMaintenanceService, MaintenanceService>();

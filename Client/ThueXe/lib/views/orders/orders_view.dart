@@ -114,11 +114,26 @@ class OrdersView extends StatelessWidget {
                         // ===== Nút Thanh toán =====
                         _buildPayButton(context, order),
 
-                        // ===== Nút Check-in / Check-out =====
-                        _buildActionButton(context, vm, order),
-
-                        // ===== Nút Đánh giá (sẽ chỉnh ở bước 2 để ẩn nếu đã review) =====
-                        _buildReviewButton(context, vm, order),
+                        // ===== Nút Thanh toán (giữ lại nếu cần cho retry, nhưng User bảo xóa hết action ở đây, tuy nhiên thanh toán Pending có thể là ngoại lệ. tạm xóa nút hành động checkin/review) =====
+                        _buildPayButton(context, order),
+                        
+                        // Nút xem chi tiết (Mặc định thẻ card đã bấm được, nhưng có thể thêm text "Xem chi tiết")
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => OrderDetailView(
+                                    orderId: order["bookingID"].toString(),
+                                  ),
+                                ),
+                              );
+                            }, 
+                            child: const Text("Xem chi tiết"),
+                          )
+                        ),
                       ],
                     ),
                   ),
@@ -181,196 +196,4 @@ class OrdersView extends StatelessWidget {
     );
   }
 
-  Widget _buildReviewButton(
-    BuildContext context,
-    OrdersViewModel vm,
-    Map<String, dynamic> order,
-  ) {
-    final status = (order["status"] ?? "") as String;
-    final bookingId = order["bookingID"] as int?;
-    final checkOut = order["checkOut"] as bool? ?? false;
-
-    // 🔹 Lấy list review từ order
-    final List<dynamic> reviews = (order["reviews"] as List?) ?? [];
-    final bool hasReview = reviews.isNotEmpty;
-
-    // Chỉ show nút REVIEW khi:
-    // - có bookingId
-    // - status = Completed
-    // - đã CheckOut = true
-    // - CHƯA có review nào
-    if (bookingId == null || status != "Completed" || !checkOut || hasReview) {
-      return const SizedBox.shrink();
-    }
-
-    return Align(
-      alignment: Alignment.centerRight,
-      child: TextButton(
-        child: const Text("Đánh giá"),
-        onPressed: () async {
-          final result = await showDialog<_ReviewDialogResult>(
-            context: context,
-            builder: (context) => const _ReviewDialog(),
-          );
-
-          if (result == null) return;
-
-          try {
-            await _reviewService.createReview(
-              bookingId: bookingId,
-              rating: result.rating,
-              comment: result.comment,
-            );
-
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text("Gửi đánh giá thành công")),
-            );
-
-            // 🔹 Load lại list đơn để:
-            // - lấy review vừa tạo
-            // - ẩn luôn nút "Đánh giá"
-            await vm.refreshOrders();
-          } catch (e) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text("Có lỗi khi gửi đánh giá")),
-            );
-          }
-        },
-      ),
-    );
-  }
-
-  Widget _buildActionButton(
-    BuildContext context,
-    OrdersViewModel vm,
-    Map<String, dynamic> order,
-  ) {
-    final status = (order["status"] ?? "") as String;
-    final bookingId = order["bookingID"] as int?;
-
-    final checkIn = order["checkIn"] as bool? ?? false;
-    final checkOut = order["checkOut"] as bool? ?? false;
-
-    if (bookingId == null) return const SizedBox.shrink();
-
-    // 1️⃣ Đã thanh toán nhưng chưa check-in -> hiện nút Check-in
-    if (status == "Paid" && !checkIn) {
-      return Align(
-        alignment: Alignment.centerRight,
-        child: ElevatedButton(
-          onPressed: () async {
-            try {
-              await vm.checkIn(bookingId);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Check-in thành công")),
-              );
-            } catch (e) {
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(SnackBar(content: Text("Check-in thất bại: $e")));
-            }
-          },
-          child: const Text("Check-in"),
-        ),
-      );
-    }
-
-    // 2️⃣ Đang thuê (InProgress) & chưa check-out -> hiện nút Check-out
-    if (status == "InProgress" && checkIn && !checkOut) {
-      return Align(
-        alignment: Alignment.centerRight,
-        child: ElevatedButton(
-          onPressed: () async {
-            try {
-              await vm.checkOut(bookingId);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Check-out thành công")),
-              );
-            } catch (e) {
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(SnackBar(content: Text("Check-out thất bại: $e")));
-            }
-          },
-          child: const Text("Check-out"),
-        ),
-      );
-    }
-
-    // 3️⃣ Các trạng thái khác -> không hiện nút
-    return const SizedBox.shrink();
-  }
-}
-
-class _ReviewDialogResult {
-  final int rating;
-  final String comment;
-  _ReviewDialogResult(this.rating, this.comment);
-}
-
-class _ReviewDialog extends StatefulWidget {
-  const _ReviewDialog();
-
-  @override
-  State<_ReviewDialog> createState() => _ReviewDialogState();
-}
-
-class _ReviewDialogState extends State<_ReviewDialog> {
-  int _rating = 5;
-  final TextEditingController _commentController = TextEditingController();
-
-  @override
-  void dispose() {
-    _commentController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text("Đánh giá chuyến thuê"),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text("Chọn số sao:"),
-          DropdownButton<int>(
-            value: _rating,
-            items: List.generate(5, (i) {
-              final v = i + 1;
-              return DropdownMenuItem(value: v, child: Text("$v sao"));
-            }),
-            onChanged: (v) {
-              if (v != null) {
-                setState(() {
-                  _rating = v;
-                });
-              }
-            },
-          ),
-          const SizedBox(height: 8),
-          TextField(
-            controller: _commentController,
-            maxLines: 3,
-            decoration: const InputDecoration(
-              labelText: "Nhận xét",
-              border: OutlineInputBorder(),
-            ),
-          ),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text("Hủy"),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            final comment = _commentController.text.trim();
-            Navigator.pop(context, _ReviewDialogResult(_rating, comment));
-          },
-          child: const Text("Gửi"),
-        ),
-      ],
-    );
-  }
 }

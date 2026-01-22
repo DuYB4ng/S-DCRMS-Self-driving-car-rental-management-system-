@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../models/car.dart';
 import '../../viewmodels/owner_car_viewmodel.dart';
 import '../../services/api_service.dart'; // For BaseUrl helper if needed or just use relative path
+import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 
 class AddEditCarView extends StatefulWidget {
   final Car? car;
@@ -17,6 +18,12 @@ class AddEditCarView extends StatefulWidget {
 class _AddEditCarViewState extends State<AddEditCarView> {
   final _formKey = GlobalKey<FormState>();
   
+  final _licensePlateFormatter = MaskTextInputFormatter(
+    mask: '##@-###.##', 
+    filter: { "#": RegExp(r'[0-9]'), "@": RegExp(r'[A-Z]'), ".": RegExp(r'[0-9]') },
+    type: MaskAutoCompletionType.lazy
+  );
+
   // Controllers
   late TextEditingController _nameController;
   late TextEditingController _licensePlateController;
@@ -193,7 +200,11 @@ class _AddEditCarViewState extends State<AddEditCarView> {
               ),
               TextFormField(
                 controller: _licensePlateController,
-                decoration: const InputDecoration(labelText: "License Plate"),
+                inputFormatters: [_licensePlateFormatter], 
+                decoration: const InputDecoration(
+                  labelText: "License Plate (e.g. 30A-123.45)",
+                  hintText: "30A-123.45"
+                ),
                 validator: (val) => val!.isEmpty ? "Required" : null,
               ),
               TextFormField(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/owner_car_viewmodel.dart';
 import 'add_edit_car_view.dart';
+import 'car_calendar_view.dart';
 
 class OwnerHomeView extends StatefulWidget {
   const OwnerHomeView({super.key});
@@ -90,6 +91,22 @@ class _OwnerHomeViewState extends State<OwnerHomeView> {
                               builder: (context) => AddEditCarView(car: car),
                             ),
                           );
+                        },
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.calendar_month, color: Colors.orange),
+                        onPressed: () {
+                          if (car.carId != null) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => CarCalendarView(
+                                  carId: car.carId!,
+                                  carName: car.nameCar,
+                                ),
+                              ),
+                            );
+                          }
                         },
                       ),
                       IconButton(

@@ -74,6 +74,24 @@ class ApiService {
       options: Options(headers: {"Authorization": "Bearer $token"}),
     );
   }
+  
+  /// ======================
+  /// PATCH
+  /// ======================
+  Future<Response> patch(
+    String path,
+    Map<String, dynamic> data, {
+    Map<String, dynamic>? queryParameters,
+  }) async {
+    final token = await _getFirebaseToken();
+
+    return await _dio.patch(
+      path,
+      data: data,
+      queryParameters: queryParameters,
+      options: Options(headers: {"Authorization": "Bearer $token"}),
+    );
+  }
 
   /// ======================
   /// DELETE
@@ -88,6 +106,21 @@ class ApiService {
       path,
       queryParameters: queryParameters,
       options: Options(headers: {"Authorization": "Bearer $token"}),
+    );
+  }
+
+  /// ======================
+  /// POST External (Gọi service khác port, ví dụ AI Service)
+  /// ======================
+  Future<Response> postExternal(
+    String fullUrl,
+    dynamic data, {
+    Options? options,
+  }) async {
+    return await _dio.post(
+      fullUrl,
+      data: data,
+      options: options,
     );
   }
 

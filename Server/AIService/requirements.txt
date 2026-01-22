@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+ultralytics
+opencv-python-headless
+paho-mqtt
+python-multipart
+numpy
+requests
+easyocr
+

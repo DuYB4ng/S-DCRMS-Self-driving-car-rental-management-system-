@@ -12,6 +12,7 @@ public class AppDbContext : DbContext
     public DbSet<Car> Cars { get; set; }
     public DbSet<OwnerCar> OwnerCars { get; set; }
     public DbSet<Maintenance> Maintenances { get; set; }
+    public DbSet<CarCalendar> CarCalendars { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -47,6 +48,11 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Maintenance>(entity =>
         {
             entity.Property(e => e.Cost).HasPrecision(18, 2);
+        });
+
+        modelBuilder.Entity<CarCalendar>(entity =>
+        {
+            entity.Property(e => e.PrivatePrice).HasPrecision(18, 2);
         });
     }
 }

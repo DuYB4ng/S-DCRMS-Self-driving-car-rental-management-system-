@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'smart_checkin_view.dart';
 import '../../viewmodels/order_detail_viewmodel.dart';
+import '../../viewmodels/orders_viewmodel.dart';
+import '../../services/review_service.dart';
 
 class OrderDetailView extends StatelessWidget {
   final String orderId;
@@ -168,22 +171,158 @@ class OrderDetailView extends StatelessWidget {
                     child: const Text("Đánh giá chuyến đi"),
                   ),
                 ),
+                ),
               ],
             ),
+            
+            const SizedBox(height: 12),
+            
+            // ===== ACTION BUTTONS SECTION =====
+            if (car != null) ...[
+                // 1️⃣ Smart Check-in (Nhận xe)
+                // Điều kiện: Status = 'Paid' (Đã thanh toán) và chưa Check-in
+                if ((order["status"] == "Paid" || order["status"] == "Approved") && !(order["checkIn"] ?? false))
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      icon: const Icon(Icons.camera_alt),
+                      onPressed: () {
+                         Navigator.push(
+                           context,
+                           MaterialPageRoute(
+                             builder: (context) => SmartCheckInView(
+                               orderId: order["bookingID"].toString(),
+                               expectedLicensePlate: car["licensePlate"]?.toString() ?? "",
+                               onCheckInSuccess: () {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text("Check-in thành công!")),
+                                  );
+                                  // Reload
+                                  Provider.of<OrderDetailViewModel>(context, listen: false).loadOrder(order["bookingID"].toString());
+                               },
+                             ),
+                           ),
+                         );
+                      },
+                      label: const Text("Smart Check-in (Nhận xe)"),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blueAccent,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                    ),
+                  ),
+
+                 // 2️⃣ Check-out (Trả xe)
+                 // Điều kiện: Status = 'InProgress' (Đang thuê) và đã Check-in và chưa Check-out
+                 if (order["status"] == "InProgress" && (order["checkIn"] ?? false) && !(order["checkOut"] ?? false))
+                   SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      icon: const Icon(Icons.exit_to_app),
+                      onPressed: () async {
+                         // Call Check-out API
+                         // Assuming we can access OrdersViewModel or calling Service directly.
+                         // Let's use OrdersViewModel if available in stack, or creating a temporary instance/service call.
+                         // Better: Use OrderDetailViewModel to handle this if possible, or simple service call.
+                         // I will call Provider<OrdersViewModel> assuming it's up in the tree (it typically is if using MultiProvider at root).
+                         // If not, I'll fallback gracefully? No, let's assume root provider.
+                         try {
+                           // Simplest: use Provider.of<OrdersViewModel> if it exists. 
+                           // But Wait, OrderDetailView might be pushed from OrdersView...
+                           // Let's assume we can get OrdersViewModel.
+                           final ordersVM = Provider.of<OrdersViewModel>(context, listen: false);
+                           await ordersVM.checkOut(order["bookingID"]);
+                           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Trả xe thành công!")));
+                           Provider.of<OrderDetailViewModel>(context, listen: false).loadOrder(order["bookingID"].toString());
+                         } catch (e) {
+                           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Lỗi trả xe: $e")));
+                         }
+                      },
+                      label: const Text("Check-out (Trả xe)"),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.orange,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                    ),
+                  ),
+
+                 // 3️⃣ Đánh giá (Review)
+                 // Điều kiện: Status = 'Completed' và chưa đánh giá
+                 if (order["status"] == "Completed" && ((order["reviews"] as List?)?.isEmpty ?? true))
+                   SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      icon: const Icon(Icons.star),
+                      onPressed: () async {
+                          final result = await showDialog<_ReviewDialogResult>(
+                            context: context,
+                            builder: (context) => const _ReviewDialog(),
+                          );
+
+                          if (result != null) {
+                             // Call Review API
+                             final reviewService = ReviewService();
+                             try {
+                               await reviewService.createReview(
+                                 bookingId: order["bookingID"], 
+                                 rating: result.rating, 
+                                 comment: result.comment
+                               );
+                               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Đánh giá thành công!")));
+                               Provider.of<OrderDetailViewModel>(context, listen: false).loadOrder(order["bookingID"].toString());
+                             } catch (e) {
+                               ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Lỗi: $e")));
+                             }
+                          }
+                      },
+                      label: const Text("Đánh giá chuyến đi"),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.amber,
+                        foregroundColor: Colors.black,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                    ),
+                  ),
+            ],
 
             const SizedBox(height: 24),
             const Divider(),
 
-            // PHẦN REVIEW (UI)
-            const Text(
-              "Đánh giá",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              "Bạn có thể đánh giá trải nghiệm chuyến đi của mình để chúng tôi phục vụ tốt hơn.",
-              style: TextStyle(color: Colors.black54),
-            ),
+            // PHẦN REVIEW (UI) - Hiển thị review nếu có
+            if ((order["reviews"] as List?)?.isNotEmpty ?? false) ...[
+                const Text(
+                  "Đánh giá của bạn",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(color: Colors.amber[50], borderRadius: BorderRadius.circular(8)),
+                  child: Column(
+                     crossAxisAlignment: CrossAxisAlignment.start,
+                     children: [
+                        Row(children: [
+                           const Icon(Icons.star, color: Colors.amber, size: 20),
+                           Text(" ${order["reviews"][0]["rating"]}/5", style: const TextStyle(fontWeight: FontWeight.bold))
+                        ]),
+                        const SizedBox(height: 4),
+                        Text("${order["reviews"][0]["comment"]}")
+                     ],
+                  ),
+                )
+            ] else ...[
+                const Text(
+                  "Đánh giá",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  "Bạn có thể đánh giá trải nghiệm chuyến đi của mình sau khi hoàn thành đơn hàng.",
+                  style: TextStyle(color: Colors.black54),
+                ),
+            ],
           ],
         ),
       ),
@@ -216,6 +355,79 @@ class OrderDetailView extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _ReviewDialogResult {
+  final int rating;
+  final String comment;
+  _ReviewDialogResult(this.rating, this.comment);
+}
+
+class _ReviewDialog extends StatefulWidget {
+  const _ReviewDialog();
+
+  @override
+  State<_ReviewDialog> createState() => _ReviewDialogState();
+}
+
+class _ReviewDialogState extends State<_ReviewDialog> {
+  int _rating = 5;
+  final TextEditingController _commentController = TextEditingController();
+
+  @override
+  void dispose() {
+    _commentController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text("Đánh giá chuyến thuê"),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text("Chọn số sao:"),
+          DropdownButton<int>(
+            value: _rating,
+            items: List.generate(5, (i) {
+              final v = i + 1;
+              return DropdownMenuItem(value: v, child: Text("$v sao"));
+            }),
+            onChanged: (v) {
+              if (v != null) {
+                setState(() {
+                  _rating = v;
+                });
+              }
+            },
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _commentController,
+            maxLines: 3,
+            decoration: const InputDecoration(
+              labelText: "Nhận xét",
+              border: OutlineInputBorder(),
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text("Hủy"),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            final comment = _commentController.text.trim();
+            Navigator.pop(context, _ReviewDialogResult(_rating, comment));
+          },
+          child: const Text("Gửi"),
+        ),
+      ],
     );
   }
 }
