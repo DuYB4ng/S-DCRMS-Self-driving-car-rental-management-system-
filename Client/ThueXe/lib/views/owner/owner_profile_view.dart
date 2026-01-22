@@ -2,35 +2,36 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../viewmodels/profile_viewmodel.dart';
-import 'profile_detail_view.dart';
 
-class ProfileView extends StatelessWidget {
+class ProfileView extends StatefulWidget {
   final Function(int) onMenuTap;
 
   const ProfileView({super.key, required this.onMenuTap});
 
   @override
-  Widget build(BuildContext context) {
-    final vm = Provider.of<ProfileViewModel>(context);
+  State<ProfileView> createState() => _ProfileViewState();
+}
 
-    // Load thông tin user khi mở màn
+class _ProfileViewState extends State<ProfileView> {
+  @override
+  void initState() {
+    super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      vm.loadUserInfo();
+      context.read<ProfileViewModel>().loadUserInfo();
     });
+  }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Tài khoản"),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0,
-      ),
-      body: SingleChildScrollView(
+  @override
+  Widget build(BuildContext context) {
+    final vm = context.watch<ProfileViewModel>();
+
+    // ✅ Quan trọng: không bọc Scaffold nữa nếu bạn dùng trong OwnerHome (tránh lồng Scaffold)
+    return SafeArea(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Thông tin user
             Row(
               children: [
                 CircleAvatar(
@@ -62,7 +63,7 @@ class ProfileView extends StatelessWidget {
                         vm.email ?? "Chưa có email",
                         style: const TextStyle(color: Colors.black54),
                       ),
-                      if (vm.phone != null) ...[
+                      if (vm.phone != null && vm.phone!.isNotEmpty) ...[
                         const SizedBox(height: 2),
                         Text(
                           vm.phone!,
@@ -83,20 +84,12 @@ class ProfileView extends StatelessWidget {
               "Tài khoản",
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
-
             const SizedBox(height: 8),
-            _menuItem(Icons.person, "Thông tin cá nhân", () {
-               Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const ProfileDetailView(),
-                ),
-              );
-            }),
+
+            _menuItem(Icons.person, "Thông tin cá nhân", () {}),
 
             _menuItem(Icons.list_alt, "Đơn hàng của tôi", () {
-              // chuyển sang tab Đơn hàng trong bottom nav
-              onMenuTap(1);
+              widget.onMenuTap(1); // nhảy qua tab Đơn hàng
             }),
 
             const SizedBox(height: 24),
@@ -109,7 +102,6 @@ class ProfileView extends StatelessWidget {
             ),
 
             const SizedBox(height: 8),
-            // 🔥 Nút ĐĂNG XUẤT
             ListTile(
               leading: const Icon(Icons.logout, color: Colors.red),
               title: const Text(
@@ -128,12 +120,12 @@ class ProfileView extends StatelessWidget {
     );
   }
 
-  Widget _menuItem(IconData icon, String title, Function onTap) {
+  Widget _menuItem(IconData icon, String title, VoidCallback onTap) {
     return ListTile(
       leading: Icon(icon, size: 26),
       title: Text(title, style: const TextStyle(fontSize: 18)),
       trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-      onTap: () => onTap(),
+      onTap: onTap,
     );
   }
 
@@ -143,9 +135,7 @@ class ProfileView extends StatelessWidget {
       builder: (ctx) {
         return AlertDialog(
           title: const Text("Đăng xuất"),
-          content: const Text(
-            "Bạn có chắc chắn muốn đăng xuất khỏi tài khoản này?",
-          ),
+          content: const Text("Bạn có chắc chắn muốn đăng xuất khỏi tài khoản này?"),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(),
@@ -153,27 +143,27 @@ class ProfileView extends StatelessWidget {
             ),
             TextButton(
               onPressed: () async {
-                Navigator.of(ctx).pop(); // đóng dialog
+                Navigator.of(ctx).pop();
 
-                // 1. Sign out Firebase
                 try {
                   await FirebaseAuth.instance.signOut();
                 } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text("Lỗi khi đăng xuất: $e")),
-                  );
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("Lỗi khi đăng xuất: $e")),
+                    );
+                  }
                   return;
                 }
 
-                // 2. Điều hướng về màn Login và xóa hết history (không back lại được)
-                Navigator.of(
-                  context,
-                ).pushNamedAndRemoveUntil("/login", (route) => false);
+                if (context.mounted) {
+                  Navigator.of(context).pushNamedAndRemoveUntil(
+                    "/login",
+                    (route) => false,
+                  );
+                }
               },
-              child: const Text(
-                "Đăng xuất",
-                style: TextStyle(color: Colors.red),
-              ),
+              child: const Text("Đăng xuất", style: TextStyle(color: Colors.red)),
             ),
           ],
         );

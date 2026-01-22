@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../../viewmodels/owner_car_viewmodel.dart';
 import 'add_edit_car_view.dart';
 import 'car_calendar_view.dart';
+import 'owner_car_detail_view.dart';
+import '../profile/profile_view.dart';
 
 class OwnerHomeView extends StatefulWidget {
   const OwnerHomeView({super.key});
@@ -33,16 +35,16 @@ class _OwnerHomeViewState extends State<OwnerHomeView> {
               context.read<OwnerCarViewModel>().loadCars();
             },
           ),
-          IconButton(
-            icon: const Icon(Icons.logout, color: Colors.blueAccent),
-            onPressed: () async {
-              // Sign out
-              await context.read<OwnerCarViewModel>().signOut();
-              if (context.mounted) {
-                 Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
-              }
-            },
-          ),
+          // IconButton(
+          //   icon: const Icon(Icons.logout, color: Colors.blueAccent),
+          //   onPressed: () async {
+          //     // Sign out
+          //     await context.read<OwnerCarViewModel>().signOut();
+          //     if (context.mounted) {
+          //        Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+          //     }
+          //   },
+          // ),
         ],
       ),
       body: Consumer<OwnerCarViewModel>(
@@ -143,6 +145,54 @@ class _OwnerHomeViewState extends State<OwnerHomeView> {
           );
         },
       ),
+bottomNavigationBar: BottomNavigationBar(
+  currentIndex: 0, // đang ở Trang chủ
+  type: BottomNavigationBarType.fixed,
+  onTap: (index) {
+    if (index == 0) return;
+
+    if (index == 1) {
+      // Đơn hàng (chưa có thì để tạm)
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Đơn hàng (chưa tạo view)")),
+      );
+    } else if (index == 2) {
+      // 👉 TÀI KHOẢN → MỞ PROFILE OWNER
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ProfileView(
+            onMenuTap: (i) {
+              // nếu từ Profile bấm "Đơn hàng của tôi"
+              Navigator.pop(context); // quay về OwnerHome
+              if (i == 1) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Đơn hàng (chưa tạo view)")),
+                );
+              }
+            },
+          ),
+        ),
+      );
+    }
+  },
+  items: const [
+    BottomNavigationBarItem(
+      icon: Icon(Icons.home),
+      label: "Trang chủ",
+    ),
+    BottomNavigationBarItem(
+      icon: Icon(Icons.receipt_long),
+      label: "Đơn hàng",
+    ),
+    BottomNavigationBarItem(
+      icon: Icon(Icons.person),
+      label: "Tài khoản",
+    ),
+  ],
+),
+
+
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(

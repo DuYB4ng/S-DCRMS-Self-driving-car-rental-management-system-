@@ -147,33 +147,32 @@ class OrderDetailView extends StatelessWidget {
             ],
 
             // Hàng nút hành động
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () {
-                      // TODO: gắn số điện thoại, chat, gì đó cho "Liên hệ hỗ trợ"
-                    },
-                    child: const Text("Liên hệ hỗ trợ"),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      // TODO: chuyển qua màn đánh giá chuyến đi
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("Mở màn hình đánh giá (TODO)"),
-                        ),
-                      );
-                    },
-                    child: const Text("Đánh giá chuyến đi"),
-                  ),
-                ),
-                ),
-              ],
+Row(
+  children: [
+    Expanded(
+      child: OutlinedButton(
+        onPressed: () {
+          // TODO: gắn số điện thoại, chat, gì đó cho "Liên hệ hỗ trợ"
+        },
+        child: const Text("Liên hệ hỗ trợ"),
+      ),
+    ),
+    const SizedBox(width: 12),
+    Expanded(
+      child: ElevatedButton(
+        onPressed: () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Mở màn hình đánh giá (TODO)"),
             ),
+          );
+        },
+        child: const Text("Đánh giá chuyến đi"),
+      ),
+    ),
+  ],
+),
+
             
             const SizedBox(height: 12),
             
