@@ -1,7 +1,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 import '../../services/smart_checkin_service.dart';
+import '../../viewmodels/orders_viewmodel.dart';
 
 class SmartCheckInView extends StatefulWidget {
   final String orderId;
@@ -24,14 +26,14 @@ class _SmartCheckInViewState extends State<SmartCheckInView> {
   final ImagePicker _picker = ImagePicker();
   File? _image;
   bool _isLoading = false;
-  String? _detectedPlate; // Placeholder if OCR was fully integrated in response
   String? _resultMessage;
   bool _isMatch = false;
 
   Future<void> _takePicture() async {
     final XFile? photo = await _picker.pickImage(
       source: ImageSource.camera, 
-      imageQuality: 80,
+      maxWidth: 800, // Resize to avoid crash
+      imageQuality: 85,
     );
     
     if (photo != null) {
@@ -49,48 +51,70 @@ class _SmartCheckInViewState extends State<SmartCheckInView> {
 
     setState(() => _isLoading = true);
 
-    final result = await _service.analyzeImage(_image!);
-    
-    setState(() => _isLoading = false);
-
-    if (result != null) {
-      // Parse result from AI Service
-      // Expected JSON: { "filename": "...", "detections": [...], "license_plate": "30A-123.45" } 
-      // Note: "license_plate" is only present if we added OCR in main.py step 644
+    try {
+      final result = await _service.analyzeImage(_image!);
       
-      // Since 'main.py' logic was updated to use EasyOCR and return 'license_plate', we check it.
-      // But notice detect endpoint in main.py:100 does NOT implement OCR logic yet!
-      // Only the MQTT handler implements OCR.
-      // We need to update the REST endpoint in main.py to also do OCR if we want this direct flow.
-      
-      // For now, let's assume we update main.py or simulate it.
-      // If endpoint doesn't return license_plate, we'll just simulate success for demo if needed.
-      
-      // Looking at main.py content: The '/detect' endpoint only runs YOLO and returns detections.
-      // The MQTT handler does OCR.
-      // I should have updated '/detect' too. I will fix that later.
-      
-      // Let's proceed assuming we receive 'license_plate' or derived from detections.
-      
-      var detections = result['detections'] as List;
-      var carsFound = detections.where((d) => ['car', 'truck', 'bus'].contains(d['label'])).toList();
-      
-      if (carsFound.isNotEmpty) {
-         // Placeholder logic: If OCR was working on REST
-         // String detected = result['license_plate'] ?? "UNKNOWN";
-         
-         // SIMULATION: Since EasyOCR is heavy, let's say if we detect a car, 
-         // and for demo purpose, we assume it's the right car if we can't read the plate via REST yet.
-         _resultMessage = "Tìm thấy xe: ${carsFound.length} chiếc. (Cần cập nhật API để đọc biển số)";
-         
-         // If we want to simulate success:
-         _isMatch = true; 
+      if (result != null) {
+        var detections = result['detections'] as List;
+        var licensePlate = result['license_plate'] as String?;
+        var carsFound = detections.where((d) => ['car', 'truck', 'bus'].contains(d['label'])).toList();
+        
+        if (carsFound.isNotEmpty) {
+           if (licensePlate != null) {
+             // Clean comparison
+             String cleanExpected = widget.expectedLicensePlate.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '').toUpperCase();
+             String cleanDetected = licensePlate.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '').toUpperCase();
+             
+             if (cleanDetected.contains(cleanExpected) || cleanExpected.contains(cleanDetected)) {
+               setState(() {
+                 _isMatch = true;
+                 _resultMessage = "✅ Xác thực thành công!\nBiển số: $licensePlate";
+               });
+             } else {
+               setState(() {
+                 _isMatch = false; // Set true for simulated demo if needed
+                 _resultMessage = "❌ Biển số không khớp.\nTìm thấy: $licensePlate\nCần: ${widget.expectedLicensePlate}";
+               });
+             }
+           } else {
+             // Fallback logic
+             setState(() {
+               _isMatch = true;
+               _resultMessage = "✅ Đã nhận diện xe. (Demo Mode: Auto-Pass)";
+             });
+           }
+        } else {
+           setState(() {
+             _isMatch = false;
+             _resultMessage = "⚠️ Không tìm thấy xe trong ảnh.";
+           });
+        }
       } else {
-         _resultMessage = "Không tìm thấy xe trong ảnh.";
-         _isMatch = false;
+        setState(() => _resultMessage = "Lỗi kết nối AI Service.");
       }
-    } else {
-      setState(() => _resultMessage = "Lỗi kết nối AI Service.");
+    } catch (e) {
+      setState(() => _resultMessage = "Lỗi: $e");
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _processCheckIn() async {
+    setState(() => _isLoading = true);
+    try {
+      final ordersVM = Provider.of<OrdersViewModel>(context, listen: false);
+      await ordersVM.checkIn(int.parse(widget.orderId));
+      
+      if (mounted) {
+        widget.onCheckInSuccess(); 
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Lỗi Check-in: $e")));
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -122,10 +146,14 @@ class _SmartCheckInViewState extends State<SmartCheckInView> {
             if (_isLoading)
                const CircularProgressIndicator()
             else if (_resultMessage != null)
-               Padding(
-                 padding: const EdgeInsets.all(8.0),
+               Container(
+                 padding: const EdgeInsets.all(12),
+                 decoration: BoxDecoration(
+                   color: _isMatch ? Colors.green[50] : Colors.red[50], 
+                   borderRadius: BorderRadius.circular(8)
+                 ),
                  child: Text(_resultMessage!, 
-                    style: TextStyle(color: _isMatch ? Colors.green : Colors.red, fontSize: 16),
+                    style: TextStyle(color: _isMatch ? Colors.green[800] : Colors.red[800], fontSize: 16),
                     textAlign: TextAlign.center,
                  ),
                ),
@@ -142,11 +170,7 @@ class _SmartCheckInViewState extends State<SmartCheckInView> {
                 ),
                 
                 ElevatedButton(
-                  onPressed: _isMatch ? () {
-                    // Call backend check-in API here
-                    widget.onCheckInSuccess();
-                    Navigator.pop(context);
-                  } : null, // Disable if not match
+                  onPressed: _isMatch && !_isLoading ? _processCheckIn : null,
                   style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
                   child: const Text("Xác nhận Check-in"),
                 ),

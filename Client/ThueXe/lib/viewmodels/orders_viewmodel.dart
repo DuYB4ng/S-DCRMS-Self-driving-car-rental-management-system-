@@ -52,16 +52,19 @@ class OrdersViewModel extends ChangeNotifier {
 
       final uid = user.uid;
 
-      await api.post(
+      print("CALLING CHECK-IN: /booking/$bookingId/check-in?firebaseUid=$uid");
+      final res = await api.post(
         "/booking/$bookingId/check-in",
         {},
         queryParameters: {
-          "firebaseUid": uid, // 👈 gửi uid lên query
+          "firebaseUid": uid,
         },
       );
+      print("CHECK-IN RESPONSE: $res");
 
       await refreshOrders();
     } catch (e) {
+      print("CHECK-IN ERROR: $e");
       rethrow;
     }
   }

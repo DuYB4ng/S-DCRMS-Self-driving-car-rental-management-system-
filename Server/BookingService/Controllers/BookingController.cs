@@ -157,9 +157,12 @@ namespace BookingService.Controllers
             if (booking.CustomerId != customerId)
                 return Forbid();
 
-            // 5. Chỉ cho check-in khi đã thanh toán
-            if (!string.Equals(booking.Status, BookingStatuses.Paid, StringComparison.OrdinalIgnoreCase))
-                return BadRequest(new { message = $"Booking must be '{BookingStatuses.Paid}' before check-in" });
+            // 5. Check-in logic (Updated for Dev/Demo: Allow Paid, Approved, or Pending)
+            var allowedStatuses = new[] { BookingStatuses.Paid, BookingStatuses.Pending, "Approved" };
+            if (!allowedStatuses.Contains(booking.Status, StringComparer.OrdinalIgnoreCase))
+            {
+                 return BadRequest(new { message = $"Booking must be Paid/Approved/Pending to check-in. Current: {booking.Status}" });
+            }
 
             if (booking.CheckIn)
                 return BadRequest(new { message = "Booking already checked in" });

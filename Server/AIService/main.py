@@ -7,6 +7,7 @@ import threading
 import easyocr
 from fastapi import FastAPI, UploadFile, File
 from ultralytics import YOLO
+import re
 import paho.mqtt.client as mqtt
 
 app = FastAPI()
@@ -154,3 +155,82 @@ async def detect(file: UploadFile = File(...)):
                             break
             
     return {"filename": file.filename, "detections": detections, "license_plate": detected_plate}
+
+@app.post("/ocr-license")
+async def ocr_license(file: UploadFile = File(...)):
+    contents = await file.read()
+    nparr = np.frombuffer(contents, np.uint8)
+    img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+    
+    if img is None:
+        return {"error": "Invalid image"}
+
+    # Run EasyOCR on the whole image
+    # detail=0 returns just the list of strings
+    raw_texts = reader.readtext(img, detail=0) 
+    
+    # Join all texts to easier regex search or list search
+    full_text = " ".join(raw_texts)
+    print(f"OCR Raw Text: {full_text}")
+
+    # Initialize result fields
+    license_no = None
+    issue_date = None
+    expiry_date = None
+    
+    # 1. Extract License Number (12 digits)
+    # Search for patterns like "No: 123456789012" or just 12 digits floating
+    license_match = re.search(r'\b\d{12}\b', full_text)
+    if license_match:
+        license_no = license_match.group(0)
+    
+    # 2. Extract Dates (dd/mm/yyyy)
+    # Usually there are DOB, Issue Date, Expiry Date.
+    # Logic: 
+    # - Expiry date is usually the last date or near "Có giá trị đến / Expires"
+    # - DOB is usually near "Ngày sinh / DOB"
+    # - Issue date is usually near bottom right
+    
+    date_matches = re.findall(r'\b\d{2}/\d{2}/\d{4}\b', full_text)
+    
+    # Simple heuristic:
+    # If 1 date found -> Unknown which one
+    # If 2 dates -> Likely DOB and Expiry (or Issue and Expiry)
+    # If 3 dates -> DOB, Issue, Expiry (in some order)
+    
+    # Let's try to be smart based on keywords if possible, but line-by-line is better for keyword context.
+    # Re-read with detail=1 to get line positions is better but complex.
+    # For now, let's use list index heuristic.
+    # Usually: DOB (top), Issue (bottom), Expiry (bottom left corner or similar).
+    # In Vietnamese PET card: DOB is near top. Expiry is bottom left ("Có giá trị đến"). Issue Date ("Ngày... tháng... năm") is bottom right.
+    
+    if len(date_matches) >= 1:
+        # Assuming the last date found is likely the Expiry date (common layout)
+        expiry_date = date_matches[-1]
+        
+    if len(date_matches) >= 2:
+         # If 3 dates: [0]=DOB, [1]=Issue?, [2]=Expiry
+         # If 2 dates: could be DOB, Expiry.
+         # Let's just return what we found and let User verify.
+         pass
+         
+    # Refined Search for specific keywords in the raw list
+    for i, line in enumerate(raw_texts):
+        line_clean = line.lower()
+        
+        # Check Expiry explicitly
+        if "giá trị đến" in line_clean or "until" in line_clean:
+             # Look for date in this line or next line
+             temp_date = re.search(r'\d{2}/\d{2}/\d{4}', line)
+             if temp_date: 
+                 expiry_date = temp_date.group(0)
+             elif i+1 < len(raw_texts):
+                 temp_date_next = re.search(r'\d{2}/\d{2}/\d{4}', raw_texts[i+1])
+                 if temp_date_next:
+                     expiry_date = temp_date_next.group(0)
+
+    return {
+        "license_no": license_no,
+        "expiry_date": expiry_date,
+        "raw_text": raw_texts
+    }

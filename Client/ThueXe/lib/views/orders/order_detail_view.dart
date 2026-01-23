@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'smart_checkin_view.dart';
+import 'smart_checkout_view.dart';
 import '../../viewmodels/order_detail_viewmodel.dart';
 import '../../viewmodels/orders_viewmodel.dart';
 import '../../services/review_service.dart';
@@ -146,42 +147,13 @@ class OrderDetailView extends StatelessWidget {
               const SizedBox(height: 24),
             ],
 
-            // Hàng nút hành động
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () {
-                      // TODO: gắn số điện thoại, chat, gì đó cho "Liên hệ hỗ trợ"
-                    },
-                    child: const Text("Liên hệ hỗ trợ"),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      // TODO: chuyển qua màn đánh giá chuyến đi
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("Mở màn hình đánh giá (TODO)"),
-                        ),
-                      );
-                    },
-                    child: const Text("Đánh giá chuyến đi"),
-                  ),
-                ),
-                ),
-              ],
-            ),
-            
-            const SizedBox(height: 12),
+
             
             // ===== ACTION BUTTONS SECTION =====
             if (car != null) ...[
                 // 1️⃣ Smart Check-in (Nhận xe)
-                // Điều kiện: Status = 'Paid' (Đã thanh toán) và chưa Check-in
-                if ((order["status"] == "Paid" || order["status"] == "Approved") && !(order["checkIn"] ?? false))
+                // Điều kiện: Status = 'Paid' / 'Approved' / 'Pending' (Demo) và chưa Check-in
+                if ((order["status"] == "Paid" || order["status"] == "Approved" || order["status"] == "Pending") && !(order["checkIn"] ?? false))
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
@@ -220,26 +192,26 @@ class OrderDetailView extends StatelessWidget {
                     width: double.infinity,
                     child: ElevatedButton.icon(
                       icon: const Icon(Icons.exit_to_app),
-                      onPressed: () async {
-                         // Call Check-out API
-                         // Assuming we can access OrdersViewModel or calling Service directly.
-                         // Let's use OrdersViewModel if available in stack, or creating a temporary instance/service call.
-                         // Better: Use OrderDetailViewModel to handle this if possible, or simple service call.
-                         // I will call Provider<OrdersViewModel> assuming it's up in the tree (it typically is if using MultiProvider at root).
-                         // If not, I'll fallback gracefully? No, let's assume root provider.
-                         try {
-                           // Simplest: use Provider.of<OrdersViewModel> if it exists. 
-                           // But Wait, OrderDetailView might be pushed from OrdersView...
-                           // Let's assume we can get OrdersViewModel.
-                           final ordersVM = Provider.of<OrdersViewModel>(context, listen: false);
-                           await ordersVM.checkOut(order["bookingID"]);
-                           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Trả xe thành công!")));
-                           Provider.of<OrderDetailViewModel>(context, listen: false).loadOrder(order["bookingID"].toString());
-                         } catch (e) {
-                           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Lỗi trả xe: $e")));
-                         }
+                      onPressed: () {
+                         // Navigate to Smart Check-out
+                         Navigator.push(
+                           context,
+                           MaterialPageRoute(
+                             builder: (context) => SmartCheckOutView(
+                               orderId: order["bookingID"].toString(),
+                               expectedLicensePlate: car["licensePlate"]?.toString() ?? "",
+                               onCheckOutSuccess: () {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text("Trả xe thành công!")),
+                                  );
+                                  // Reload
+                                  Provider.of<OrderDetailViewModel>(context, listen: false).loadOrder(order["bookingID"].toString());
+                               },
+                             ),
+                           ),
+                         );
                       },
-                      label: const Text("Check-out (Trả xe)"),
+                      label: const Text("Smart Check-out (Trả xe)"),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.orange,
                         foregroundColor: Colors.white,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../viewmodels/profile_viewmodel.dart';
+import 'edit_profile_view.dart';
 
 class ProfileView extends StatelessWidget {
   final Function(int) onMenuTap;
@@ -34,15 +35,20 @@ class ProfileView extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 28,
-                  child: Text(
-                    (vm.email != null && vm.email!.isNotEmpty)
-                        ? vm.email![0].toUpperCase()
-                        : "?",
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  backgroundImage: (vm.photoUrl != null && vm.photoUrl!.isNotEmpty)
+                      ? NetworkImage(vm.photoUrl!)
+                      : null,
+                  child: (vm.photoUrl == null || vm.photoUrl!.isEmpty)
+                      ? Text(
+                          (vm.email != null && vm.email!.isNotEmpty)
+                              ? vm.email![0].toUpperCase()
+                              : "?",
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        )
+                      : null,
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -85,7 +91,10 @@ class ProfileView extends StatelessWidget {
 
             const SizedBox(height: 8),
             _menuItem(Icons.person, "Thông tin cá nhân", () {
-              // TODO: mở màn chi tiết profile nếu muốn
+               Navigator.push(
+                 context, 
+                 MaterialPageRoute(builder: (context) => const EditProfileView())
+               );
             }),
 
             _menuItem(Icons.list_alt, "Đơn hàng của tôi", () {
