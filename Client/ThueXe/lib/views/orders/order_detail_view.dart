@@ -159,6 +159,18 @@ class OrderDetailView extends StatelessWidget {
                     child: ElevatedButton.icon(
                       icon: const Icon(Icons.camera_alt),
                       onPressed: () {
+                         final startTime = _parseDateTime(order["startDate"]);
+                         if (startTime != null) {
+                            // Allow check-in 30 mins before
+                            final checkInTime = startTime.subtract(const Duration(minutes: 30)); 
+                            if (DateTime.now().isBefore(checkInTime)) {
+                               ScaffoldMessenger.of(context).showSnackBar(
+                                 const SnackBar(content: Text("Chưa đến giờ nhận xe! Vui lòng chờ đến gần giờ hẹn.")),
+                               );
+                               return;
+                            }
+                         }
+
                          Navigator.push(
                            context,
                            MaterialPageRoute(
@@ -186,7 +198,6 @@ class OrderDetailView extends StatelessWidget {
                   ),
 
                  // 2️⃣ Check-out (Trả xe)
-                 // Điều kiện: Status = 'InProgress' (Đang thuê) và đã Check-in và chưa Check-out
                  if (order["status"] == "InProgress" && (order["checkIn"] ?? false) && !(order["checkOut"] ?? false))
                    SizedBox(
                     width: double.infinity,
@@ -201,10 +212,7 @@ class OrderDetailView extends StatelessWidget {
                                orderId: order["bookingID"].toString(),
                                expectedLicensePlate: car["licensePlate"]?.toString() ?? "",
                                onCheckOutSuccess: () {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text("Trả xe thành công!")),
-                                  );
-                                  // Reload
+                                  // NOTE: Status will update to 'ReturnRequested'
                                   Provider.of<OrderDetailViewModel>(context, listen: false).loadOrder(order["bookingID"].toString());
                                },
                              ),
@@ -219,6 +227,28 @@ class OrderDetailView extends StatelessWidget {
                       ),
                     ),
                   ),
+
+                 // ⏳ Đang chờ xác nhận
+                 if (order["status"] == "ReturnRequested")
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.orange[50], 
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.orange)
+                      ),
+                      child: const Column(
+                        children: [
+                           Icon(Icons.hourglass_bottom, color: Colors.orange, size: 30),
+                           SizedBox(height: 8),
+                           Text(
+                             "Đang chờ chủ xe xác nhận trả xe...",
+                             style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold),
+                           ),
+                        ],
+                      ),
+                    ),
 
                  // 3️⃣ Đánh giá (Review)
                  // Điều kiện: Status = 'Completed' và chưa đánh giá

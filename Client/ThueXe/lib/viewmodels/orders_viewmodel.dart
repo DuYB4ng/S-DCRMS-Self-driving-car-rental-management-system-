@@ -69,8 +69,8 @@ class OrdersViewModel extends ChangeNotifier {
     }
   }
 
-  /// CUSTOMER check-out booking
-  Future<void> checkOut(int bookingId) async {
+  /// CUSTOMER REQUEST check-out (Request Return)
+  Future<void> requestCheckOut(int bookingId) async {
     try {
       final user = _auth.currentUser;
       if (user == null) {
@@ -80,10 +80,10 @@ class OrdersViewModel extends ChangeNotifier {
       final uid = user.uid;
 
       await api.post(
-        "/booking/$bookingId/check-out",
+        "/booking/$bookingId/request-check-out",
         {},
         queryParameters: {
-          "firebaseUid": uid, // 👈 gửi uid lên query
+          "firebaseUid": uid,
         },
       );
 

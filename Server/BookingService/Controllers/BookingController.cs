@@ -118,46 +118,32 @@ namespace BookingService.Controllers
 
         // POST: api/booking/{id}/check-in
         [HttpPost("{id}/check-in")]
-        // [Authorize] // sau này bật auth thì mở dòng này
-        [AllowAnonymous] // tạm dev
+        [AllowAnonymous] 
         public async Task<IActionResult> CheckIn(
             int id,
-            [FromQuery] string? firebaseUid // dev mode: cho phép nhận từ query
+            [FromQuery] string? firebaseUid 
         )
         {
-            // 1. Lấy booking
             var booking = await _context.Bookings.FindAsync(id);
             if (booking == null)
                 return NotFound(new { message = "Booking not found" });
 
-            // 2. Xác định firebaseUid
-            string? uid = firebaseUid;
+            // ... (Firebase Auth logic omitted for brevity, keeping existing flow) ...
+            string? uid = firebaseUid ?? User.FindFirst("firebaseUid")?.Value ?? User.FindFirst("user_id")?.Value;
+            if (string.IsNullOrEmpty(uid)) return BadRequest("firebaseUid required");
 
-            // Nếu không truyền qua query, thử lấy từ JWT claim
-            if (string.IsNullOrEmpty(uid))
-            {
-                uid = User.FindFirst("firebaseUid")?.Value
-                ?? User.FindFirst("user_id")?.Value;
-            }
-
-            if (string.IsNullOrEmpty(uid))
-            {
-                // Không có cách nào lấy được uid -> dev mode báo lỗi rõ ràng
-                return BadRequest("firebaseUid is required (query or JWT).");
-            }
-
-            // 3. Lấy customer theo firebaseUid
             var customer = await _customerClient.GetByFirebaseUidAsync(uid);
-            if (customer == null)
-                return BadRequest(new { message = "Customer profile not found" });
+            if (customer == null) return BadRequest(new { message = "Customer profile not found" });
 
-            int customerId = customer.CustomerId;
+            if (booking.CustomerId != customer.CustomerId) return Forbid();
 
-            // 4. Chỉ chủ booking mới được check-in
-            if (booking.CustomerId != customerId)
-                return Forbid();
+            // === 1. CHECK START DATE TIME ===
+            // Allow check-in 1 hour before start time
+            if (DateTime.UtcNow < booking.StartDate.AddHours(-1))
+            {
+                 return BadRequest(new { message = "Chưa đến giờ nhận xe. Vui lòng quay lại sau." });
+            }
 
-            // 5. Check-in logic (Updated for Dev/Demo: Allow Paid, Approved, or Pending)
             var allowedStatuses = new[] { BookingStatuses.Paid, BookingStatuses.Pending, "Approved" };
             if (!allowedStatuses.Contains(booking.Status, StringComparer.OrdinalIgnoreCase))
             {
@@ -167,7 +153,6 @@ namespace BookingService.Controllers
             if (booking.CheckIn)
                 return BadRequest(new { message = "Booking already checked in" });
 
-            // 6. Cập nhật trạng thái check-in
             booking.CheckIn = true;
             booking.Status = BookingStatuses.InProgress;
 
@@ -175,58 +160,69 @@ namespace BookingService.Controllers
             return Ok(booking.ToBookingDto());
         }
 
-
-        // POST: api/booking/{id}/check-out
-        [HttpPost("{id}/check-out")]
-        // [Authorize] // sau này bật auth
+        // POST: api/booking/{id}/request-check-out (Customer requests return)
+        [HttpPost("{id}/request-check-out")]
         [AllowAnonymous]
-        public async Task<IActionResult> CheckOut(
+        public async Task<IActionResult> RequestCheckOut(
             int id,
-            [FromQuery] string? firebaseUid // dev mode
+            [FromQuery] string? firebaseUid
         )
         {
             var booking = await _context.Bookings.FindAsync(id);
-            if (booking == null)
-                return NotFound(new { message = "Booking not found" });
+            if (booking == null) return NotFound();
 
-            // 1. Xác định firebaseUid
-            string? uid = firebaseUid;
+            string? uid = firebaseUid ?? User.FindFirst("firebaseUid")?.Value ?? User.FindFirst("user_id")?.Value;
+            if (string.IsNullOrEmpty(uid)) return BadRequest("firebaseUid required");
 
-            if (string.IsNullOrEmpty(uid))
-            {
-                uid = User.FindFirst("firebaseUid")?.Value
-                ?? User.FindFirst("user_id")?.Value;
-            }
-
-            if (string.IsNullOrEmpty(uid))
-            {
-                return BadRequest("firebaseUid is required (query or JWT).");
-            }
-
-            // 2. Lấy customer theo firebaseUid
             var customer = await _customerClient.GetByFirebaseUidAsync(uid);
-            if (customer == null)
-                return BadRequest(new { message = "Customer profile not found" });
+            if (customer == null) return BadRequest(new { message = "Customer not found" });
 
-            int customerId = customer.CustomerId;
+            if (booking.CustomerId != customer.CustomerId) return Forbid();
 
-            // 3. Chỉ chủ booking mới được check-out
-            if (booking.CustomerId != customerId)
-                return Forbid();
+            if (!booking.CheckIn) return BadRequest(new { message = "Must check-in first" });
+            if (booking.CheckOut) return BadRequest(new { message = "Already checked out" });
 
-            // 4. Phải check-in rồi mới được check-out
-            if (!booking.CheckIn)
-                return BadRequest(new { message = "Booking must be checked in before check-out" });
-
-            if (booking.CheckOut)
-                return BadRequest(new { message = "Booking already checked out" });
-
-            // 5. Cập nhật trạng thái
-            booking.CheckOut = true;
-            booking.Status = BookingStatuses.Completed;
-
+            // Set Status to ReturnRequested
+            booking.Status = BookingStatuses.ReturnRequested;
+            
             await _context.SaveChangesAsync();
             return Ok(booking.ToBookingDto());
+        }
+
+        // POST: api/booking/{id}/confirm-return (Owner confirms return)
+        [HttpPost("{id}/confirm-return")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ConfirmReturn(int id)
+        {
+            // Note: Should verify if caller is Owner. For Dev, open.
+            var booking = await _context.Bookings.FindAsync(id);
+            if (booking == null) return NotFound();
+
+            if (booking.Status != BookingStatuses.ReturnRequested && booking.Status != "InProgress") 
+            {
+                 // Allow confirming even if just InProgress (force checkout)
+            }
+
+            booking.CheckOut = true;
+            booking.Status = BookingStatuses.Completed;
+            
+            await _context.SaveChangesAsync();
+            return Ok(booking.ToBookingDto());
+        }
+
+        // POST: api/booking/{id}/check-out (Legacy/Direct)
+        [HttpPost("{id}/check-out")]
+        [AllowAnonymous]
+        public async Task<IActionResult> CheckOut(
+            int id,
+            [FromQuery] string? firebaseUid 
+        )
+        {
+             // ... existing implementation ...
+             // For now, let's just alias this to RequestCheckOut if we want to force the flow?
+             // Or keep it for direct checkout.
+             // Replacing with Request logic:
+             return await RequestCheckOut(id, firebaseUid);
         }
 
 

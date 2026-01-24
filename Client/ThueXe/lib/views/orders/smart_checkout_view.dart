@@ -115,15 +115,16 @@ class _SmartCheckOutViewState extends State<SmartCheckOutView> {
     setState(() => _isLoading = true);
     try {
       final ordersVM = Provider.of<OrdersViewModel>(context, listen: false);
-      await ordersVM.checkOut(int.parse(widget.orderId));
+      await ordersVM.requestCheckOut(int.parse(widget.orderId));
       
       if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Đã gửi yêu cầu trả xe thành công!")));
         widget.onCheckOutSuccess();
         Navigator.pop(context); // Close SmartCheckOutView
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Lỗi trả xe: $e")));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Lỗi gửi yêu cầu: $e")));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
