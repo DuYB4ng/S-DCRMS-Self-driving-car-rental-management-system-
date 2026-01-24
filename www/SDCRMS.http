@@ -1,6 +1,0 @@
-@SDCRMS_HostAddress = http://localhost:5100
-
-GET {{SDCRMS_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
