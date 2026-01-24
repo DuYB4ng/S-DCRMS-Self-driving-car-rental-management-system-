@@ -23,7 +23,7 @@ class ProfileViewModel extends ChangeNotifier {
   int? customerId;
 
   // AI Service URL (Direct)
-  final String aiServiceUrl = "http://192.168.1.6:8002/ocr-license";
+  final String aiServiceUrl = "http://192.168.111.150:8002/ocr-license";
 
   Future<void> loadUserInfo() async {
     final user = _auth.currentUser;
@@ -203,7 +203,7 @@ class ProfileViewModel extends ChangeNotifier {
         String relativeUrl = response.data['url'];
         
         // 3. Construct full URL via Gateway
-        String fullUrl = "http://192.168.1.6:8000$relativeUrl";
+        String fullUrl = "http://192.168.111.150:8000$relativeUrl";
         
         // 4. Update Firebase Profile
         await user.updatePhotoURL(fullUrl);
