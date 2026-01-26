@@ -7,7 +7,7 @@ class SmartCheckInService {
   final ApiService _api = ApiService();
   
   // AI Service runs on port 8002, use local IP
-  final String aiServiceUrl = "http://192.168.111.150:8002/detect";
+  final String aiServiceUrl = "http://192.168.1.4:8002/detect";
 
   Future<Map<String, dynamic>?> analyzeImage(File imageFile) async {
     try {

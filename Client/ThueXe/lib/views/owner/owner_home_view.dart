@@ -5,6 +5,7 @@ import 'add_edit_car_view.dart';
 import 'car_calendar_view.dart';
 import 'owner_car_detail_view.dart';
 import '../profile/profile_view.dart';
+import 'car_bookings_view.dart';
 
 class OwnerHomeView extends StatefulWidget {
   const OwnerHomeView({super.key});
@@ -108,6 +109,19 @@ class _OwnerHomeViewState extends State<OwnerHomeView> {
                                 ),
                               ),
                             );
+                          }
+                        },
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.list_alt, color: Colors.blueGrey),
+                        onPressed: () {
+                          if (car.carId != null) {
+                             Navigator.push(
+                               context,
+                               MaterialPageRoute(
+                                 builder: (context) => CarBookingsView(carId: car.carId!, carName: car.nameCar),
+                               ),
+                             );
                           }
                         },
                       ),

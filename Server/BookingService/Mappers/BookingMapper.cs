@@ -17,6 +17,7 @@ namespace BookingService.Mappers
                 Status = booking.Status,
                 CustomerId = booking.CustomerId,
                 CarId = booking.CarId,
+                TotalPrice = booking.TotalPrice,
                 CreatedAt  = booking.CreatedAt
             };
         }
@@ -33,7 +34,8 @@ namespace BookingService.Mappers
                 CheckIn = false,
                 CheckOut = false,
                 Status = "Pending",
-                CarId     = bookingDto.CarId 
+                CarId     = bookingDto.CarId,
+                TotalPrice = bookingDto.TotalPrice
             };
         }
     }

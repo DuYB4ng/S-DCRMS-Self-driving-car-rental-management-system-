@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 class ApiService {
   final Dio _dio = Dio(
     BaseOptions(
-      baseUrl: "http://192.168.111.150:8000/api",
+      baseUrl: "http://192.168.1.4:8000/api",
       connectTimeout: Duration(seconds: 60),
       receiveTimeout: Duration(seconds: 60),
     ),

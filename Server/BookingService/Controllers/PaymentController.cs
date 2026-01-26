@@ -144,7 +144,10 @@ namespace BookingService.Controllers
 
 
         [HttpGet("vnpay-ipn")]
-        public async Task<IActionResult> VnPayIpn()
+        public async Task<IActionResult> VnPayIpn(
+            [FromServices] UserClient userClient,
+            [FromServices] OwnerCarClient ownerCarClient
+        )
         {
             // Dùng service mới để validate chữ ký & đọc dữ liệu
             var response = _vnPayService.PaymentExecute(Request.Query);
@@ -184,12 +187,42 @@ namespace BookingService.Controllers
             // response.VnPayResponseCode == "00" là thanh toán thành công
             if (response.VnPayResponseCode == "00")
             {
-                payment.Status = "Completed";
-                payment.PaymentDate = DateTime.Now;
-
-                if (booking != null && booking.Status == "Pending")
+                if (payment.Status != "Completed") // Only process if not already processed
                 {
-                    booking.Status = "Paid";
+                    payment.Status = "Completed";
+                    payment.PaymentDate = DateTime.Now;
+
+                    if (booking != null)
+                    {
+                        if (booking.Status == "Pending")
+                        {
+                            booking.Status = "Paid";
+                        }
+                        else if (booking.Status == "InProgress" || booking.Status == "ReturnRequested")
+                        {
+                            booking.Status = "Completed";
+                            booking.CheckOut = true;
+                        }
+                        
+                        // Credit Owner Wallet (90% of received amount)
+                        try 
+                        {
+                             var ownerId = await ownerCarClient.GetOwnerIdByCarIdAsync(booking.CarId);
+                             if (ownerId != null) 
+                             {
+                                 var ownerUid = await ownerCarClient.GetOwnerFirebaseUidAsync(ownerId.Value);
+                                 if (ownerUid != null)
+                                 {
+                                     var creditAmount = payment.Amount * 0.9m;
+                                     await userClient.CreditWalletAsync(ownerUid, creditAmount);
+                                 }
+                             }
+                        }
+                        catch
+                        {
+                            // Log error but don't fail IPN
+                        }
+                    }
                 }
             }
             else
@@ -206,9 +239,40 @@ namespace BookingService.Controllers
 
         // GET: api/payment/vnpay-return
         [HttpGet("vnpay-return")]
-        public IActionResult VnPayReturn()
+        public async Task<IActionResult> VnPayReturn(
+            [FromServices] UserClient userClient,
+            [FromServices] OwnerCarClient ownerCarClient
+        )
         {
             var response = _vnPayService.PaymentExecute(Request.Query);
+            if (response.Success && response.VnPayResponseCode == "00")
+            {
+                 // Update DB similar to IPN (Quick Dev Mode)
+                 if (int.TryParse(response.OrderId, out var paymentId))
+                 {
+                     var payment = await _paymentRepo.GetByIdAsync(paymentId);
+                     if (payment != null && payment.Status != "Completed")
+                     {
+                         var booking = await _context.Bookings.FindAsync(payment.BookingID);
+                         payment.Status = "Completed";
+                         payment.PaymentDate = DateTime.Now;
+                         
+                         if (booking != null)
+                         {
+                             if (booking.Status == "Pending") booking.Status = "Paid";
+                             // Credit Owner Wallet
+                             try {
+                                 var ownerId = await ownerCarClient.GetOwnerIdByCarIdAsync(booking.CarId);
+                                 if (ownerId != null) {
+                                     var ownerUid = await ownerCarClient.GetOwnerFirebaseUidAsync(ownerId.Value);
+                                     if (ownerUid != null) await userClient.CreditWalletAsync(ownerUid, payment.Amount * 0.9m);
+                                 }
+                             } catch {}
+                         }
+                         await _context.SaveChangesAsync();
+                     }
+                 }
+            }
             return Ok(response);
         }
 

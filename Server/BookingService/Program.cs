@@ -33,6 +33,8 @@ builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
 
 //Đăng ký HttpClient
 builder.Services.AddHttpClient<CustomerClient>();
+builder.Services.AddHttpClient<UserClient>();
+builder.Services.AddHttpClient<OwnerCarClient>();
 builder.Services.AddScoped<IVnPayService, VnPayService>();
 
 // Đăng kí VNPay
@@ -42,7 +44,10 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.Migrate(); // tạo DB + chạy migrations nếu chưa có
+    // db.Database.Migrate(); // tạo DB + chạy migrations nếu chưa có
+    // Use EnsureDeleted/Created to bypass migration command requirement
+    db.Database.EnsureDeleted();
+    db.Database.EnsureCreated();
 }
 
 // Configure the HTTP request pipeline.

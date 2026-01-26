@@ -31,6 +31,7 @@ namespace OwnerCarService.Services
         Task<MaintenanceDTO> ThemMaintenanceChoXeAsync(int carId, CreateMaintenanceDTO maintenanceDto);
         Task<OwnerCarDTO?> CapNhatOwnerCarAsync(int ownerId, UpdateOwnerCarDTO ownerCarDto);
         Task<bool> XoaOwnerCarAsync(int ownerCarId);
+        Task KhoaXeCuaOwnerAsync(int ownerId);
     }
 
     public class OwnerCarService : IOwnerCarService
@@ -169,6 +170,19 @@ namespace OwnerCarService.Services
         {
             var ownerCar = await _ownerCarRepository.LayOwnerCarTheoFirebaseUidAsync(firebaseUid);
             return ownerCar == null ? null : _mapper.Map<OwnerCarDTO>(ownerCar);
+        }
+
+        public async Task KhoaXeCuaOwnerAsync(int ownerId)
+        {
+             var ownerCar = await _ownerCarRepository.LayOwnerCarTheoIdAsync(ownerId);
+             if (ownerCar != null) 
+             {
+                 foreach(var car in ownerCar.Cars)
+                 {
+                     car.IsActive = false;
+                     await _carRepository.CapNhatXeAsync(car);
+                 }
+             }
         }
     }
 }

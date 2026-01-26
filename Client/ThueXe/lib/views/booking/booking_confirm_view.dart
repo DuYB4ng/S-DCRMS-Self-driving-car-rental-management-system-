@@ -236,9 +236,10 @@ class _BookingConfirmViewState extends State<BookingConfirmView>
       }
 
       // 3️⃣ Thanh toán VNPay
+      final deposit = (widget.car["deposit"] as num).toInt();
       final vnPayRes = await paymentService.createVnPayPayment(
         bookingId: bookingId,
-        amount: totalPrice,
+        amount: deposit,
       );
 
       final paymentId =

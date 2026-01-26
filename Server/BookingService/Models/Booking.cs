@@ -12,6 +12,7 @@ namespace BookingService.Models
         public string Status { get; set; } = "Pending";
         public int CustomerId { get; set; }
         public int CarId { get; set; }
+        public decimal TotalPrice { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }

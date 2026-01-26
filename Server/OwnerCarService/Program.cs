@@ -87,6 +87,10 @@ builder.Services.AddRedisShared(builder.Configuration);
 // Đăng ký service với proxy tự động AOP
 builder.Services.AddProxiedService<IOwnerCarService, OwnerCarService.Services.OwnerCarService>();
 
+// Background Services
+builder.Services.AddHttpClient();
+builder.Services.AddHostedService<OwnerCarService.BackgroundServices.WalletEnforcementService>();
+
 var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {

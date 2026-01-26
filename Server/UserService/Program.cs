@@ -56,6 +56,7 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 
 // Services
 builder.Services.AddScoped<IUserService, UserService.Services.UserService>();
+builder.Services.AddScoped<UserService.Services.IVnPayService, UserService.Services.VnPayService>();
 
 var app = builder.Build();
 using (var scope = app.Services.CreateScope())
@@ -66,7 +67,9 @@ using (var scope = app.Services.CreateScope())
     try
     {
         Console.WriteLine("🗄️ Checking database state...");
-        db.Database.Migrate(); // 👈 Dòng này sẽ tự tạo DB nếu chưa tồn tại
+        // db.Database.Migrate(); 
+        db.Database.EnsureDeleted(); // Reset DB to apply new Wallet fields
+        db.Database.EnsureCreated(); // Create new DB schema
         Console.WriteLine("✅ Database created or already up to date.");
     }
     catch (Exception ex)

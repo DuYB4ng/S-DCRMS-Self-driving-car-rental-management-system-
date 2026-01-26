@@ -12,6 +12,7 @@ namespace UserService.Repositories
         Task UpdateAsync(User user);
         Task SaveChangesAsync();
         Task<List<User>> GetAllAsync();
+        Task<List<User>> GetUsersWithNegativeBalanceAsync(DateTime thresholdDate);
     }
 
     public class UserRepository : IUserRepository
@@ -55,6 +56,13 @@ namespace UserService.Repositories
         public async Task SaveChangesAsync()
         {
             await _context.SaveChangesAsync();
+        }
+
+        public async Task<List<User>> GetUsersWithNegativeBalanceAsync(DateTime thresholdDate)
+        {
+            return await _context.Users
+                .Where(u => u.WalletBalance < 0 && u.LastNegativeBalanceDate <= thresholdDate)
+                .ToListAsync();
         }
     }
 }

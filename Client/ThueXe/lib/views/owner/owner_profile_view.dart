@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../viewmodels/profile_viewmodel.dart';
+import '../wallet_screen.dart';
 
 class ProfileView extends StatefulWidget {
   final Function(int) onMenuTap;
@@ -91,6 +92,11 @@ class _ProfileViewState extends State<ProfileView> {
             _menuItem(Icons.list_alt, "Đơn hàng của tôi", () {
               widget.onMenuTap(1); // nhảy qua tab Đơn hàng
             }),
+
+            _menuItem(Icons.account_balance_wallet, "Ví của tôi", () {
+                Navigator.push(context, MaterialPageRoute(builder: (context) => const WalletScreen()));
+            }),
+
 
             const SizedBox(height: 24),
             const Divider(),
