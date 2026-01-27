@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace BookingService.Models
 {
     public class Booking
@@ -8,11 +10,14 @@ namespace BookingService.Models
         public bool CheckIn { get; set; } = false;
         public bool CheckOut { get; set; } = false;
         public List<Review> Reviews { get; set; } = new List<Review>();
-        public Payment? Payment { get; set; }
+        public List<BookingPayment> Payments { get; set; } = new List<BookingPayment>();
         public string Status { get; set; } = "Pending";
         public int CustomerId { get; set; }
         public int CarId { get; set; }
         public decimal TotalPrice { get; set; }
+        public decimal DepositAmount { get; set; }
+        public decimal RefundAmount { get; set; }
+        public decimal CancellationFee { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }

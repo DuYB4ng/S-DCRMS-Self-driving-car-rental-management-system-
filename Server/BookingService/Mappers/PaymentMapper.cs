@@ -5,9 +5,9 @@ namespace BookingService.Mappers
 {
     public static class PaymentMapper
     {
-        public static Payment toPaymentDto(this Payment PaymentModel)
+        public static BookingPayment toPaymentDto(this BookingPayment PaymentModel)
         {
-            return new Payment
+            return new BookingPayment
             {
                 PaymentDate = PaymentModel.PaymentDate,
                 Amount = PaymentModel.Amount,
@@ -17,9 +17,9 @@ namespace BookingService.Mappers
 
             };
         }
-        public static Payment ToPaymentFromCreateDto(this CreatePaymentRequestDto paymentDto)
+        public static BookingPayment ToPaymentFromCreateDto(this CreatePaymentRequestDto paymentDto)
         {
-            return new Payment
+            return new BookingPayment
             {
                 PaymentDate = paymentDto.PaymentDate,
                 Amount = paymentDto.Amount,

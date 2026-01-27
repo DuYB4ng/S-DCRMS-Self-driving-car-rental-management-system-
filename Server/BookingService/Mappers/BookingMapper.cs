@@ -18,6 +18,9 @@ namespace BookingService.Mappers
                 CustomerId = booking.CustomerId,
                 CarId = booking.CarId,
                 TotalPrice = booking.TotalPrice,
+                DepositAmount = booking.DepositAmount,
+                RefundAmount = booking.RefundAmount,
+                CancellationFee = booking.CancellationFee,
                 CreatedAt  = booking.CreatedAt
             };
         }

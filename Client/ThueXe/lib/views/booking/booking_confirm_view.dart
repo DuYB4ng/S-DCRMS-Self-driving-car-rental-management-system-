@@ -3,6 +3,8 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../services/booking_service.dart';
 import '../../services/payment_service.dart';
+import '../../services/wallet_service.dart';
+import '../wallet_screen.dart';
 import 'package:dio/dio.dart';
 
 class BookingConfirmView extends StatefulWidget {
@@ -25,6 +27,8 @@ class _BookingConfirmViewState extends State<BookingConfirmView>
     with WidgetsBindingObserver {
   String selectedMethod = "Cash";
   int totalPrice = 0;
+  num walletBalance = 0;
+  bool isWalletLoaded = false;
 
   // Lưu lại paymentId của giao dịch VNPay đang chờ
   int? _pendingPaymentId;
@@ -38,13 +42,31 @@ class _BookingConfirmViewState extends State<BookingConfirmView>
     WidgetsBinding.instance.addObserver(this);
 
     // Tính tổng tiền 1 lần ở đây
+    // Tính tổng tiền 1 lần ở đây (Chỉ tính tiền thuê - Thế chấp là riêng)
     final pricePerDay = (widget.car["pricePerDay"] as num).toInt();
-    final deposit = (widget.car["deposit"] as num).toInt();
+    // final deposit = (widget.car["deposit"] as num).toInt(); // Collateral, not included in Total Rental Price
     final days = widget.returnDate.difference(widget.receiveDate).inDays <= 0
         ? 1
         : widget.returnDate.difference(widget.receiveDate).inDays;
 
-    totalPrice = pricePerDay * days + deposit;
+    totalPrice = pricePerDay * days;
+    
+    _loadWalletBalance();
+  }
+
+  Future<void> _loadWalletBalance() async {
+     try {
+       final walletService = WalletService();
+       final res = await walletService.getBalance();
+       if (res.data != null) {
+          setState(() {
+            walletBalance = res.data["balance"] ?? 0;
+            isWalletLoaded = true;
+          });
+       }
+     } catch (e) {
+       print("Error loading wallet: $e");
+     }
   }
 
   @override
@@ -64,6 +86,7 @@ class _BookingConfirmViewState extends State<BookingConfirmView>
   }
 
   @override
+  @override
   Widget build(BuildContext context) {
     final car = widget.car;
     final carName = (car["carName"] ?? "").toString();
@@ -76,74 +99,131 @@ class _BookingConfirmViewState extends State<BookingConfirmView>
 
     return Scaffold(
       appBar: AppBar(title: const Text("Xác nhận đặt xe")),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            _box(
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight - 32),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    carName.isEmpty ? "Xe" : carName,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
+                  Column(
+                    children: [
+                      _box(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              carName.isEmpty ? "Xe" : carName,
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            if (brandName.isNotEmpty) ...[
+                              const SizedBox(height: 4),
+                              Text(brandName, style: const TextStyle(fontSize: 16)),
+                            ],
+                            const SizedBox(height: 8),
+                            _row("Nhận xe", widget.receiveDate.toString().substring(0, 16)),
+                            _row("Trả xe", widget.returnDate.toString().substring(0, 16)),
+                            _row("Số ngày thuê", "$days ngày"),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      _box(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              "Chi phí",
+                              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 10),
+                            _row("Giá thuê / ngày", "$pricePerDay VNĐ"),
+                            _row("Thế chấp (sẽ hoàn lại)", "$deposit VNĐ"), 
+                            const Divider(height: 25),
+                            _row("Tổng tiền thuê", "$totalPrice VNĐ", isBold: true),
+                            const SizedBox(height: 8),
+                            Text(
+                              "Cần thanh toán trước (Thế chấp): $deposit VNĐ",
+                              style: const TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      _box(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              "Phương thức thanh toán",
+                              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 10),
+                            _radioRow("Tiền mặt", "Cash"),
+                            _radioRow("Ví của tôi (Số dư: ${walletBalance.toInt()}đ)", "Wallet"),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  if (selectedMethod == "Wallet") ...[
+                     if (!isWalletLoaded)
+                        const Center(child: CircularProgressIndicator())
+                     else if (walletBalance < deposit) 
+                       Column(
+                         children: [
+                            Text(
+                              "Số dư không đủ để cọc ($deposit đ)",
+                              style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 10),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton.icon(
+                                onPressed: () async {
+                                   await Navigator.push(context, MaterialPageRoute(builder: (context) => const WalletScreen()));
+                                   _loadWalletBalance();
+                                }, 
+                                icon: const Icon(Icons.add),
+                                label: const Text("Nạp thêm tiền"),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.orange,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(vertical: 12)
+                                ),
+                              ),
+                            )
+                         ],
+                       )
+                     else
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () => handleConfirmBooking(context),
+                            child: Text("Xác nhận & Cọc ngay ($deposit đ)"),
+                            style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12)),
+                          ),
+                        )
+                  ] else 
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () => handleConfirmBooking(context),
+                        child: const Text("Xác nhận đặt xe"),
+                        style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12)),
+                      ),
                     ),
-                  ),
-                  if (brandName.isNotEmpty) ...[
-                    const SizedBox(height: 4),
-                    Text(brandName, style: const TextStyle(fontSize: 16)),
-                  ],
-                  const SizedBox(height: 8),
-                  _row("Nhận xe", widget.receiveDate.toString()),
-                  _row("Trả xe", widget.returnDate.toString()),
-                  _row("Số ngày thuê", "$days ngày"),
                 ],
               ),
             ),
-            const SizedBox(height: 16),
-            _box(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    "Chi phí",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 10),
-                  _row("Giá thuê / ngày", "$pricePerDay VNĐ"),
-                  _row("Tiền cọc", "$deposit VNĐ"),
-                  const Divider(height: 25),
-                  _row("Tổng cộng", "$totalPrice VNĐ", isBold: true),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            _box(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    "Phương thức thanh toán",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 10),
-                  _radioRow("Tiền mặt", "Cash"),
-                  _radioRow("VNPay", "VNPAY"),
-                ],
-              ),
-            ),
-            const Spacer(),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () => handleConfirmBooking(context),
-                child: const Text("Xác nhận đặt xe"),
-              ),
-            ),
-          ],
-        ),
+          );
+        }
       ),
     );
   }
@@ -212,6 +292,7 @@ class _BookingConfirmViewState extends State<BookingConfirmView>
         receiveDate: widget.receiveDate,
         returnDate: widget.returnDate,
         totalPrice: totalPrice,
+        depositAmount: (widget.car["deposit"] as num).toInt(),
       );
 
       final bookingId = bookingRes.data["bookingID"];
@@ -235,26 +316,31 @@ class _BookingConfirmViewState extends State<BookingConfirmView>
         return;
       }
 
-      // 3️⃣ Thanh toán VNPay
-      final deposit = (widget.car["deposit"] as num).toInt();
-      final vnPayRes = await paymentService.createVnPayPayment(
-        bookingId: bookingId,
-        amount: deposit,
-      );
+      // 3️⃣ Thanh toán Ví (Collateral)
+      if (selectedMethod == "Wallet") {
+         final deposit = (widget.car["deposit"] as num).toInt();
+         
+         if (walletBalance < deposit) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Số dư không đủ để cọc.")));
+            return;
+         }
 
-      final paymentId =
-          vnPayRes.data["paymentId"] ?? vnPayRes.data["paymentID"];
-      final url = vnPayRes.data["paymentUrl"] as String;
+         // Call Payment (Deposit) IMMEDIATELY
+         // Note: Logic in Backend: Create Booking -> Receive ID -> Call Booking/Pay OR
+         // Backend Booking Controller Create method could optionally handle it?
+         // For now, adhere to separation: Create -> Pay.
+         
+         await bookingService.payBooking(bookingId, true); // true = deposit
 
-      // Lưu lại paymentId để tí nữa check khi app resume
-      setState(() {
-        _pendingPaymentId = paymentId;
-      });
+         if (!mounted) return;
+         ScaffoldMessenger.of(context).showSnackBar(
+           const SnackBar(
+             content: Text("Đặt xe & Trừ cọc thành công!"),
+           ),
+         );
 
-      final uri = Uri.parse(url);
-      final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
-      if (!opened) {
-        throw Exception("Không mở được VNPay");
+         Navigator.pop(context); // Close confirm screen
+         return;
       }
     } on DioException catch (e) {
       if (!mounted) return;

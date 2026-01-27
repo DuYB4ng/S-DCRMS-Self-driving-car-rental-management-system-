@@ -7,6 +7,7 @@ import '../../viewmodels/order_detail_viewmodel.dart';
 import '../../viewmodels/orders_viewmodel.dart';
 import '../../services/review_service.dart';
 import '../../services/booking_service.dart';
+import 'package:dio/dio.dart';
 
 class OrderDetailView extends StatelessWidget {
   final String orderId;
@@ -100,6 +101,15 @@ class OrderDetailView extends StatelessWidget {
             _info("Ngày trả xe", endDateText),
             _info("Trạng thái đơn", "${order["status"] ?? "—"}"),
             _info("Tổng tiền", totalPriceText),
+            
+            if (order["depositAmount"] != null && order["depositAmount"] > 0)
+               _info("Tiền cọc (30%)", currencyFormat.format(order["depositAmount"])),
+
+            if (order["cancellationFee"] != null && order["cancellationFee"] > 0)
+               _info("Phí hủy chuyến", currencyFormat.format(order["cancellationFee"])),
+
+            if (order["refundAmount"] != null && order["refundAmount"] > 0)
+               _info("Số tiền hoàn lại", currencyFormat.format(order["refundAmount"])),
 
             const SizedBox(height: 24),
 
@@ -193,7 +203,7 @@ class OrderDetailView extends StatelessWidget {
                 ] 
                 // CUSTOMER ACTIONS
                 else ...[
-                    // 1️⃣ Cancel Booking (Hủy chuyến)
+                     // 1️⃣ Cancel Booking (Hủy chuyến)
                     if (order["status"] == "Pending" || order["status"] == "Approved" || order["status"] == "Paid")
                       SizedBox(
                         width: double.infinity,
@@ -259,12 +269,15 @@ class OrderDetailView extends StatelessWidget {
                                       ScaffoldMessenger.of(context).showSnackBar(
                                         const SnackBar(content: Text("Check-in thành công!")),
                                       );
-                                      // Reload
+                                      // Trigger reload inside callback
                                       Provider.of<OrderDetailViewModel>(context, listen: false).loadOrder(order["bookingID"].toString());
                                    },
                                  ),
                                ),
-                             );
+                             ).then((_) {
+                                // Reload again when returning from page to be sure
+                                Provider.of<OrderDetailViewModel>(context, listen: false).loadOrder(order["bookingID"].toString());
+                             });
                           },
                           label: const Text("Smart Check-in (Nhận xe)"),
                           style: ElevatedButton.styleFrom(
@@ -275,29 +288,16 @@ class OrderDetailView extends StatelessWidget {
                         ),
                       ),
 
-                     // 3️⃣ Check-out (Trả xe)
-                     if (order["status"] == "InProgress" && (order["checkIn"] ?? false) && !(order["checkOut"] ?? false)) ...[
-                       SizedBox(
+                     // 3️⃣ Check-out / Thanh toán (Trả xe)
+                     if (order["status"] == "InProgress" && (order["checkIn"] ?? false)) ...[
+                       // Nút Thanh Toán & Checkout (như yêu cầu)
+                       // Bấm nút này sẽ thực hiện thanh toán phần còn lại và chuyển sang trạng thái chờ Owner xác nhận trả xe
+                        SizedBox(
                         width: double.infinity,
                         child: ElevatedButton.icon(
-                          icon: const Icon(Icons.exit_to_app),
-                          onPressed: () {
-                             // Navigate to Smart Check-out
-                             Navigator.push(
-                               context,
-                               MaterialPageRoute(
-                                 builder: (context) => SmartCheckOutView(
-                                   orderId: order["bookingID"].toString(),
-                                   expectedLicensePlate: car["licensePlate"]?.toString() ?? "",
-                                   onCheckOutSuccess: () {
-                                      // NOTE: Status will update to 'ReturnRequested'
-                                      Provider.of<OrderDetailViewModel>(context, listen: false).loadOrder(order["bookingID"].toString());
-                                   },
-                                 ),
-                               ),
-                             );
-                          },
-                          label: const Text("Smart Check-out (Trả xe)"),
+                          icon: const Icon(Icons.payment),
+                          onPressed: () => _handlePayment(context, order["bookingID"], false), // false = Remaining Payment
+                          label: const Text("Thanh toán & Trả xe"),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.orange,
                             foregroundColor: Colors.white,
@@ -437,6 +437,64 @@ class OrderDetailView extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _handlePayment(BuildContext context, int bookingId, bool isDeposit) async {
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(isDeposit ? "Thanh toán Cọc" : "Thanh toán & Trả xe"),
+          content: const Text("Số tiền sẽ được trừ từ Ví của bạn. Bạn chắc chắn muốn tiếp tục?"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text("Hủy"),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text("Thanh toán"),
+            ),
+          ],
+        ),
+      );
+
+      if (confirm == true) {
+         try {
+            final bookingService = BookingService();
+            // 1. Pay Handling
+            await bookingService.payBooking(bookingId, isDeposit);
+            
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("Thanh toán thành công!")),
+            );
+
+            // 2. If this was Final Payment (Checkout), trigger Checkout Request too?
+            // The user requirement says "Payment (to checkout)".
+            // If API `payBooking` sets status to `Paid`. 
+            // We might need to manually set status to `ReturnRequested` or `Completed`?
+            // Current Backend `PayBooking` (isDeposit=false) sets status to `Paid`.
+            // But for Checkout flow we need `ReturnRequested`.
+            
+            if (!isDeposit) {
+               await bookingService.requestCheckOut(bookingId);
+               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Đã gửi yêu cầu trả xe.")));
+            }
+            
+            // Reload
+            if (context.mounted)
+                Provider.of<OrderDetailViewModel>(context, listen: false).loadOrder(bookingId.toString());
+         } catch (e) {
+            String msg = e.toString();
+            if (e is DioException) {
+                msg = e.response?.data?["Message"] ?? e.response?.data?["message"] ?? e.message ?? "Lỗi không xác định"; 
+            }
+             // Remove unexpected characters like brackets from generic exceptions if present
+             if (context.mounted)
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text("Lỗi: $msg")),
+                );
+         }
+      }
   }
 }
 

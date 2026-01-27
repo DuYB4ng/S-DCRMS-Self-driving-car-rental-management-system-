@@ -12,14 +12,14 @@ namespace BookingService.Repositories
         {
             _context = context;
         }
-        public async Task<Payment?> CreateAsync(Payment PaymentModel)
+        public async Task<BookingPayment?> CreateAsync(BookingPayment PaymentModel)
         {
             await _context.Payments.AddAsync(PaymentModel);
             await _context.SaveChangesAsync();
             return PaymentModel;
         }
 
-        public async Task<Payment?> DeleteAsync(int id)
+        public async Task<BookingPayment?> DeleteAsync(int id)
         {
             var paymentModel = await _context.Payments.FirstOrDefaultAsync(x => x.PaymentID == id);
             if (paymentModel == null)
@@ -31,17 +31,17 @@ namespace BookingService.Repositories
             return paymentModel;
         }
 
-        public async Task<List<Payment>> GetAllAsync()
+        public async Task<List<BookingPayment>> GetAllAsync()
         {
           return await _context.Payments.ToListAsync();
         }
 
-        public async Task<Payment?> GetByIdAsync(int id)
+        public async Task<BookingPayment?> GetByIdAsync(int id)
         {
             return await _context.Payments.FindAsync(id);
         }
 
-        public async Task<Payment?> UpdateAsync(int id, UpdatePaymentRequestDto PaymentDto)
+        public async Task<BookingPayment?> UpdateAsync(int id, UpdatePaymentRequestDto PaymentDto)
         {
             var existingPayment = await _context.Payments.FirstOrDefaultAsync(x=>x.PaymentID == id);
             if (existingPayment == null)

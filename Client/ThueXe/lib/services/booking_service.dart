@@ -11,6 +11,7 @@ class BookingService {
     required DateTime receiveDate,
     required DateTime returnDate,
     required int totalPrice,
+    required int depositAmount, // Add this
   }) async {
     final user = _auth.currentUser;
     if (user == null) {
@@ -26,6 +27,7 @@ class BookingService {
         "endDate": returnDate.toIso8601String(),
         "carId": carId,
         "totalPrice": totalPrice,
+        "depositAmount": depositAmount, // Send this
       },
       // 👉 gửi firebaseUid lên link
       queryParameters: {"firebaseUid": uid},
@@ -63,5 +65,17 @@ class BookingService {
 
   Future<Response> getBookingsByCarId(int carId) async {
     return await api.get("/booking/car/$carId");
+  }
+
+  Future<Response> payBooking(int bookingId, bool isDeposit) async {
+     final user = FirebaseAuth.instance.currentUser;
+     return await api.post(
+        "/booking/$bookingId/pay", 
+        {}, 
+        queryParameters: {
+           "firebaseUid": user?.uid,
+           "isDeposit": isDeposit
+        }
+     );
   }
 }

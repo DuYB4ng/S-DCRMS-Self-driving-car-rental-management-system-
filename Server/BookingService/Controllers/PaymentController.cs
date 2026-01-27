@@ -111,7 +111,7 @@ namespace BookingService.Controllers
             }
 
             // 2. tạo payment pending trong DB
-            var payment = new Payment
+            var payment = new BookingPayment
             {
                 PaymentDate = DateTime.UtcNow,
                 Amount = dto.Amount,       // decimal
@@ -280,7 +280,7 @@ namespace BookingService.Controllers
         public async Task<IActionResult> RetryVnPay(int bookingId)
         {
             var booking = await _context.Bookings
-                .Include(b => b.Payment)
+                .Include(b => b.Payments)
                 .FirstOrDefaultAsync(b => b.BookingID == bookingId);
 
             if (booking == null)
@@ -290,29 +290,32 @@ namespace BookingService.Controllers
             if (!string.Equals(booking.Status, "Pending", StringComparison.OrdinalIgnoreCase))
                 return BadRequest(new { message = "Booking is not in Pending status" });
 
-            if (booking.Payment == null ||
-                !string.Equals(booking.Payment.Method, "VNPAY", StringComparison.OrdinalIgnoreCase))
+            // Get latest payment
+            var payment = booking.Payments.OrderByDescending(p => p.PaymentDate).FirstOrDefault();
+
+            if (payment == null ||
+                !string.Equals(payment.Method, "VNPAY", StringComparison.OrdinalIgnoreCase))
             {
                 return BadRequest(new { message = "This booking does not use VNPay" });
             }
 
             // cho phép retry nếu payment đang Pending hoặc Failed
-            if (!string.Equals(booking.Payment.Status, "Pending", StringComparison.OrdinalIgnoreCase) &&
-                !string.Equals(booking.Payment.Status, "Failed", StringComparison.OrdinalIgnoreCase))
+            if (!string.Equals(payment.Status, "Pending", StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(payment.Status, "Failed", StringComparison.OrdinalIgnoreCase))
             {
                 return BadRequest(new { message = "Payment is not retryable" });
             }
 
             // reset về Pending trước khi tạo link mới
-            booking.Payment.Status = "Pending";
+            payment.Status = "Pending";
             await _context.SaveChangesAsync();
 
             var paymentInfo = new PaymentInformationModel
             {
-                PaymentId = booking.Payment.PaymentID,
-                Amount = (double)booking.Payment.Amount,
+                PaymentId = payment.PaymentID,
+                Amount = (double)payment.Amount,
                 OrderType = "other",
-                OrderDescription = $"Khach hang thanh toan booking {booking.BookingID}, payment {booking.Payment.PaymentID} {booking.Payment.Amount}",
+                OrderDescription = $"Khach hang thanh toan booking {booking.BookingID}, payment {payment.PaymentID} {payment.Amount}",
                 Name = "Khach hang"
             };
 

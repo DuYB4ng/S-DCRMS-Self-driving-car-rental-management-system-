@@ -58,7 +58,7 @@ class OrdersView extends StatelessWidget {
                           orderId: order["bookingID"].toString(),
                         ),
                       ),
-                    );
+                    ).then((_) => vm.loadOrders());
                   },
                   child: Container(
                     padding: const EdgeInsets.all(16),
@@ -111,11 +111,7 @@ class OrdersView extends StatelessWidget {
                           const SizedBox(height: 8),
                         ],
 
-                        // ===== Nút Thanh toán =====
-                        _buildPayButton(context, order),
 
-                        // ===== Nút Thanh toán (giữ lại nếu cần cho retry, nhưng User bảo xóa hết action ở đây, tuy nhiên thanh toán Pending có thể là ngoại lệ. tạm xóa nút hành động checkin/review) =====
-                        _buildPayButton(context, order),
                         
                         // Nút xem chi tiết (Mặc định thẻ card đã bấm được, nhưng có thể thêm text "Xem chi tiết")
                         Align(

@@ -28,6 +28,7 @@ class CarDetailView extends StatelessWidget {
         receiveDate: receiveDate,
         returnDate: returnDate,
         totalPrice: price,
+        depositAmount: (car["deposit"] as num).toInt(),
       );
 
       ScaffoldMessenger.of(

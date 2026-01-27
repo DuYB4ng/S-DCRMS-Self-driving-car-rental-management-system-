@@ -10,7 +10,7 @@ class WalletScreen extends StatefulWidget {
   State<WalletScreen> createState() => _WalletScreenState();
 }
 
-class _WalletScreenState extends State<WalletScreen> {
+class _WalletScreenState extends State<WalletScreen> with WidgetsBindingObserver {
   final WalletService _walletService = WalletService();
   double _balance = 0;
   String? _bankName;
@@ -24,7 +24,24 @@ class _WalletScreenState extends State<WalletScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadWalletInfo();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _amountController.dispose();
+    _bankNameController.dispose();
+    _bankAccountController.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _loadWalletInfo();
+    }
   }
 
   Future<void> _loadWalletInfo() async {
