@@ -5,6 +5,7 @@ using UserService.Services;
 using UserService.Data;
 using UserService.Models;
 using UserService.VnPay;
+using Microsoft.EntityFrameworkCore;
 
 namespace UserService.Controllers
 {
@@ -77,7 +78,7 @@ namespace UserService.Controllers
                      Amount = (double)dto.Amount,
                      OrderDescription = $"TopUp Wallet {transaction.Id}",
                      Name = "User Wallet",
-                     OrderId = transaction.Id.ToString()
+                     OrderId = transaction.VnPayTxnRef // Use the Unique Ticks string to prevent duplication
                  };
                  
                  // Generate URL (Wrapped in try-catch inside Service too, but just in case)
@@ -98,41 +99,89 @@ namespace UserService.Controllers
              var response = _vnPayService.PaymentExecute(Request.Query);
              if (!response.Success) return BadRequest("Invalid Signature");
 
+             string title = "Giao dịch thất bại";
+             string message = $"Mã lỗi: {response.VnPayResponseCode}";
+             string icon = "❌";
+             string color = "#e74c3c"; // Red
+
              if (response.VnPayResponseCode == "00")
              {
-                 // Extract ID from TxnRef
-                 if (int.TryParse(response.OrderId, out int transId))
+                 // Extract Transaction by VnPayTxnRef (which is passed as OrderId)
+                 // response.OrderId holds the VnPayTxnRef we sent
+                 var txnRef = response.OrderId;
+                 
+                 var trans = await _context.WalletTransactions
+                                     .FirstOrDefaultAsync(t => t.VnPayTxnRef == txnRef);
+
+                 if (trans != null && trans.Status == "Pending")
                  {
-                     var trans = await _context.WalletTransactions.FindAsync(transId);
-                     if (trans != null && trans.Status == "Pending")
+                     trans.Status = "Completed";
+                     trans.UpdatedAt = DateTime.UtcNow;
+                      
+                     // Update User Wallet
+                     var user = await _userRepo.GetByFirebaseUidAsync(trans.FirebaseUid);
+                     if (user != null)
                      {
-                         trans.Status = "Completed";
-                         trans.UpdatedAt = DateTime.UtcNow;
-                         
-                         // Update User Wallet
-                         var user = await _userRepo.GetByFirebaseUidAsync(trans.FirebaseUid);
-                         if (user != null)
-                         {
-                             user.WalletBalance += trans.Amount;
-                             if (user.WalletBalance >= 0) user.LastNegativeBalanceDate = null;
-                             await _userRepo.UpdateAsync(user);
-                         }
-                         await _context.SaveChangesAsync();
-                         
-                         return Content("<html><body style='text-align:center; padding-top:50px;'><h1>Giao dịch thành công!</h1><p>Số dư ví đã được cập nhật.</p><p>Bạn có thể đóng cửa sổ này.</p></body></html>", "text/html");
+                         user.WalletBalance += trans.Amount;
+                         if (user.WalletBalance >= 0) user.LastNegativeBalanceDate = null;
+                         await _userRepo.UpdateAsync(user);
                      }
+                     await _context.SaveChangesAsync();
+                      
+                     title = "Giao dịch thành công!";
+                     message = "Số dư ví của bạn đã được cập nhật.";
+                     icon = "✅";
+                     color = "#2ecc71"; // Green
                  }
-                 else 
+                 else if (trans != null && trans.Status == "Completed")
                  {
-                      return Content("<html><body><h1>Giao dịch thành công nhưng không tìm thấy mã giao dịch!</h1></body></html>", "text/html");
+                     title = "Giao dịch đã hoàn tất";
+                     message = "Giao dịch này đã được ghi nhận trước đó.";
+                     icon = "ℹ️";
+                     color = "#3498db"; // Blue
                  }
              }
              else 
              {
-                 return Content("<html><body><h1>Giao dịch thất bại!</h1></body></html>", "text/html");
+                 // Failed logic
+                 var txnRef = response.OrderId;
+                 var trans = await _context.WalletTransactions.FirstOrDefaultAsync(t => t.VnPayTxnRef == txnRef);
+                 if (trans != null) 
+                 {
+                     trans.Status = "Failed";
+                     await _context.SaveChangesAsync();
+                 }
              }
              
-             return Ok("Processed");
+             string html = $@"
+                <!DOCTYPE html>
+                <html lang='vi'>
+                <head>
+                    <meta charset='UTF-8'>
+                    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+                    <title>{title}</title>
+                    <style>
+                        body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f8; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }}
+                        .card {{ background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; max-width: 400px; width: 90%; }}
+                        .icon {{ font-size: 64px; margin-bottom: 20px; }}
+                        h1 {{ color: #333; margin-bottom: 10px; font-size: 24px; }}
+                        p {{ color: #666; font-size: 16px; line-height: 1.5; }}
+                        .btn {{ display: inline-block; margin-top: 20px; padding: 10px 20px; background-color: {color}; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; }}
+                        .btn:hover {{ opacity: 0.9; }}
+                    </style>
+                </head>
+                <body>
+                    <div class='card'>
+                        <div class='icon'>{icon}</div>
+                        <h1>{title}</h1>
+                        <p>{message}</p>
+                        <p style='font-size: 14px; color: #999;'>Bạn có thể quay lại ứng dụng để kiểm tra số dư.</p>
+                        <a href='selfdrivingcar://wallet' class='btn'>Quay lại ứng dụng</a>
+                    </div>
+                </body>
+                </html>";
+
+             return Content(html, "text/html");
         }
 
         [HttpPost("deduct")]

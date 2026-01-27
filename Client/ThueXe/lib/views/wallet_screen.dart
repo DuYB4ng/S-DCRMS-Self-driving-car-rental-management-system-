@@ -75,7 +75,7 @@ class _WalletScreenState extends State<WalletScreen> with WidgetsBindingObserver
   }
 
   Future<void> _topUpVnPay() async {
-    final amount = double.tryParse(_amountController.text);
+    final amount = double.tryParse(_amountController.text.replaceAll('.', '').replaceAll(',', ''));
     if (amount == null || amount <= 0) return;
     
     try {
@@ -209,7 +209,7 @@ class _WalletScreenState extends State<WalletScreen> with WidgetsBindingObserver
                         const Text("Số dư khả dụng", style: TextStyle(color: Colors.white, fontSize: 16)),
                         const SizedBox(height: 10),
                         Text(
-                          "${_balance.toStringAsFixed(0)} đ", 
+                          "${_balance.toInt().toString().replaceAll(RegExp(r'\B(?=(\d{3})+(?!\d))'), '.')} VNĐ", 
                           style: const TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.bold)
                         ),
                         const SizedBox(height: 20),

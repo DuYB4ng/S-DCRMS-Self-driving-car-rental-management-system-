@@ -41,11 +41,11 @@ class _CarBookingsViewState extends State<CarBookingsView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Bookings: ${widget.carName}")),
+      appBar: AppBar(title: Text("Danh sách đơn: ${widget.carName}")),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _bookings.isEmpty
-              ? const Center(child: Text("No bookings for this car."))
+              ? const Center(child: Text("Chưa có đơn đặt nào cho xe này."))
               : ListView.builder(
                   itemCount: _bookings.length,
                   itemBuilder: (context, index) {
@@ -53,8 +53,8 @@ class _CarBookingsViewState extends State<CarBookingsView> {
                     return Card(
                       margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                       child: ListTile(
-                        title: Text("Booking #${booking['bookingID']}"),
-                        subtitle: Text("${booking['startDate']} - ${booking['endDate']}\nStatus: ${booking['status']}"),
+                        title: Text("Mã đơn #${booking['bookingID']}"),
+                        subtitle: Text("${booking['startDate']} - ${booking['endDate']}\nTrạng thái: ${booking['status']}"),
                         trailing: const Icon(Icons.arrow_forward_ios),
                         onTap: () {
                            Navigator.push(

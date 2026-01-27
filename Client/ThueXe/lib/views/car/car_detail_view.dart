@@ -81,7 +81,7 @@ class CarDetailView extends StatelessWidget {
 
                   /// ======== GIÁ / NGÀY ========
                   Text(
-                    "${car["pricePerDay"]} VNĐ / ngày",
+                    "${(car["pricePerDay"] as num).toInt().toString().replaceAll(RegExp(r'\B(?=(\d{3})+(?!\d))'), '.')} VNĐ / ngày",
                     style: TextStyle(
                       fontSize: 20,
                       color: Colors.green.shade700,
@@ -92,7 +92,7 @@ class CarDetailView extends StatelessWidget {
 
                   /// ======== TIỀN CỌC ========
                   Text(
-                    "Tiền cọc: ${car["deposit"]} VNĐ",
+                    "Tiền cọc: ${(car["deposit"] as num).toInt().toString().replaceAll(RegExp(r'\B(?=(\d{3})+(?!\d))'), '.')} VNĐ",
                     style: const TextStyle(fontSize: 16, color: Colors.black54),
                   ),
                   const SizedBox(height: 16),

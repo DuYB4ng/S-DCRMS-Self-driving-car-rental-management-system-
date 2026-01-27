@@ -23,7 +23,7 @@ class _CarCalendarViewState extends State<CarCalendarView> {
       create: (_) => CarCalendarViewModel(widget.carId)..loadCalendar(),
       child: Scaffold(
         appBar: AppBar(
-          title: Text("Availability: ${widget.carName}"),
+          title: Text("Lịch xe: ${widget.carName}"),
         ),
         body: Consumer<CarCalendarViewModel>(
           builder: (context, vm, child) {
@@ -92,20 +92,21 @@ class _CarCalendarViewState extends State<CarCalendarView> {
                 const Padding(
                   padding: EdgeInsets.all(16.0),
                   child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                        Icon(Icons.circle, color: Colors.redAccent, size: 16),
                        SizedBox(width: 8),
-                       Text("Busy / Blocked"),
+                       Text("Bận / Đã khóa"),
                        SizedBox(width: 16),
                        Icon(Icons.circle_outlined, color: Colors.black, size: 16),
                        SizedBox(width: 8),
-                       Text("Available"),
+                       Text("Trống"),
                     ],
                   ),
                 ),
                 
                 const Spacer(),
-                const Text("Tap a date to toggle blocking", style: TextStyle(color: Colors.grey)),
+                const Text("Chọn ngày để khóa/mở khóa", style: TextStyle(color: Colors.grey)),
                 const SizedBox(height: 20),
               ],
             );

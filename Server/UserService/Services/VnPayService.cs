@@ -30,7 +30,11 @@ namespace UserService.Services
                 timeZoneInfo = TimeZoneInfo.Local; // Fallback
             }
 
-            var timeNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZoneInfo);
+            // DateTime timeNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZoneInfo);
+            // Docker/Linux often defaults to UTC. VNPAY requires GMT+7.
+            // Safest way is explicitly add 7 hours to UTC.
+            var timeNow = DateTime.UtcNow.AddHours(7);
+            
             var tick = DateTime.Now.Ticks.ToString();
             var pay = new VnPayLibrary();
             var urlCallBack = _configuration["Vnpay:PaymentBackReturnUrl"];
@@ -47,6 +51,9 @@ namespace UserService.Services
             pay.AddRequestData("vnp_OrderType", model.OrderType);
             pay.AddRequestData("vnp_ReturnUrl", urlCallBack);
             pay.AddRequestData("vnp_TxnRef", model.OrderId); // Use OrderId passed from Controller
+            
+            // Add Expire Date (15 minutes)
+            pay.AddRequestData("vnp_ExpireDate", timeNow.AddMinutes(15).ToString("yyyyMMddHHmmss"));
 
             var paymentUrl =
                 pay.CreateRequestUrl(_configuration["Vnpay:BaseUrl"], _configuration["Vnpay:HashSecret"]);

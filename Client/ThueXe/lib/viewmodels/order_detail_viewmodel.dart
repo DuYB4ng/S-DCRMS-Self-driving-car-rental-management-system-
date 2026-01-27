@@ -49,6 +49,23 @@ class OrderDetailViewModel extends ChangeNotifier {
         try {
           final carRes = await api.get("/Car/$carId");
           carData = carRes.data;
+          
+          // 3️⃣ Check if reviewed (Workaround: Fetch all car reviews and filter)
+          if (orderData?["status"] == "Completed") {
+             try {
+                final reviewRes = await api.get("/review/car/$carId");
+                final reviews = reviewRes.data as List?;
+                if (reviews != null) {
+                   final myReview = reviews.firstWhere((r) => r["bookingId"] == orderData?["bookingID"], orElse: () => null);
+                   if (myReview != null) {
+                       // Inject into orderData for UI to use
+                       List currentReviews = orderData?["reviews"] ?? [];
+                       currentReviews.add(myReview); // Add found review
+                       orderData?["reviews"] = currentReviews;
+                   }
+                }
+             } catch (_) {}
+          }
         } catch (_) {
           // Nếu lỗi lấy xe thì vẫn hiển thị hóa đơn, chỉ là không có block thông tin xe
           carData = null;

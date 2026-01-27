@@ -1,4 +1,5 @@
 using BookingService.Models;
+using BookingService.Dtos.Review;
 
 namespace BookingService.Dtos.Booking
 {
