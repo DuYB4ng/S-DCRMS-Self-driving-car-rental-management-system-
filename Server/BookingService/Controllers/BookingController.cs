@@ -251,35 +251,53 @@ namespace BookingService.Controllers
                      }
                 }
 
-                // 2. PAY OWNER (Rent - Commission)
-                // System holds everything. We paid out Deposit. Remaining is Rent.
+                // 2. SETTLE WITH OWNER (Rent - Commission)
+                // System Commission
                 decimal commissionRate = 0.1m; // 10%
-                decimal rentAmount = booking.TotalPrice; // Assuming Rent = TotalPrice
+                decimal rentAmount = booking.TotalPrice; 
                 decimal commission = rentAmount * commissionRate;
 
-                // How much Rent did we actually collect?
-                // TotalPaid = Deposit + RentPaid.
+                // Amount System actually holds (excluding the Deposit we just refunded)
+                // TotalPaid = All Wallet/VNPAY transactions.
                 var totalPaid = booking.Payments
                     .Where(p => (p.Method == "Wallet" || p.Method == "VNPAY") && (p.Status == "Completed" || p.Status == "Success"))
                     .Sum(p => p.Amount);
                 
-                // System Remaining = TotalPaid - DepositAmount (Refunded above)
-                // If Full Paid: System Remaining = Rent.
-                // Owner Payout = Rent - Commission.
-                // We transfer System Remaining -> Owner, BUT minus Commission?
-                // No. Owner gets `Rent - Commission`.
-                // If System Remaining < Rent (e.g. paying cash?), then logic differs.
-                // Assuming Full Wallet Payment for now as per flows.
-                
-                // Rent = TotalPrice? Yes often.
-                // Payout = Rent * 0.9.
-                
-                decimal payoutToOwner = rentAmount - commission;
-                
-                if (payoutToOwner > 0)
+                // If we refunded deposit above, we don't have it anymore.
+                // Assuming System used the 'Deposit' portion of TotalPaid to refund.
+                // Remaining System Funds = TotalPaid - DepositAmount.
+                // (Note: If DepositAmount > TotalPaid, we have a deficit problem, but assuming logic holds).
+                decimal systemHoldingRent = totalPaid - booking.DepositAmount;
+                if (systemHoldingRent < 0) systemHoldingRent = 0; // Should not happen if data consistent
+
+                // Net Amount to Transfer
+                // If System holds Rent (Wallet Pay), we owe Owner (Rent - Commission).
+                // If System holds Nothing (Cash Pay), Owner owes System (Commission).
+                // Formula: Transfer = SystemHoldingRent - Commission.
+                decimal netTransferToOwner = systemHoldingRent - commission;
+
+                if (netTransferToOwner > 0)
                 {
-                    await userClient.CreditWalletAsync(ownerUid!, payoutToOwner);
+                    // System owes Owner (e.g. Wallet Payment)
+                    await userClient.CreditWalletAsync(ownerUid!, netTransferToOwner);
                 }
+                else if (netTransferToOwner < 0)
+                {
+                    // Owner owes System (e.g. Cash Payment)
+                    // We need to DEDUCT "Abs(netTransferToOwner)" from Owner.
+                    decimal amountToDeduct = Math.Abs(netTransferToOwner);
+                    
+                    // Check Owner Balance? DeductWalletAsync handles check usually, returns false if fail.
+                    bool success = await userClient.DeductWalletAsync(ownerUid!, amountToDeduct);
+                    if (!success)
+                    {
+                         // If Owner doesn't have enough money for commission, what do we do?
+                         // Fail the return confirmation? Or mark as debt?
+                         // For now, fail and tell Owner to top up.
+                         return BadRequest(new { Message = $"Chủ xe không đủ số dư để thanh toán hoa hồng hệ thống ({amountToDeduct:N0}đ). Vui lòng nạp tiền." });
+                    }
+                }
+                // If == 0, do nothing.
 
                 // 3. Update Status
                 booking.CheckOut = true;

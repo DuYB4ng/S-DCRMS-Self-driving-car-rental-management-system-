@@ -442,7 +442,7 @@ class OrderDetailView extends StatelessWidget {
   }
 
   Future<void> _handlePayment(BuildContext context, int bookingId, bool isDeposit) async {
-       final currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: '₫'); // Fix: Define here
+       final currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
        final vm = Provider.of<OrderDetailViewModel>(context, listen: false);
        final order = vm.orderData;
        if (order == null) return;
@@ -462,20 +462,16 @@ class OrderDetailView extends StatelessWidget {
                  if (days < 1) days = 1; // Min 1 day
                  num price = car["pricePerDay"];
                  total = days * price;
-                 // If deposit is also 0, maybe calc deposit too?
-                 if (deposit == 0) deposit = total * 0.3;
+                 // Remove forced deposit calculation to trust API data
+                 // if (deposit == 0) deposit = total * 0.3; 
              }
           }
        }
 
        num amountToPay = 0;
-
        if (isDeposit) {
            amountToPay = deposit;
        } else {
-           // Logic fix: TotalPrice is the Rent fee. Deposit is separate (Collateral).
-           // So remaining payment is the full Rent (Total), not Total - Deposit.
-           // Unless Total includes Deposit, but user report implies otherwise.
            amountToPay = total;
        }
 
@@ -492,8 +488,6 @@ class OrderDetailView extends StatelessWidget {
        
        final fmt = NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
        bool isEnough = balance >= amountToPay;
-
-       // Allow 0 amount (Already paid or Free) -> Treat as Enough
        if (amountToPay <= 0) isEnough = true;
 
        // 3. Show Detailed Dialog FIRST
@@ -511,12 +505,8 @@ class OrderDetailView extends StatelessWidget {
                            Text(isDeposit ? "Thanh toán Tiền cọc" : "Thanh toán & Trả xe", style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                            const SizedBox(height: 16),
                            
-                           // Bill Details
                            _billRow("Tổng hóa đơn (Thuê xe)", fmt.format(total), isBold: true),
-                           // Only show Deposit line if we are paying Deposit or just for info? 
-                           // If paying rent, Deposit is irrelevant to the 'To Pay' sum if it's separate. 
-                           // But helpful to show.
-                           if (!isDeposit) _billRow("Tiền cọc (Đã thanh toán)", fmt.format(deposit), color: Colors.green),
+                           if (!isDeposit) _billRow("Tiền cọc (Đã cọc)", fmt.format(deposit), color: Colors.green),
                            
                            const Divider(height: 24),
                            _billRow("CẦN THANH TOÁN", fmt.format(amountToPay), isBold: true, color: Colors.orange[800]),
@@ -545,7 +535,7 @@ class OrderDetailView extends StatelessWidget {
 
                            const SizedBox(height: 24),
                            
-                           // Actions
+                           // Action: PAY WALLET
                            SizedBox(
                                width: double.infinity,
                                child: ElevatedButton(
@@ -555,18 +545,45 @@ class OrderDetailView extends StatelessWidget {
                                        foregroundColor: Colors.white
                                    ),
                                    onPressed: () async {
-                                       Navigator.pop(context); // Close sheet
                                        if (isEnough) {
-                                           // Proceed to Pay
-                                           await _processPayment(context, bookingId, isDeposit);
+                                           Navigator.pop(context);
+                                           await _processPayment(context, bookingId, isDeposit, isCash: false);
                                        } else {
-                                           // Go to Top Up
+                                           Navigator.pop(context);
                                            await Navigator.push(context, MaterialPageRoute(builder: (_) => const WalletScreen()));
                                        }
                                    },
-                                   child: Text(isEnough ? (amountToPay > 0 ? "Xác nhận Thanh toán" : "Xác nhận Trả xe") : "Nạp tiền vào ví"),
+                                   child: Text(isEnough ? (isDeposit ? "Thanh toán Cọc (Ví)" : "Thanh toán & Trả xe (Ví)") : "Nạp tiền vào ví"),
                                ),
-                           )
+                           ),
+                           
+                           // Action: PAY CASH (Only for Checkout/Return)
+                           if (!isDeposit) ...[
+                               const SizedBox(height: 12),
+                               SizedBox(
+                                   width: double.infinity,
+                                   child: OutlinedButton.icon(
+                                       icon: const Icon(Icons.money),
+                                       style: OutlinedButton.styleFrom(
+                                           padding: const EdgeInsets.symmetric(vertical: 14),
+                                           side: const BorderSide(color: Colors.green),
+                                           foregroundColor: Colors.green
+                                       ),
+                                       onPressed: () async {
+                                            Navigator.pop(context);
+                                            await _processPayment(context, bookingId, isDeposit, isCash: true);
+                                       },
+                                       label: const Text("Thanh toán Trực tiếp (Tiền mặt)"),
+                                   ),
+                               ),
+                               const Padding(
+                                  padding: EdgeInsets.only(top: 8.0),
+                                  child: Text(
+                                    "* Bạn sẽ thanh toán trực tiếp cho chủ xe khi gặp mặt. Hệ thống chỉ ghi nhận yêu cầu trả xe.",
+                                    style: TextStyle(fontSize: 12, color: Colors.black54, fontStyle: FontStyle.italic),
+                                  ),
+                               )
+                           ]
                        ],
                    ),
                );
@@ -587,7 +604,7 @@ class OrderDetailView extends StatelessWidget {
       );
   }
 
-  Future<void> _processPayment(BuildContext context, int bookingId, bool isDeposit) async {
+  Future<void> _processPayment(BuildContext context, int bookingId, bool isDeposit, {required bool isCash}) async {
          final bookingService = BookingService();
          
          final vm = Provider.of<OrderDetailViewModel>(context, listen: false);
@@ -596,8 +613,8 @@ class OrderDetailView extends StatelessWidget {
          num total = order?["totalPrice"] ?? 0;
          num amountToPay = isDeposit ? deposit : total;
 
-         // Phase 1: Payment
-         if (amountToPay > 0) {
+         // Phase 1: Payment (Skip if Cash)
+         if (!isCash && amountToPay > 0) {
             try {
               await bookingService.payBooking(bookingId, isDeposit);
               ScaffoldMessenger.of(context).showSnackBar(
@@ -609,23 +626,26 @@ class OrderDetailView extends StatelessWidget {
                   msg = e.response?.data?["Message"] ?? e.response?.data?["message"] ?? e.message ?? "Lỗi không xác định"; 
                }
                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Lỗi thanh toán: $msg")));
-               // If payment fails, we stop.
                return; 
             }
          }
 
          // Phase 2: Checkout (Return Request)
+         // Assuming if we paid, we want to checkout.
+         // If Cash, we assume payment happens physically, so we just request return.
          if (!isDeposit) {
              try {
                await bookingService.requestCheckOut(bookingId);
-               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Đã gửi yêu cầu trả xe.")));
+               String successMsg = isCash 
+                   ? "Đã gửi yêu cầu trả xe. Vui lòng thanh toán tiền mặt cho chủ xe." 
+                   : "Đã gửi yêu cầu trả xe.";
+               ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(successMsg)));
              } catch (e) {
                  String msg = e.toString();
                  if (e is DioException) {
                     msg = e.response?.data?["Message"] ?? e.response?.data?["message"] ?? e.message ?? "Lỗi không xác định"; 
                  }
                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Lỗi trả xe: $msg")));
-                 // Even if checkout fails, we reload to show recent payment status
              }
          }
          
