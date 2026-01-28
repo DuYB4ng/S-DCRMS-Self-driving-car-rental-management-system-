@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
 import AdminDashboard from "./pages/AdminDashboard";
 import UserManagement from "./pages/UserManagement";
+import CarManagement from "./pages/CarManagement";
 import PrivateRoute from "./routes/PrivateRoute";
 
 function App() {
@@ -24,6 +25,14 @@ function App() {
           element={
             <PrivateRoute>
               <UserManagement />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/admin/cars"
+          element={
+            <PrivateRoute>
+              <CarManagement />
             </PrivateRoute>
           }
         />
