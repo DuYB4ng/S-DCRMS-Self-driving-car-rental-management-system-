@@ -211,8 +211,6 @@ namespace BookingService.Controllers
         }
 
         // POST: api/booking/{id}/confirm-return (Owner confirms return)
-        [HttpPost("{id}/confirm-return")]
-        [AllowAnonymous]
         // POST: api/booking/{id}/confirm-return (Owner confirms return)
         [HttpPost("{id}/confirm-return")]
         [AllowAnonymous]
