@@ -1,5 +1,6 @@
 using BookingService.Dtos.Booking;
 using BookingService.Models;
+using System.Linq;
 
 namespace BookingService.Mappers
 {
@@ -19,6 +20,8 @@ namespace BookingService.Mappers
                 CarId = booking.CarId,
                 CreatedAt  = booking.CreatedAt,
                 TotalAmount = booking.Payment?.Amount ?? 0
+                RefundAmount = booking.RefundAmount,
+                CancellationFee = booking.CancellationFee,
             };
         }
     }
@@ -34,7 +37,8 @@ namespace BookingService.Mappers
                 CheckIn = false,
                 CheckOut = false,
                 Status = "Pending",
-                CarId     = bookingDto.CarId 
+                CarId     = bookingDto.CarId,
+                TotalPrice = bookingDto.TotalPrice
             };
         }
     }

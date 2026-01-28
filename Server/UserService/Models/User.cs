@@ -21,5 +21,11 @@ namespace UserService.Models
         public DateTime Birthday { get; set; }
         public DateTime JoinDate { get; set; } = DateTime.Now;
         public string Address { get; set; }
+
+        [Column(TypeName = "decimal(18, 2)")]
+        public decimal WalletBalance { get; set; } = 0;
+        public string? BankAccountNumber { get; set; }
+        public string? BankName { get; set; }
+        public DateTime? LastNegativeBalanceDate { get; set; }
     }
 }

@@ -1,4 +1,5 @@
 using BookingService.Models;
+using BookingService.Dtos.Review;
 
 namespace BookingService.Dtos.Booking
 {
@@ -12,6 +13,10 @@ namespace BookingService.Dtos.Booking
 		public string Status { get; set; } = string.Empty;
 		public int CustomerId { get; set; }
 		public int CarId { get; set; }
+		public decimal TotalPrice { get; set; }
+		public decimal DepositAmount { get; set; }
+		public decimal RefundAmount { get; set; }
+		public decimal CancellationFee { get; set; }
 		public DateTime CreatedAt { get; set; }
         public decimal TotalAmount { get; set; }
 	}

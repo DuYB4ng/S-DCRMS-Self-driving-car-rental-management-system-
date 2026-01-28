@@ -23,6 +23,14 @@ namespace BookingService.Services
 
             return await response.Content.ReadFromJsonAsync<CustomerDto>();
         }
+
+        public async Task<CustomerDto?> GetByIdAsync(int id)
+        {
+            var response = await _httpClient.GetAsync($"/api/customer/{id}");
+            if (!response.IsSuccessStatusCode) return null;
+
+            return await response.Content.ReadFromJsonAsync<CustomerDto>();
+        }
     }
 
     // DTO tối thiểu để BookingService dùng

@@ -12,7 +12,7 @@ class PaymentService {
       "paymentDate": DateTime.now().toIso8601String(),
       "amount": amount,
       "method": "Cash",
-      "status": "Completed",
+      "status": "Pending",
       "bookingID": bookingId,
     });
   }

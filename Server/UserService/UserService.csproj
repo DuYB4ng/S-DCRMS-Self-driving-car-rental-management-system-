@@ -19,9 +19,7 @@
     </PackageReference>
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Redis.Shared\Redis.Shared.csproj" />
-  </ItemGroup>
+
   <ItemGroup>
     <None Update="Firebase\FireBaseToken.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

@@ -111,7 +111,7 @@ namespace BookingService.Controllers
             }
 
             // 2. tạo payment pending trong DB
-            var payment = new Payment
+            var payment = new BookingPayment
             {
                 PaymentDate = DateTime.UtcNow,
                 Amount = dto.Amount,       // decimal
@@ -144,7 +144,10 @@ namespace BookingService.Controllers
 
 
         [HttpGet("vnpay-ipn")]
-        public async Task<IActionResult> VnPayIpn()
+        public async Task<IActionResult> VnPayIpn(
+            [FromServices] UserClient userClient,
+            [FromServices] OwnerCarClient ownerCarClient
+        )
         {
             // Dùng service mới để validate chữ ký & đọc dữ liệu
             var response = _vnPayService.PaymentExecute(Request.Query);
@@ -184,12 +187,42 @@ namespace BookingService.Controllers
             // response.VnPayResponseCode == "00" là thanh toán thành công
             if (response.VnPayResponseCode == "00")
             {
-                payment.Status = "Completed";
-                payment.PaymentDate = DateTime.Now;
-
-                if (booking != null && booking.Status == "Pending")
+                if (payment.Status != "Completed") // Only process if not already processed
                 {
-                    booking.Status = "Paid";
+                    payment.Status = "Completed";
+                    payment.PaymentDate = DateTime.Now;
+
+                    if (booking != null)
+                    {
+                        if (booking.Status == "Pending")
+                        {
+                            booking.Status = "Paid";
+                        }
+                        else if (booking.Status == "InProgress" || booking.Status == "ReturnRequested")
+                        {
+                            booking.Status = "Completed";
+                            booking.CheckOut = true;
+                        }
+                        
+                        // Credit Owner Wallet (90% of received amount)
+                        try 
+                        {
+                             var ownerId = await ownerCarClient.GetOwnerIdByCarIdAsync(booking.CarId);
+                             if (ownerId != null) 
+                             {
+                                 var ownerUid = await ownerCarClient.GetOwnerFirebaseUidAsync(ownerId.Value);
+                                 if (ownerUid != null)
+                                 {
+                                     var creditAmount = payment.Amount * 0.9m;
+                                     await userClient.CreditWalletAsync(ownerUid, creditAmount);
+                                 }
+                             }
+                        }
+                        catch
+                        {
+                            // Log error but don't fail IPN
+                        }
+                    }
                 }
             }
             else
@@ -206,9 +239,40 @@ namespace BookingService.Controllers
 
         // GET: api/payment/vnpay-return
         [HttpGet("vnpay-return")]
-        public IActionResult VnPayReturn()
+        public async Task<IActionResult> VnPayReturn(
+            [FromServices] UserClient userClient,
+            [FromServices] OwnerCarClient ownerCarClient
+        )
         {
             var response = _vnPayService.PaymentExecute(Request.Query);
+            if (response.Success && response.VnPayResponseCode == "00")
+            {
+                 // Update DB similar to IPN (Quick Dev Mode)
+                 if (int.TryParse(response.OrderId, out var paymentId))
+                 {
+                     var payment = await _paymentRepo.GetByIdAsync(paymentId);
+                     if (payment != null && payment.Status != "Completed")
+                     {
+                         var booking = await _context.Bookings.FindAsync(payment.BookingID);
+                         payment.Status = "Completed";
+                         payment.PaymentDate = DateTime.Now;
+                         
+                         if (booking != null)
+                         {
+                             if (booking.Status == "Pending") booking.Status = "Paid";
+                             // Credit Owner Wallet
+                             try {
+                                 var ownerId = await ownerCarClient.GetOwnerIdByCarIdAsync(booking.CarId);
+                                 if (ownerId != null) {
+                                     var ownerUid = await ownerCarClient.GetOwnerFirebaseUidAsync(ownerId.Value);
+                                     if (ownerUid != null) await userClient.CreditWalletAsync(ownerUid, payment.Amount * 0.9m);
+                                 }
+                             } catch {}
+                         }
+                         await _context.SaveChangesAsync();
+                     }
+                 }
+            }
             return Ok(response);
         }
 
@@ -216,7 +280,7 @@ namespace BookingService.Controllers
         public async Task<IActionResult> RetryVnPay(int bookingId)
         {
             var booking = await _context.Bookings
-                .Include(b => b.Payment)
+                .Include(b => b.Payments)
                 .FirstOrDefaultAsync(b => b.BookingID == bookingId);
 
             if (booking == null)
@@ -226,29 +290,32 @@ namespace BookingService.Controllers
             if (!string.Equals(booking.Status, "Pending", StringComparison.OrdinalIgnoreCase))
                 return BadRequest(new { message = "Booking is not in Pending status" });
 
-            if (booking.Payment == null ||
-                !string.Equals(booking.Payment.Method, "VNPAY", StringComparison.OrdinalIgnoreCase))
+            // Get latest payment
+            var payment = booking.Payments.OrderByDescending(p => p.PaymentDate).FirstOrDefault();
+
+            if (payment == null ||
+                !string.Equals(payment.Method, "VNPAY", StringComparison.OrdinalIgnoreCase))
             {
                 return BadRequest(new { message = "This booking does not use VNPay" });
             }
 
             // cho phép retry nếu payment đang Pending hoặc Failed
-            if (!string.Equals(booking.Payment.Status, "Pending", StringComparison.OrdinalIgnoreCase) &&
-                !string.Equals(booking.Payment.Status, "Failed", StringComparison.OrdinalIgnoreCase))
+            if (!string.Equals(payment.Status, "Pending", StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(payment.Status, "Failed", StringComparison.OrdinalIgnoreCase))
             {
                 return BadRequest(new { message = "Payment is not retryable" });
             }
 
             // reset về Pending trước khi tạo link mới
-            booking.Payment.Status = "Pending";
+            payment.Status = "Pending";
             await _context.SaveChangesAsync();
 
             var paymentInfo = new PaymentInformationModel
             {
-                PaymentId = booking.Payment.PaymentID,
-                Amount = (double)booking.Payment.Amount,
+                PaymentId = payment.PaymentID,
+                Amount = (double)payment.Amount,
                 OrderType = "other",
-                OrderDescription = $"Khach hang thanh toan booking {booking.BookingID}, payment {booking.Payment.PaymentID} {booking.Payment.Amount}",
+                OrderDescription = $"Khach hang thanh toan booking {booking.BookingID}, payment {payment.PaymentID} {payment.Amount}",
                 Name = "Khach hang"
             };
 

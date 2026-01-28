@@ -3,20 +3,29 @@ import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../viewmodels/profile_viewmodel.dart';
 import 'edit_profile_view.dart';
+import '../wallet_screen.dart';
 
-class ProfileView extends StatelessWidget {
+class ProfileView extends StatefulWidget {
   final Function(int) onMenuTap;
 
   const ProfileView({super.key, required this.onMenuTap});
 
   @override
+  State<ProfileView> createState() => _ProfileViewState();
+}
+
+class _ProfileViewState extends State<ProfileView> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<ProfileViewModel>(context, listen: false).loadUserInfo();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final vm = Provider.of<ProfileViewModel>(context);
-
-    // Load thông tin user khi mở màn
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      vm.loadUserInfo();
-    });
 
     return Scaffold(
       appBar: AppBar(
@@ -99,7 +108,11 @@ class ProfileView extends StatelessWidget {
 
             _menuItem(Icons.list_alt, "Đơn hàng của tôi", () {
               // chuyển sang tab Đơn hàng trong bottom nav
-              onMenuTap(1);
+              widget.onMenuTap(1);
+            }),
+
+            _menuItem(Icons.account_balance_wallet, "Ví của tôi", () {
+                Navigator.push(context, MaterialPageRoute(builder: (context) => const WalletScreen()));
             }),
 
             const SizedBox(height: 24),

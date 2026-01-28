@@ -19,12 +19,12 @@ namespace BookingService.Interfaces
 
      public interface IBookingRepository
     {
-        // Cache list booking trong 300s
-        [Cache(300)]
+        // Cache list booking trong 300s -> REMOVED to fix stale data
+        // [Cache(300)]
         Task<List<Booking>> getAllAsync();
 
-        // Cache chi tiết 1 booking trong 300s
-        [Cache(300)]
+        // Cache chi tiết 1 booking trong 300s -> REMOVED because Controller updates status directly via Context
+        // [Cache(300)]
         Task<Booking?> getByIdAsync(int id);
 
         // Mỗi khi tạo booking mới → xóa toàn bộ cache booking

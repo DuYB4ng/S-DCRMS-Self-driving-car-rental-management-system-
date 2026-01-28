@@ -54,13 +54,14 @@ services:
   # ==========================
   userservice:
     build:
-      context: ./Server/UserService
-      dockerfile: Dockerfile
+      context: ./Server
+      dockerfile: UserService/Dockerfile
     container_name: userservice
     depends_on:
       - db
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8086
       - ConnectionStrings__DefaultConnection=server=db;port=3306;database=UserDB;user=root;password=YourStrong@Password123;
     ports:
       - "8086:8086"
@@ -112,6 +113,8 @@ services:
       - ASPNETCORE_URLS=http://+:8083
       - ConnectionStrings__DefaultConnection=Server=sqlserver-booking;Database=BookingService;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;
       - Services__CustomerService=http://customerservice:8085
+      - Services__UserService=http://userservice:8086
+      - Services__OwnerCarService=http://ownercarservice:8081
     depends_on:
       sqlserver-booking:
         condition: service_started
@@ -152,7 +155,6 @@ services:
       - ASPNETCORE_URLS=http://+:8090
     networks:
       - sdcrms-network
-
 
   # ==========================
   # OwnerCar Consumer (Kafka -> SQL)
@@ -206,7 +208,6 @@ services:
     networks:
       - sdcrms-network
 
-
   # ==========================
   # MySQL Database
   # ==========================
@@ -224,15 +225,7 @@ services:
     networks:
       - sdcrms-network
     healthcheck:
-      test:
-        [
-          "CMD",
-          "mysqladmin",
-          "ping",
-          "-h",
-          "localhost",
-          "-pYourStrong@Password123",
-        ]
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-pYourStrong@Password123" ]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -253,8 +246,6 @@ services:
     volumes:
       - sqlserver-booking-data:/var/opt/mssql
 
-
-
   sqlserver-customer:
     image: mcr.microsoft.com/mssql/server:2022-latest
     container_name: sqlserver-customer
@@ -267,8 +258,6 @@ services:
       - sdcrms-network
     volumes:
       - sqlserver-customer-data:/var/opt/mssql
-
-
 
   # ==========================
   # Zookeeper (Kafka dependency)
@@ -372,7 +361,7 @@ services:
     ports:
       - "6379:6379"
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 5s
       timeout: 3s
       retries: 5

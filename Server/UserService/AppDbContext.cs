@@ -11,6 +11,7 @@ namespace UserService.Data
             : base(options) { }
 
         public DbSet<User> Users { get; set; }
+        public DbSet<WalletTransaction> WalletTransactions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

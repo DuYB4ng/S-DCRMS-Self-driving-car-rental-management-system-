@@ -10,7 +10,7 @@ public class AppDbContext : DbContext
     }
 
     public DbSet<Booking> Bookings { get; set; }
-    public DbSet<Payment> Payments { get; set; }
+    public DbSet<BookingPayment> Payments { get; set; }
     public DbSet<Review> Reviews { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -18,10 +18,13 @@ public class AppDbContext : DbContext
         base.OnModelCreating(modelBuilder);
 
         modelBuilder.Entity<Booking>()
-            .HasOne(e => e.Payment)
+            .HasMany(e => e.Payments)
             .WithOne(e => e.Booking)
-            .HasForeignKey<Payment>(e => e.BookingID)
+            .HasForeignKey(e => e.BookingID)
             .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<BookingPayment>()
+            .HasKey(e => e.PaymentID);
 
         modelBuilder.Entity<Review>()
             .HasOne(e => e.Booking)

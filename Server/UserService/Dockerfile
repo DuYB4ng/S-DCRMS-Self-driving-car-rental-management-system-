@@ -1,11 +1,11 @@
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
-COPY *.csproj ./
-RUN dotnet restore
-COPY . ./
+COPY ["UserService/UserService.csproj", "UserService/"]
+RUN dotnet restore "UserService/UserService.csproj"
 
-
+COPY . .
+WORKDIR "/src/UserService"
 RUN dotnet publish -c Release -o /app/publish
 
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime

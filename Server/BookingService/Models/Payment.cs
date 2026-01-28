@@ -1,6 +1,6 @@
 namespace BookingService.Models
 {
-    public class Payment
+    public class BookingPayment
     {
         public int PaymentID { get; set; }
         public DateTime PaymentDate { get; set; }

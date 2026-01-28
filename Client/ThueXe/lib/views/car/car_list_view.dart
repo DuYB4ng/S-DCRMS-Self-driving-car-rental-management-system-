@@ -149,7 +149,7 @@ class _CarListViewState extends State<CarListView> {
               children: [
                 // Giá thuê
                 Text(
-                  "Chỉ từ ${car["pricePerDay"]} VNĐ/ngày",
+                  "Chỉ từ ${(car["pricePerDay"] as num).toInt().toString().replaceAll(RegExp(r'\B(?=(\d{3})+(?!\d))'), '.')} VNĐ/ngày",
                   style: TextStyle(
                     fontSize: 18,
                     color: Colors.green.shade700,
