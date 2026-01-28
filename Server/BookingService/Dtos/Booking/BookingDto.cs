@@ -13,5 +13,6 @@ namespace BookingService.Dtos.Booking
 		public int CustomerId { get; set; }
 		public int CarId { get; set; }
 		public DateTime CreatedAt { get; set; }
+        public decimal TotalAmount { get; set; }
 	}
 }

@@ -22,6 +22,7 @@ namespace BookingService.Repositories
 		public Task<List<Booking>> getAllAsync()
 		{
 			return _context.Bookings
+                .Include(b => b.Payment)
 				.OrderByDescending(b => b.BookingID)
 				.ToListAsync();
 		}

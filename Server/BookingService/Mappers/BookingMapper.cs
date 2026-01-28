@@ -17,7 +17,8 @@ namespace BookingService.Mappers
                 Status = booking.Status,
                 CustomerId = booking.CustomerId,
                 CarId = booking.CarId,
-                CreatedAt  = booking.CreatedAt
+                CreatedAt  = booking.CreatedAt,
+                TotalAmount = booking.Payment?.Amount ?? 0
             };
         }
     }
