@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Car, ShoppingBag, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, Users, Car, Calendar, Settings, LogOut } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
 const Sidebar = () => {
@@ -8,9 +8,9 @@ const Sidebar = () => {
   const menuItems = [
     { icon: LayoutDashboard, label: "Dashboard", path: "/admin" },
     { icon: Users, label: "Users", path: "/admin/users" },
-    { icon: ShoppingBag, label: "Orders", path: "/admin/orders" }, // Placeholder
-    { icon: Car, label: "Cars", path: "/admin/cars" }, // Placeholder
-    { icon: Settings, label: "Settings", path: "/admin/settings" }, // Placeholder
+    { icon: Calendar, label: "Bookings", path: "/admin/bookings" }, 
+    { icon: Car, label: "Cars", path: "/admin/cars" },
+    { icon: Settings, label: "Settings", path: "/admin/settings" },
   ];
 
   const handleLogout = () => {
@@ -52,7 +52,7 @@ const Sidebar = () => {
       <div className="sidebar-footer">
         <button onClick={handleLogout} className="logout-btn">
           <LogOut size={20} style={{ marginRight: 12 }} />
-          Logout
+          Đăng Xuất
         </button>
       </div>
     </div>

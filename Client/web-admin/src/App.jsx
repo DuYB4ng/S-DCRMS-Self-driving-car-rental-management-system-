@@ -3,6 +3,7 @@ import Login from "./pages/Login";
 import AdminDashboard from "./pages/AdminDashboard";
 import UserManagement from "./pages/UserManagement";
 import CarManagement from "./pages/CarManagement";
+import BookingManagement from "./pages/BookingManagement";
 import PrivateRoute from "./routes/PrivateRoute";
 
 function App() {
@@ -33,6 +34,14 @@ function App() {
           element={
             <PrivateRoute>
               <CarManagement />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/admin/bookings"
+          element={
+            <PrivateRoute>
+              <BookingManagement />
             </PrivateRoute>
           }
         />
