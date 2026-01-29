@@ -25,7 +25,7 @@ services:
 
       - BOOKING_SERVICE_URL=http://bookingservice:8083
       - CUSTOMER_SERVICE_URL=http://customerservice:8085
-      - USER_SERVICE_URL=http://customerservice:8086
+      - USER_SERVICE_URL=http://userservice:8086
       - ITS_SERVICE_URL=http://itsservice:8090
 
       - KAFKA__BootstrapServers=kafka:9092
@@ -59,10 +59,13 @@ services:
     container_name: userservice
     depends_on:
       - db
+      - kafka
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8086
       - ConnectionStrings__DefaultConnection=server=db;port=3306;database=UserDB;user=root;password=YourStrong@Password123;
+      - KAFKA__BootstrapServers=kafka:9092
+      - KAFKA__Topic=user_location
     ports:
       - "8086:8086"
     networks:
@@ -225,7 +228,15 @@ services:
     networks:
       - sdcrms-network
     healthcheck:
-      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-pYourStrong@Password123" ]
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-pYourStrong@Password123",
+        ]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -361,7 +372,7 @@ services:
     ports:
       - "6379:6379"
     healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
+      test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 3s
       retries: 5

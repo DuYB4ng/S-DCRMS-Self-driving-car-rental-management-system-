@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../viewmodels/profile_viewmodel.dart';
 import 'edit_profile_view.dart';
 import '../wallet_screen.dart';
+import '../../viewmodels/login_viewmodel.dart';
 
 class ProfileView extends StatefulWidget {
   final Function(int) onMenuTap;
@@ -173,7 +174,7 @@ class _ProfileViewState extends State<ProfileView> {
 
                 // 1. Sign out Firebase
                 try {
-                  await FirebaseAuth.instance.signOut();
+                  await context.read<LoginViewModel>().logout();
                 } catch (e) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text("Lỗi khi đăng xuất: $e")),
