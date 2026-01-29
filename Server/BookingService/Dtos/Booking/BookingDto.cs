@@ -1,4 +1,5 @@
 using BookingService.Models;
+using BookingService.Dtos.Review;
 
 namespace BookingService.Dtos.Booking
 {
@@ -17,5 +18,6 @@ namespace BookingService.Dtos.Booking
 		public decimal RefundAmount { get; set; }
 		public decimal CancellationFee { get; set; }
 		public DateTime CreatedAt { get; set; }
+        public decimal TotalAmount { get; set; }
 	}
 }

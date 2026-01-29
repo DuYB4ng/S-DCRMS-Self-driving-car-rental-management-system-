@@ -57,6 +57,10 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 // Services
 builder.Services.AddScoped<IUserService, UserService.Services.UserService>();
 builder.Services.AddScoped<UserService.Services.IVnPayService, UserService.Services.VnPayService>();
+//GPS Location Service
+builder.Services.AddScoped<IUserLocationService, UserLocationService>();
+builder.Services.AddSingleton<IKafkaProducer, KafkaProducer>();
+builder.Services.AddHostedService<UserLocationConsumer>();
 
 var app = builder.Build();
 using (var scope = app.Services.CreateScope())

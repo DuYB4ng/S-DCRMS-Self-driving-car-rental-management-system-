@@ -1,5 +1,6 @@
 using UserService.Models;
 using UserService.Repositories;
+using UserService.Dtos;
 
 namespace UserService.Services
 {

@@ -6,8 +6,12 @@ import '../../services/payment_service.dart';
 import '../../services/wallet_service.dart';
 import '../wallet_screen.dart';
 import 'package:dio/dio.dart';
+import '../orders/order_detail_view.dart';
 
 class BookingConfirmView extends StatefulWidget {
+// ... (keep class definition)
+// ...
+
   final dynamic car;
   final DateTime receiveDate;
   final DateTime returnDate;
@@ -312,7 +316,7 @@ class _BookingConfirmViewState extends State<BookingConfirmView>
           ),
         );
 
-        Navigator.pop(context);
+        _navigateToOrder(bookingId.toString());
         return;
       }
 
@@ -326,10 +330,6 @@ class _BookingConfirmViewState extends State<BookingConfirmView>
          }
 
          // Call Payment (Deposit) IMMEDIATELY
-         // Note: Logic in Backend: Create Booking -> Receive ID -> Call Booking/Pay OR
-         // Backend Booking Controller Create method could optionally handle it?
-         // For now, adhere to separation: Create -> Pay.
-         
          await bookingService.payBooking(bookingId, true); // true = deposit
 
          if (!mounted) return;
@@ -339,7 +339,7 @@ class _BookingConfirmViewState extends State<BookingConfirmView>
            ),
          );
 
-         Navigator.pop(context); // Close confirm screen
+         _navigateToOrder(bookingId.toString());
          return;
       }
     } on DioException catch (e) {
@@ -382,6 +382,15 @@ class _BookingConfirmViewState extends State<BookingConfirmView>
         SnackBar(content: Text("Có lỗi xảy ra khi thanh toán: $e")),
       );
     }
+  }
+  
+  void _navigateToOrder(String bookingId) {
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(
+        builder: (context) => OrderDetailView(orderId: bookingId),
+      ),
+      (route) => route.isFirst,
+    );
   }
 
   // ==== Check trạng thái payment khi app quay lại ====

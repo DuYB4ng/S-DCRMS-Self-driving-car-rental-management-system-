@@ -67,9 +67,17 @@ namespace CustomerService.Controllers
         public async Task<IActionResult> GetByFirebaseUid(string firebaseUid)
         {
             var customer = await _customerRepo.GetByFirebaseUidAsync(firebaseUid);
-            if (customer == null) return NotFound();
 
-            return Ok(customer.ToCustomerDto()); // hoặc trả thẳng entity nếu bạn chưa dùng DTO
+            if (customer == null)
+            {
+                return NotFound(new
+                {
+                    message = "User is not registered as a customer"
+                });
+            }
+
+            return Ok(customer.ToCustomerDto());
         }
+
     }
 }

@@ -1,5 +1,6 @@
 using BookingService.Dtos.Booking;
 using BookingService.Models;
+using System.Linq;
 
 namespace BookingService.Mappers
 {
@@ -17,11 +18,10 @@ namespace BookingService.Mappers
                 Status = booking.Status,
                 CustomerId = booking.CustomerId,
                 CarId = booking.CarId,
-                TotalPrice = booking.TotalPrice,
-                DepositAmount = booking.DepositAmount,
+                CreatedAt  = booking.CreatedAt,
+                TotalAmount = booking.Payments?.Sum(p => p.Amount) ?? 0,
                 RefundAmount = booking.RefundAmount,
                 CancellationFee = booking.CancellationFee,
-                CreatedAt  = booking.CreatedAt
             };
         }
     }

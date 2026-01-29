@@ -27,5 +27,10 @@ namespace UserService.Models
         public string? BankAccountNumber { get; set; }
         public string? BankName { get; set; }
         public DateTime? LastNegativeBalanceDate { get; set; }
+
+        //GPS
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
+        public DateTime? LocationUpdatedAt { get; set; }
     }
 }

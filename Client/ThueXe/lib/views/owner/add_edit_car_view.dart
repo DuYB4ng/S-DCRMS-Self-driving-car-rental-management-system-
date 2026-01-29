@@ -56,15 +56,23 @@ class _AddEditCarViewState extends State<AddEditCarView> {
     final car = widget.car;
     _nameController = TextEditingController(text: car?.nameCar ?? "");
     _licensePlateController = TextEditingController(text: car?.licensePlate ?? "");
-    _priceController = TextEditingController(text: car?.pricePerDay?.toString() ?? "");
+    
+    // Price: If editing, show value. If new, empty.
+    _priceController = TextEditingController(text: car != null 
+        ? "${(car.pricePerDay ?? 0).toInt().toString().replaceAll(RegExp(r'\B(?=(\d{3})+(?!\d))'), '.')}" 
+        : "");
     _locationController = TextEditingController(text: car?.location ?? "");
     _descController = TextEditingController(text: car?.description ?? "");
 
-    _modelYearController = TextEditingController(text: car?.modelYear.toString() ?? "2024");
+    _modelYearController = TextEditingController(text: car?.modelYear.toString() ?? DateTime.now().year.toString());
     _seatController = TextEditingController(text: car?.seat.toString() ?? "4");
-    _fuelConsumptionController = TextEditingController(text: car?.fuelConsumption.toString() ?? "8.0");
+    _fuelConsumptionController = TextEditingController(text: car != null ? "${car.fuelConsumption}" : "");
     _colorController = TextEditingController(text: car?.color ?? "");
-    _depositController = TextEditingController(text: car?.deposit.toString() ?? "0.0");
+    
+    // Deposit: default empty if new
+    _depositController = TextEditingController(text: car != null 
+        ? "${(car.deposit ?? 0).toInt().toString().replaceAll(RegExp(r'\B(?=(\d{3})+(?!\d))'), '.')}" 
+        : "");
 
     if (car != null) {
       if (_typeCarOptions.contains(car.typeCar)) _typeCar = car.typeCar;
@@ -97,33 +105,32 @@ class _AddEditCarViewState extends State<AddEditCarView> {
     }
   }
 
+
   Future<void> _saveCar() async {
     if (_formKey.currentState!.validate()) {
       final viewModel = context.read<OwnerCarViewModel>();
       
-      // Upload image first if new one selected
       String? imageUrl;
       if (_imageFile != null) {
         imageUrl = await viewModel.uploadImage(_imageFile!);
         if (imageUrl == null) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Failed to upload image")),
+            const SnackBar(content: Text("Lỗi tải ảnh lên")),
           );
           return;
         }
       }
 
-      // Prepare Car object
       final car = Car(
         carId: widget.car?.carId,
         nameCar: _nameController.text,
         licensePlate: _licensePlateController.text,
-        pricePerDay: double.tryParse(_priceController.text) ?? 0.0,
-        deposit: double.tryParse(_depositController.text) ?? 0.0,
+        // Remove dots/commas before parsing if using formatter
+        pricePerDay: double.tryParse(_priceController.text.replaceAll('.', '').replaceAll(',', '')) ?? 0.0,
+        deposit: double.tryParse(_depositController.text.replaceAll('.', '').replaceAll(',', '')) ?? 0.0,
         location: _locationController.text,
         description: _descController.text,
         
-        // Detailed Infos
         modelYear: int.tryParse(_modelYearController.text) ?? 2024,
         seat: int.tryParse(_seatController.text) ?? 4,
         typeCar: _typeCar,
@@ -133,7 +140,7 @@ class _AddEditCarViewState extends State<AddEditCarView> {
         color: _colorController.text,
 
         imageUrls: imageUrl != null 
-            ? [imageUrl] // Use the returned path (e.g. /images/...)
+            ? [imageUrl]
             : (widget.car?.imageUrls ?? []),
       );
 
@@ -149,7 +156,7 @@ class _AddEditCarViewState extends State<AddEditCarView> {
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(viewModel.errorMessage ?? "Operation failed")),
+            SnackBar(content: Text(viewModel.errorMessage ?? "Thao tác thất bại")),
           );
         }
       }
@@ -160,7 +167,7 @@ class _AddEditCarViewState extends State<AddEditCarView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.car == null ? "Add Car" : "Edit Car"),
+        title: Text(widget.car == null ? "Thêm xe" : "Cập nhật xe"),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -181,58 +188,66 @@ class _AddEditCarViewState extends State<AddEditCarView> {
                       ? Image.file(_imageFile!, fit: BoxFit.cover)
                       : (widget.car != null && widget.car!.imageUrls.isNotEmpty)
                           ? Image.network(
-                              // Ensure full URL if stored as relative path
                               widget.car!.imageUrls.first.startsWith("http") 
                               ? widget.car!.imageUrls.first
                               : "${context.read<OwnerCarViewModel>().baseUrl.replaceAll('/api', '')}${widget.car!.imageUrls.first}",
                               fit: BoxFit.cover,
                               errorBuilder: (ctx, _, __) => const Icon(Icons.add_a_photo, size: 50),
                             )
-                          : const Center(child: Icon(Icons.add_a_photo, size: 50)),
+                          : const Center(child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.add_a_photo, size: 50),
+                                Text("Chọn ảnh xe")
+                              ],
+                            )),
                 ),
               ),
               const SizedBox(height: 16),
               
               TextFormField(
                 controller: _nameController,
-                decoration: const InputDecoration(labelText: "Car Name"),
-                validator: (val) => val!.isEmpty ? "Required" : null,
+                decoration: const InputDecoration(labelText: "Tên xe"),
+                validator: (val) => val!.isEmpty ? "Vui lòng nhập tên xe" : null,
               ),
               TextFormField(
                 controller: _licensePlateController,
                 inputFormatters: [_licensePlateFormatter], 
                 decoration: const InputDecoration(
-                  labelText: "License Plate (e.g. 30A-123.45)",
+                  labelText: "Biển số (VD: 30A-123.45)",
                   hintText: "30A-123.45"
                 ),
-                validator: (val) => val!.isEmpty ? "Required" : null,
+                validator: (val) => val!.isEmpty ? "Vui lòng nhập biển số" : null,
               ),
               TextFormField(
                 controller: _priceController,
-                decoration: const InputDecoration(labelText: "Price Per Day (VND)"),
+                decoration: const InputDecoration(labelText: "Giá thuê / ngày (VNĐ)"),
                 keyboardType: TextInputType.number,
-                validator: (val) => val!.isEmpty ? "Required" : null,
+                validator: (val) => val!.isEmpty ? "Vui lòng nhập giá" : null,
               ),
               TextFormField(
                 controller: _depositController,
-                decoration: const InputDecoration(labelText: "Deposit (VND)"),
+                decoration: const InputDecoration(
+                    labelText: "Tiền thế chấp (VNĐ)",
+                    hintText: "Nhập số tiền cọc (nếu có)"
+                ),
                 keyboardType: TextInputType.number,
               ),
               TextFormField(
                 controller: _locationController,
-                decoration: const InputDecoration(labelText: "Location"),
-                validator: (val) => val!.isEmpty ? "Required" : null,
+                decoration: const InputDecoration(labelText: "Địa điểm"),
+                validator: (val) => val!.isEmpty ? "Vui lòng nhập địa điểm" : null,
               ),
               
               const SizedBox(height: 16),
-              const Text("Vehicle Details", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              const Text("Thông số xe", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
               
               Row(
                 children: [
                    Expanded(
                      child: TextFormField(
                         controller: _modelYearController,
-                        decoration: const InputDecoration(labelText: "Model Year"),
+                        decoration: const InputDecoration(labelText: "Năm sản xuất"),
                         keyboardType: TextInputType.number,
                      ),
                    ),
@@ -240,7 +255,7 @@ class _AddEditCarViewState extends State<AddEditCarView> {
                    Expanded(
                      child: TextFormField(
                         controller: _seatController,
-                        decoration: const InputDecoration(labelText: "Seats"),
+                        decoration: const InputDecoration(labelText: "Số ghế"),
                         keyboardType: TextInputType.number,
                      ),
                    ),
@@ -252,7 +267,7 @@ class _AddEditCarViewState extends State<AddEditCarView> {
                    Expanded(
                      child: DropdownButtonFormField<String>(
                         value: _typeCar,
-                        decoration: const InputDecoration(labelText: "Type"),
+                        decoration: const InputDecoration(labelText: "Loại xe"),
                         items: _typeCarOptions.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
                         onChanged: (val) => setState(() => _typeCar = val!),
                      ),
@@ -261,7 +276,7 @@ class _AddEditCarViewState extends State<AddEditCarView> {
                    Expanded(
                      child: DropdownButtonFormField<String>(
                         value: _transmission,
-                        decoration: const InputDecoration(labelText: "Transmission"),
+                        decoration: const InputDecoration(labelText: "Hộp số"),
                         items: _transmissionOptions.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
                         onChanged: (val) => setState(() => _transmission = val!),
                      ),
@@ -274,7 +289,7 @@ class _AddEditCarViewState extends State<AddEditCarView> {
                    Expanded(
                      child: DropdownButtonFormField<String>(
                         value: _fuelType,
-                        decoration: const InputDecoration(labelText: "Fuel Type"),
+                        decoration: const InputDecoration(labelText: "Nhiên liệu"),
                         items: _fuelOptions.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
                         onChanged: (val) => setState(() => _fuelType = val!),
                      ),
@@ -283,7 +298,7 @@ class _AddEditCarViewState extends State<AddEditCarView> {
                    Expanded(
                      child: TextFormField(
                         controller: _fuelConsumptionController,
-                        decoration: const InputDecoration(labelText: "Fuel (L/100km)"),
+                        decoration: const InputDecoration(labelText: "Mức tiêu thụ (L/100km)"),
                         keyboardType: TextInputType.number,
                      ),
                    ),
@@ -292,13 +307,13 @@ class _AddEditCarViewState extends State<AddEditCarView> {
               
               TextFormField(
                 controller: _colorController,
-                decoration: const InputDecoration(labelText: "Color"),
+                decoration: const InputDecoration(labelText: "Màu sắc"),
               ),
 
               const SizedBox(height: 16),
               TextFormField(
                 controller: _descController,
-                decoration: const InputDecoration(labelText: "Description", border: OutlineInputBorder()),
+                decoration: const InputDecoration(labelText: "Mô tả", border: OutlineInputBorder()),
                 maxLines: 3,
               ),
               const SizedBox(height: 20),
@@ -307,9 +322,14 @@ class _AddEditCarViewState extends State<AddEditCarView> {
                 builder: (context, viewModel, child) {
                   return ElevatedButton(
                     onPressed: viewModel.isLoading ? null : _saveCar,
+                     style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        backgroundColor: Colors.blueAccent,
+                        foregroundColor: Colors.white
+                     ),
                     child: viewModel.isLoading 
                         ? const CircularProgressIndicator() 
-                        : Text(widget.car == null ? "Create Car" : "Update Car"),
+                        : Text(widget.car == null ? "Tạo xe mới" : "Cập nhật thông tin"),
                   );
                 },
               )

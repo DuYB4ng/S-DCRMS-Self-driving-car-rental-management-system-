@@ -76,3 +76,11 @@ Server/AdminService/FireBase
 Server/OwnerCarService/FireBase
 
 Server/FireBase
+
+# ================================
+# Flutter
+# ================================
+Client/**/.flutter-plugins
+Client/**/.flutter-plugins-dependencies
+Client/**/.dart_tool/
+Client/**/build/

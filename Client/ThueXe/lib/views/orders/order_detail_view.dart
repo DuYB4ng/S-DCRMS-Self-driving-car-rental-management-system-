@@ -8,6 +8,8 @@ import '../../viewmodels/orders_viewmodel.dart';
 import '../../services/review_service.dart';
 import '../../services/booking_service.dart';
 import 'package:dio/dio.dart';
+import '../../services/wallet_service.dart';
+import '../wallet_screen.dart';
 
 class OrderDetailView extends StatelessWidget {
   final String orderId;
@@ -103,7 +105,7 @@ class OrderDetailView extends StatelessWidget {
             _info("Tổng tiền", totalPriceText),
             
             if (order["depositAmount"] != null && order["depositAmount"] > 0)
-               _info("Tiền cọc (30%)", currencyFormat.format(order["depositAmount"])),
+               _info("Tiền cọc", currencyFormat.format(order["depositAmount"])),
 
             if (order["cancellationFee"] != null && order["cancellationFee"] > 0)
                _info("Phí hủy chuyến", currencyFormat.format(order["cancellationFee"])),
@@ -440,63 +442,222 @@ class OrderDetailView extends StatelessWidget {
   }
 
   Future<void> _handlePayment(BuildContext context, int bookingId, bool isDeposit) async {
-      final confirm = await showDialog<bool>(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          title: Text(isDeposit ? "Thanh toán Cọc" : "Thanh toán & Trả xe"),
-          content: const Text("Số tiền sẽ được trừ từ Ví của bạn. Bạn chắc chắn muốn tiếp tục?"),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text("Hủy"),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: const Text("Thanh toán"),
-            ),
-          ],
-        ),
-      );
+       final currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
+       final vm = Provider.of<OrderDetailViewModel>(context, listen: false);
+       final order = vm.orderData;
+       if (order == null) return;
 
-      if (confirm == true) {
-         try {
-            final bookingService = BookingService();
-            // 1. Pay Handling
-            await bookingService.payBooking(bookingId, isDeposit);
-            
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text("Thanh toán thành công!")),
-            );
+       // 1. Calculate Amounts
+       num deposit = order["depositAmount"] ?? 0;
+       num total = order["totalPrice"] ?? 0;
 
-            // 2. If this was Final Payment (Checkout), trigger Checkout Request too?
-            // The user requirement says "Payment (to checkout)".
-            // If API `payBooking` sets status to `Paid`. 
-            // We might need to manually set status to `ReturnRequested` or `Completed`?
-            // Current Backend `PayBooking` (isDeposit=false) sets status to `Paid`.
-            // But for Checkout flow we need `ReturnRequested`.
-            
-            if (!isDeposit) {
-               await bookingService.requestCheckOut(bookingId);
-               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Đã gửi yêu cầu trả xe.")));
-            }
-            
-            // Reload
-            if (context.mounted)
-                Provider.of<OrderDetailViewModel>(context, listen: false).loadOrder(bookingId.toString());
-         } catch (e) {
-            String msg = e.toString();
-            if (e is DioException) {
-                msg = e.response?.data?["Message"] ?? e.response?.data?["message"] ?? e.message ?? "Lỗi không xác định"; 
-            }
-             // Remove unexpected characters like brackets from generic exceptions if present
-             if (context.mounted)
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text("Lỗi: $msg")),
-                );
-         }
-      }
+       // Fallback: If TotalPrice is 0 (missing/error), try to calculate from Car Price
+       if (total <= 0 || (total < deposit && !isDeposit)) {
+          final car = vm.carData;
+          if (car != null && car["pricePerDay"] != null) {
+             final start = _parseDateTime(order["startDate"]);
+             final end = _parseDateTime(order["endDate"]);
+             if (start != null && end != null) {
+                 int days = end.difference(start).inDays;
+                 if (days < 1) days = 1; // Min 1 day
+                 num price = car["pricePerDay"];
+                 total = days * price;
+                 // Remove forced deposit calculation to trust API data
+                 // if (deposit == 0) deposit = total * 0.3; 
+             }
+          }
+       }
+
+       num amountToPay = 0;
+       if (isDeposit) {
+           amountToPay = deposit;
+       } else {
+           amountToPay = total;
+       }
+
+       // 2. Fetch Wallet Balance
+       final walletService = WalletService();
+       num balance = 0;
+       try {
+           final res = await walletService.getBalance();
+           balance = res.data["balance"] ?? 0;
+       } catch (e) {
+           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Lỗi lấy số dư ví: $e")));
+           return;
+       }
+       
+       final fmt = NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
+       bool isEnough = balance >= amountToPay;
+       if (amountToPay <= 0) isEnough = true;
+
+       // 3. Show Detailed Dialog FIRST
+       await showModalBottomSheet(
+           context: context,
+           isScrollControlled: true,
+           shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+           builder: (context) {
+               return Padding(
+                   padding: const EdgeInsets.all(24.0),
+                   child: Column(
+                       mainAxisSize: MainAxisSize.min,
+                       crossAxisAlignment: CrossAxisAlignment.start,
+                       children: [
+                           Text(isDeposit ? "Thanh toán Tiền cọc" : "Thanh toán & Trả xe", style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                           const SizedBox(height: 16),
+                           
+                           _billRow("Tổng hóa đơn (Thuê xe)", fmt.format(total), isBold: true),
+                           if (!isDeposit) _billRow("Tiền cọc (Đã cọc)", fmt.format(deposit), color: Colors.green),
+                           
+                           const Divider(height: 24),
+                           _billRow("CẦN THANH TOÁN", fmt.format(amountToPay), isBold: true, color: Colors.orange[800]),
+                           const SizedBox(height: 8),
+                           
+                           // Wallet Info
+                           Container(
+                               padding: const EdgeInsets.all(12),
+                               decoration: BoxDecoration(
+                                   color: isEnough ? Colors.green[50] : Colors.red[50], 
+                                   borderRadius: BorderRadius.circular(8)
+                               ),
+                               child: Row(
+                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                   children: [
+                                       const Text("Ví của bạn:"),
+                                       Text(fmt.format(balance), style: TextStyle(fontWeight: FontWeight.bold, color: isEnough ? Colors.green : Colors.red)),
+                                   ],
+                               ),
+                           ),
+                           if (!isEnough)
+                               Padding(
+                                 padding: const EdgeInsets.only(top: 8.0),
+                                 child: Text("Thiếu: ${fmt.format(amountToPay - balance)}", style: const TextStyle(color: Colors.red, fontStyle: FontStyle.italic)),
+                               ),
+
+                           const SizedBox(height: 24),
+                           
+                           // Action: PAY WALLET
+                           SizedBox(
+                               width: double.infinity,
+                               child: ElevatedButton(
+                                   style: ElevatedButton.styleFrom(
+                                       padding: const EdgeInsets.symmetric(vertical: 14),
+                                       backgroundColor: isEnough ? Colors.orange : Colors.blue,
+                                       foregroundColor: Colors.white
+                                   ),
+                                   onPressed: () async {
+                                       if (isEnough) {
+                                           Navigator.pop(context);
+                                           await _processPayment(context, bookingId, isDeposit, isCash: false);
+                                       } else {
+                                           Navigator.pop(context);
+                                           await Navigator.push(context, MaterialPageRoute(builder: (_) => const WalletScreen()));
+                                       }
+                                   },
+                                   child: Text(isEnough ? (isDeposit ? "Thanh toán Cọc (Ví)" : "Thanh toán & Trả xe (Ví)") : "Nạp tiền vào ví"),
+                               ),
+                           ),
+                           
+                           // Action: PAY CASH (Only for Checkout/Return)
+                           if (!isDeposit) ...[
+                               const SizedBox(height: 12),
+                               SizedBox(
+                                   width: double.infinity,
+                                   child: OutlinedButton.icon(
+                                       icon: const Icon(Icons.money),
+                                       style: OutlinedButton.styleFrom(
+                                           padding: const EdgeInsets.symmetric(vertical: 14),
+                                           side: const BorderSide(color: Colors.green),
+                                           foregroundColor: Colors.green
+                                       ),
+                                       onPressed: () async {
+                                            Navigator.pop(context);
+                                            await _processPayment(context, bookingId, isDeposit, isCash: true);
+                                       },
+                                       label: const Text("Thanh toán Trực tiếp (Tiền mặt)"),
+                                   ),
+                               ),
+                               const Padding(
+                                  padding: EdgeInsets.only(top: 8.0),
+                                  child: Text(
+                                    "* Bạn sẽ thanh toán trực tiếp cho chủ xe khi gặp mặt. Hệ thống chỉ ghi nhận yêu cầu trả xe.",
+                                    style: TextStyle(fontSize: 12, color: Colors.black54, fontStyle: FontStyle.italic),
+                                  ),
+                               )
+                           ]
+                       ],
+                   ),
+               );
+           }
+       );
   }
-}
+
+  Widget _billRow(String label, String value, {bool isBold = false, Color? color}) {
+      return Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                  Text(label, style: TextStyle(fontWeight: isBold ? FontWeight.bold : FontWeight.normal)),
+                  Text(value, style: TextStyle(fontWeight: isBold ? FontWeight.bold : FontWeight.normal, color: color)),
+              ],
+          ),
+      );
+  }
+
+  Future<void> _processPayment(BuildContext context, int bookingId, bool isDeposit, {required bool isCash}) async {
+         final bookingService = BookingService();
+         
+         final vm = Provider.of<OrderDetailViewModel>(context, listen: false);
+         final order = vm.orderData;
+         num deposit = order?["depositAmount"] ?? 0;
+         num total = order?["totalPrice"] ?? 0;
+         num amountToPay = isDeposit ? deposit : total;
+
+         // Phase 1: Payment (Skip if Cash)
+         if (!isCash && amountToPay > 0) {
+            try {
+              await bookingService.payBooking(bookingId, isDeposit);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Thanh toán thành công!")),
+              );
+            } catch (e) {
+               String msg = e.toString();
+               if (e is DioException) {
+                  msg = e.response?.data?["Message"] ?? e.response?.data?["message"] ?? e.message ?? "Lỗi không xác định"; 
+               }
+               ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Lỗi thanh toán: $msg")));
+               return; 
+            }
+         }
+
+         // Phase 2: Checkout (Return Request)
+         // Assuming if we paid, we want to checkout.
+         // If Cash, we assume payment happens physically, so we just request return.
+         if (!isDeposit) {
+             try {
+               await bookingService.requestCheckOut(bookingId);
+               String successMsg = isCash 
+                   ? "Đã gửi yêu cầu trả xe. Vui lòng thanh toán tiền mặt cho chủ xe." 
+                   : "Đã gửi yêu cầu trả xe.";
+               ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(successMsg)));
+             } catch (e) {
+                 String msg = e.toString();
+                 if (e is DioException) {
+                    msg = e.response?.data?["Message"] ?? e.response?.data?["message"] ?? e.message ?? "Lỗi không xác định"; 
+                 }
+                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Lỗi trả xe: $msg")));
+             }
+         }
+         
+         // Reload Layout
+         if (context.mounted) {
+             await Future.delayed(const Duration(milliseconds: 500));
+             if (context.mounted) {
+                Provider.of<OrderDetailViewModel>(context, listen: false).loadOrder(bookingId.toString());
+             }
+         }
+  }
+} // End Class
 
 class _ReviewDialogResult {
   final int rating;

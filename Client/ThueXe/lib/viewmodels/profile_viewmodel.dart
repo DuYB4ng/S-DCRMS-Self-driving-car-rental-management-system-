@@ -16,6 +16,9 @@ class ProfileViewModel extends ChangeNotifier {
   final _auth = FirebaseAuth.instance;
   final ApiService _api = ApiService();
 
+  // 🔹 ADD: role (lấy từ LoginViewModel gán vào)
+  String? role;
+
   // License fields
   String? licenseNo;
   String? licenseIssueDate;
@@ -28,14 +31,22 @@ class ProfileViewModel extends ChangeNotifier {
   Future<void> loadUserInfo() async {
     final user = _auth.currentUser;
 
-    if (user != null) {
-      email = user.email;
-      phone = user.phoneNumber; 
-      name = user.displayName; 
-      photoUrl = user.photoURL;
-      
-      // Fetch details from backend
+    if (user == null) return;
+
+    email = user.email;
+    phone = user.phoneNumber;
+    name = user.displayName;
+    photoUrl = user.photoURL;
+
+    // 🔥 FIX LOGIC: chỉ CUSTOMER mới gọi CustomerService
+    if ((role ?? "").toLowerCase().contains("customer")) {
       await _fetchCustomerData(user.uid);
+    } else {
+      // 🔹 Owner → clear customer fields (tránh dính data cũ)
+      customerId = null;
+      licenseNo = null;
+      licenseIssueDate = null;
+      licenseExpiryDate = null;
     }
     notifyListeners();
   }
@@ -135,7 +146,7 @@ class ProfileViewModel extends ChangeNotifier {
       }
 
       // 2. Update Backend Customer Info (License)
-      if (customerId != null) {
+      if ((role ?? "").toLowerCase().contains("customer") && customerId != null) {
         // Convert dd/mm/yyyy to ISO
         final issueIso = _toIsoDate(newIssueDate);
         final expiryIso = _toIsoDate(newExpiryDate);

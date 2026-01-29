@@ -211,6 +211,7 @@ namespace BookingService.Controllers
         }
 
         // POST: api/booking/{id}/confirm-return (Owner confirms return)
+        // POST: api/booking/{id}/confirm-return (Owner confirms return)
         [HttpPost("{id}/confirm-return")]
         [AllowAnonymous]
         public async Task<IActionResult> ConfirmReturn(int id, [FromServices] OwnerCarClient ownerCarClient, [FromServices] UserClient userClient)
@@ -224,70 +225,79 @@ namespace BookingService.Controllers
                 if (booking.Status == BookingStatuses.Completed || booking.Status == BookingStatuses.Cancelled)
                     return BadRequest(new { Message = "Booking already processed." });
 
-                // 1. REFUND DEPOSIT TO CUSTOMER
+                // Get Owner UID
+                var ownerId = await ownerCarClient.GetOwnerIdByCarIdAsync(booking.CarId);
+                string? ownerUid = null;
+                if (ownerId != null)
+                {
+                    ownerUid = await ownerCarClient.GetOwnerFirebaseUidAsync(ownerId.Value);
+                }
+
+                if (string.IsNullOrEmpty(ownerUid))
+                {
+                    return BadRequest(new { Message = "Cannot identify Owner Wallet." });
+                }
+
+                // 1. REFUND DEPOSIT TO CUSTOMER (From System Holding)
+                // System currently holds Deposit + Rent (if paid via Wallet/VNPAY).
                 if (booking.DepositAmount > 0)
                 {
-                     // Get Customer Profile to find FirebaseUid
                      var customer = await _customerClient.GetByIdAsync(booking.CustomerId);
                      if (customer != null && !string.IsNullOrEmpty(customer.FirebaseUid))
                      {
-                         // Refund Deposit
+                         // Credit Customer directly (System -> Customer)
+                         // DO NOT Deduct Owner (since Owner never received Deposit)
                          await userClient.CreditWalletAsync(customer.FirebaseUid, booking.DepositAmount);
                      }
                 }
 
-                // 2. PAY OWNER (Rent - Commission)
+                // 2. SETTLE WITH OWNER (Rent - Commission)
+                // System Commission
                 decimal commissionRate = 0.1m; // 10%
-                decimal rentAmount = booking.TotalPrice;
+                decimal rentAmount = booking.TotalPrice; 
                 decimal commission = rentAmount * commissionRate;
 
-                // Determine who holds the Rent money?
-                // Total paid via Wallet (System holds)
-                var paidViaWallet = booking.Payments
+                // Amount System actually holds (excluding the Deposit we just refunded)
+                // TotalPaid = All Wallet/VNPAY transactions.
+                var totalPaid = booking.Payments
                     .Where(p => (p.Method == "Wallet" || p.Method == "VNPAY") && (p.Status == "Completed" || p.Status == "Success"))
                     .Sum(p => p.Amount);
                 
-                // We assume Deposit was paid via Wallet and we just refunded it.
-                // So remaining system money = paidViaWallet - DepositAmount.
-                // (If Deposit was Cash, logic is complex, but assuming Wallet for Deposit).
-                
-                decimal systemRentHolding = paidViaWallet - booking.DepositAmount; 
-                // Note: If systemRentHolding < 0, it means we refunded more than wallet held? (e.g. Deposit was cash?)
-                // For MVP, if systemRentHolding < 0, set to 0.
-                if (systemRentHolding < 0) systemRentHolding = 0;
+                // If we refunded deposit above, we don't have it anymore.
+                // Assuming System used the 'Deposit' portion of TotalPaid to refund.
+                // Remaining System Funds = TotalPaid - DepositAmount.
+                // (Note: If DepositAmount > TotalPaid, we have a deficit problem, but assuming logic holds).
+                decimal systemHoldingRent = totalPaid - booking.DepositAmount;
+                if (systemHoldingRent < 0) systemHoldingRent = 0; // Should not happen if data consistent
 
-                // Net to Owner = Rent (from System) - Commission.
-                // Wait. Rent (from system) is what we CAN pay.
-                // Total Rent User should have paid = rentAmount.
-                // If User paid Cash, Owner has it.
-                // If User paid Wallet, System has it.
-                
-                // Formula: Transfer = SystemRentHolding - Commission.
-                // Example 1: Full Wallet. System has Rent.
-                // Transfer = Rent - Commission. (Positive -> Credit Owner).
-                // Example 2: Full Cash. System has 0.
-                // Transfer = 0 - Commission. (Negative -> Deduct Owner).
-                // Example 3: Mixed.
-                
-                decimal netTransfer = systemRentHolding - commission;
+                // Net Amount to Transfer
+                // If System holds Rent (Wallet Pay), we owe Owner (Rent - Commission).
+                // If System holds Nothing (Cash Pay), Owner owes System (Commission).
+                // Formula: Transfer = SystemHoldingRent - Commission.
+                decimal netTransferToOwner = systemHoldingRent - commission;
 
-                // Get Owner UID
-                var ownerId = await ownerCarClient.GetOwnerIdByCarIdAsync(booking.CarId);
-                if (ownerId != null)
+                if (netTransferToOwner > 0)
                 {
-                    var ownerUid = await ownerCarClient.GetOwnerFirebaseUidAsync(ownerId.Value);
-                    if (!string.IsNullOrEmpty(ownerUid))
+                    // System owes Owner (e.g. Wallet Payment)
+                    await userClient.CreditWalletAsync(ownerUid!, netTransferToOwner);
+                }
+                else if (netTransferToOwner < 0)
+                {
+                    // Owner owes System (e.g. Cash Payment)
+                    // We need to DEDUCT "Abs(netTransferToOwner)" from Owner.
+                    decimal amountToDeduct = Math.Abs(netTransferToOwner);
+                    
+                    // Check Owner Balance? DeductWalletAsync handles check usually, returns false if fail.
+                    bool success = await userClient.DeductWalletAsync(ownerUid!, amountToDeduct);
+                    if (!success)
                     {
-                         if (netTransfer > 0)
-                         {
-                             await userClient.CreditWalletAsync(ownerUid, netTransfer);
-                         }
-                         else if (netTransfer < 0)
-                         {
-                             await userClient.DeductWalletAsync(ownerUid, Math.Abs(netTransfer));
-                         }
+                         // If Owner doesn't have enough money for commission, what do we do?
+                         // Fail the return confirmation? Or mark as debt?
+                         // For now, fail and tell Owner to top up.
+                         return BadRequest(new { Message = $"Chủ xe không đủ số dư để thanh toán hoa hồng hệ thống ({amountToDeduct:N0}đ). Vui lòng nạp tiền." });
                     }
                 }
+                // If == 0, do nothing.
 
                 // 3. Update Status
                 booking.CheckOut = true;
@@ -304,7 +314,7 @@ namespace BookingService.Controllers
 
         // POST: api/booking/{id}/cancel
         [HttpPost("{id}/cancel")]
-        public async Task<IActionResult> Cancel(int id, [FromServices] UserClient userClient)
+        public async Task<IActionResult> Cancel(int id, [FromServices] UserClient userClient, [FromServices] OwnerCarClient ownerCarClient)
         {
             var booking = await _context.Bookings.FindAsync(id);
             if (booking == null)
@@ -319,31 +329,15 @@ namespace BookingService.Controllers
             // Cancellation Policy
             var now = DateTime.UtcNow;
             decimal feePercent = 0;
-            
-            // Example Policy:
-            // > 7 days before: 0%
-            // 1-7 days before: 10%
-            // < 24h before: 30%
-            // During trip: 100% (handled by checks above, CheckIn prevents Cancel)
-            
             double hoursBefore = (booking.StartDate - now).TotalHours;
             
             if (hoursBefore > 168) // 7 days
-            {
                 feePercent = 0;
-            }
             else if (hoursBefore > 24)
-            {
                 feePercent = 10;
-            }
             else
-            {
                 feePercent = 30; // Late cancel
-            }
 
-            // Calculate amounts
-            // Load payments if not loaded? FindAsync might not load Includes.
-            // We need to reload or explicit load.
             await _context.Entry(booking).Collection(b => b.Payments).LoadAsync();
             
             decimal totalPaid = booking.Payments
@@ -351,72 +345,58 @@ namespace BookingService.Controllers
                 .Sum(p => p.Amount);
                 
             decimal feeAmount = booking.TotalPrice * (feePercent / 100m);
-            decimal refundAmount = totalPaid - feeAmount;
-
-            // Logic:
-            // If Refund > 0: Credit User.
-            // If Refund < 0: User owes money? (Usually we just keep what they paid, max is totalPaid).
-            // So Refund = Max(0, totalPaid - feeAmount).
-            // Fee Taken = totalPaid - Refund. (Which might be less than feeAmount if they only paid deposit).
             
+            // Refund Amount = TotalPaid - Fee. 
+            // (If Fee > TotalPaid, Refund = 0. FeeTaken = TotalPaid).
+            decimal refundAmount = totalPaid - feeAmount;
             if (refundAmount < 0) refundAmount = 0;
+            
+            // Fee Taken is what we DON'T refund.
             decimal actualFeeTaken = totalPaid - refundAmount;
 
-            // Process Refund
-            if (refundAmount > 0)
-            {
-                // Get customer UID (we need it for wallet). 
-                // We have CustomerId. Need to fetch UID from CustomerClient? 
-                // Or stored in Booking? No.
-                // We need CustomerClient to get UID from CustomerId in CustomerService.
-                // Re-using _customerClient.
-                // But _customerClient.GetByFirebaseUidAsync(uid) gets Profile.
-                // Does it have GetByCustomerId?
-                
-                // Assuming we can get it via customerClient or stored in User Context if caller is user.
-                // If caller is Admin/Owner provided ID, we need lookup.
-                // Let's try to get UID from CustomerClient.
-                // Or... Booking doesn't store FirebaseUid. That's a design gap. CustomerId maps to Customer Profile.
-                // Customer Profile has AccountId? User Table?
-                // For now, let's assume we can get it.
-                // We will add GetCustomerById to CustomerClient later if needed.
-                // For now, let's look up via CustomerClient?
-            }
-            // Temporarily skip Wallet Call if we don't have UID, but we SHOULD have it.
-            // Assuming we resolve this.
-            
-            // Update Booking
-            // Update Booking status first (to record refund trace if we keep it, but we are deleting)
-            // User requested: "Delete Cancelled Orders" so they don't block.
-            // If I delete, I lose the record of CancellationFee.
-            // BETTER APPROACH: Keep status "Cancelled" (Constant) and fix "Create" overlap check to use exactly this constant.
-            // This is safer. Deleting financial records is bad practice.
-            
-            booking.Status = BookingStatuses.Cancelled;
-            booking.CancellationFee = actualFeeTaken;
-            booking.RefundAmount = refundAmount;
-            
-            // Refund to Wallet
+            // 1. REFUND CUSTOMER (From System)
+            // System holds TotalPaid. We give back RefundAmount.
             var uid = User.FindFirst("firebaseUid")?.Value;
             if (uid != null && refundAmount > 0)
             {
-                 // Use UserClient to credit wallet
+                 // System -> Customer
                  await userClient.CreditWalletAsync(uid, refundAmount);
             }
+            
+            // 2. PAY FEE TO OWNER (From System)
+            // System holds Remaining = TotalPaid - RefundAmount = ActualFeeTaken.
+            // This Fee belongs to Owner (compensation).
+            if (actualFeeTaken > 0)
+            {
+                 var ownerId = await ownerCarClient.GetOwnerIdByCarIdAsync(booking.CarId);
+                 if (ownerId != null)
+                 {
+                     var ownerUid = await ownerCarClient.GetOwnerFirebaseUidAsync(ownerId.Value);
+                     if (!string.IsNullOrEmpty(ownerUid))
+                     {
+                         // System -> Owner
+                         await userClient.CreditWalletAsync(ownerUid, actualFeeTaken);
+                     }
+                 }
+            }
+
+            booking.Status = BookingStatuses.Cancelled;
+            booking.CancellationFee = actualFeeTaken;
+            booking.RefundAmount = refundAmount;
 
             await _context.SaveChangesAsync();
             return Ok(new { 
                 Booking = booking.ToBookingDto(),
                 CancellationFee = actualFeeTaken,
                 RefundAmount = refundAmount,
-                Message = $"Cancelled. Fee detected: {actualFeeTaken}. Refund: {refundAmount}"
+                Message = "Cancelled successfully."
             });
         }
 
 
         // POST: api/booking/{id}/pay
         [HttpPost("{id}/pay")]
-        public async Task<IActionResult> PayBooking(int id, [FromServices] UserClient userClient, [FromQuery] bool isDeposit = true)
+        public async Task<IActionResult> PayBooking(int id, [FromServices] UserClient userClient, [FromServices] OwnerCarClient ownerCarClient, [FromQuery] bool isDeposit = true)
         {
             var booking = await _context.Bookings.Include(b => b.Payments).FirstOrDefaultAsync(b => b.BookingID == id);
             if (booking == null) return NotFound();
@@ -424,77 +404,39 @@ namespace BookingService.Controllers
             if (booking.Status == BookingStatuses.Cancelled || booking.Status == "Completed")
                 return BadRequest("Booking is already finalized.");
 
-            // Resolve User UID
             var uid = User.FindFirst("firebaseUid")?.Value; 
-            // In Dev, try to get from header or query if not in claim? 
-            // Assuming Auth Middleware works. 
-            // If strictly anonymous, we might need Query Param 'firebaseUid'.
-            if (string.IsNullOrEmpty(uid)) 
-                uid = Request.Query["firebaseUid"]; // Fallback for Dev
+            if (string.IsNullOrEmpty(uid)) uid = Request.Query["firebaseUid"];
 
-            if (string.IsNullOrEmpty(uid)) 
-                 return BadRequest("User not identified");
+            if (string.IsNullOrEmpty(uid)) return BadRequest("User not identified");
 
-            // Calculate Amount to Pay
             decimal amountToPay = 0;
             if (isDeposit)
             {
-                // Pay Deposit
                 amountToPay = booking.DepositAmount;
-                // Double check if DepositAmount is 0 (migration issue or save issue)
-                if (amountToPay == 0 && booking.TotalPrice > 0) 
-                {
-                    amountToPay = booking.TotalPrice * 0.3m;
-                }
+                if (amountToPay == 0 && booking.TotalPrice > 0) amountToPay = booking.TotalPrice * 0.3m;
+                if (amountToPay <= 0) return BadRequest(new { Message = "Invalid Deposit Amount." });
 
-                if (amountToPay <= 0) return BadRequest(new { Message = "Invalid Deposit Amount (0)." });
-
-                // Check if already paid deposit?
-                // Sum all completed payments
                 var paid = booking.Payments
                     .Where(p => p.Status == "Completed" || p.Status == "Success")
                     .Sum(p => p.Amount);
 
-                if (paid >= amountToPay - 1000) // Tolerance
-                     return BadRequest(new { Message = "Deposit already paid or sufficient amount paid." });
-                
-                // If partial paid?
+                if (paid >= amountToPay - 1000) return BadRequest(new { Message = "Deposit already paid." });
                 if (paid > 0) amountToPay -= paid;
-                
-                if (amountToPay <= 0) return BadRequest(new { Message = "Deposit covered." });
             }
             else
             {
-                // Pay Remaining (Full Payment for Rent)
-                // Case: Collateral (Deposit) is separate. It is NOT part of Rent.
-                // So we need to pay `booking.TotalPrice`.
-                
-                // First, check if already paid?
-                if (booking.Status == "Paid" || booking.Status == "Completed")
-                {
-                     return BadRequest(new { Message = "Booking is already Paid." });
-                }
-
-                // Does existing payments include Rent?
-                // We assume previous payments were Deposit.
-                // If we support partial rent payment, we need complex logic.
-                // For MVP, we assume Rent is paid in full at end.
-                
+                // Full Payment Logic (Rent)
+                // ... (Logic same as before)
+                // NOTE: If paying Rent, System holds it. We don't transfer to Owner yet.
                 amountToPay = booking.TotalPrice;
-
-                // Safety: If by any chance they paid more than Deposit?
                 var totalPaid = booking.Payments.Where(p => p.Status == "Completed" || p.Status == "Success").Sum(p => p.Amount);
-                // RentPaid = TotalPaid - DepositAmount (assuming Deposit covered first)
                 var rentPaid = totalPaid - booking.DepositAmount;
-                if (rentPaid > 0)
-                {
-                    amountToPay -= rentPaid;
-                }
+                if (rentPaid > 0) amountToPay -= rentPaid;
             }
 
             if (amountToPay <= 0) return BadRequest(new { Message = "Nothing to pay." });
 
-            // Call Wallet Service
+            // 1. Deduct Customer
             bool success = false;
             try 
             {
@@ -505,7 +447,10 @@ namespace BookingService.Controllers
                return StatusCode(500, new { Message = $"Lỗi kết nối ví: {ex.Message}" });
             }
 
-            if (!success) return BadRequest(new { Message = "Số dư ví không đủ hoặc lỗi hệ thống ví." });
+            if (!success) return BadRequest(new { Message = "Số dư ví không đủ." });
+
+            // 2. Deposit logic: System holds it. Do NOT transfer to Owner.
+            // (Reverted direct transfer logic based on user request "Owner currently does not hold deposit")
 
             // Record Payment
             var payment = new BookingPayment
@@ -518,7 +463,6 @@ namespace BookingService.Controllers
             };
             _context.Payments.Add(payment);
             
-            // Update Booking Status
             if (isDeposit)
             {
                 if (booking.Status == "Pending") booking.Status = "Approved"; 
@@ -526,8 +470,7 @@ namespace BookingService.Controllers
             else 
             {
                  var totalPaid = booking.Payments.Where(p => p.Status == "Completed" || p.Status == "Success").Sum(p => p.Amount) + amountToPay;
-                 // Tolerance check
-                 if (totalPaid >= booking.TotalPrice - 1000) // 1000 VND tolerance
+                 if (totalPaid >= booking.TotalPrice - 1000)
                      booking.Status = "Paid";
             }
 
@@ -591,6 +534,5 @@ namespace BookingService.Controllers
             var dtoBooking = bookings.Select(b => b.ToBookingDto());
             return Ok(dtoBooking);
         }
-
     }
 }

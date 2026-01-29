@@ -178,5 +178,107 @@ namespace AuthService.Services
         {
             public string IdToken { get; set; } = string.Empty;
         }
+
+        // ✅ Login với Email/Password using Firebase REST API
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginRequest request)
+        {
+            try
+            {
+                // 1. Get API Key
+                var apiKey = GetFirebaseApiKey();
+                if (string.IsNullOrEmpty(apiKey))
+                    return StatusCode(500, "Firebase API Key not found.");
+
+                // 2. Call Firebase REST API to sign in
+                var authUrl = $"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={apiKey}";
+                var payload = new
+                {
+                    email = request.Email,
+                    password = request.Password,
+                    returnSecureToken = true
+                };
+
+                var http = _httpClientFactory.CreateClient();
+                var response = await http.PostAsJsonAsync(authUrl, payload);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    return Unauthorized(new { message = "Authentication failed", details = error });
+                }
+
+                var authData = await response.Content.ReadFromJsonAsync<FirebaseSignInResponse>();
+                
+                // 3. Get User Role from DB
+                var user = await _authUserRepository.GetByFirebaseUidAsync(authData.localId);
+                
+                // If user not in DB (sync issue?), try to create or just return default
+                string role = "Customer";
+                if (user != null)
+                {
+                    role = user.Role;
+                    // Update LastLogin?
+                }
+                else
+                {
+                    // Auto-create if missing (optional, keeps sync)
+                    var newUser = new AuthUser
+                    {
+                        FirebaseUid = authData.localId,
+                        Email = authData.email,
+                        DisplayName = request.Email.Split('@')[0], // Fallback
+                        Role = "Customer",
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    await _authUserRepository.AddAsync(newUser);
+                }
+
+                return Ok(new
+                {
+                    token = authData.idToken,
+                    refreshToken = authData.refreshToken,
+                    expiresIn = authData.expiresIn,
+                    role = role,
+                    email = authData.email
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
+
+        private string GetFirebaseApiKey()
+        {
+            try
+            {
+                // Try to read from firebase_config.json
+                if (System.IO.File.Exists("firebase_config.json"))
+                {
+                    var json = System.IO.File.ReadAllText("firebase_config.json");
+                    using var doc = System.Text.Json.JsonDocument.Parse(json);
+                    if (doc.RootElement.TryGetProperty("apiKey", out var key))
+                    {
+                        return key.GetString();
+                    }
+                }
+                return ""; 
+            }
+            catch
+            {
+                return "";
+            }
+        }
+
+        public class FirebaseSignInResponse
+        {
+            public string idToken { get; set; }
+            public string email { get; set; }
+            public string refreshToken { get; set; }
+            public string expiresIn { get; set; }
+            public string localId { get; set; }
+        }
+
     }
 }

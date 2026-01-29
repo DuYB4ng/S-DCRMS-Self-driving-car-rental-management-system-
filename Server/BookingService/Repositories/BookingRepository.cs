@@ -22,12 +22,13 @@ namespace BookingService.Repositories
 		public Task<List<Booking>> getAllAsync()
 		{
 			return _context.Bookings
+                .Include(b => b.Payments)
 				.OrderByDescending(b => b.BookingID)
 				.ToListAsync();
 		}
 		public Task<Booking?> getByIdAsync(int id)
 		{
-			return _context.Bookings.FindAsync(id).AsTask();
+			return _context.Bookings.AsNoTracking().FirstOrDefaultAsync(u => u.BookingID == id);
 		}
 		public async Task<Booking> createAsync(CreateBookingDto bookingDto, int customerId)
 		{

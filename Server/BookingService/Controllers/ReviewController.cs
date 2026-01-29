@@ -130,5 +130,23 @@ namespace Controllers
 
             return Ok(reviews);
         }
+
+        // GET: api/review/booking/{bookingId}
+        [HttpGet("booking/{bookingId}")]
+        public async Task<IActionResult> GetByBooking(int bookingId)
+        {
+            var review = await _context.Reviews
+                .Where(r => r.BookingID == bookingId)
+                .Select(r => new 
+                {
+                    r.ReviewID,
+                    r.Rating,
+                    r.Comment,
+                    r.ReviewDate
+                })
+                .FirstOrDefaultAsync();
+
+            return Ok(review); // returns null (204 or just null json) if not found
+        }
     }
 }

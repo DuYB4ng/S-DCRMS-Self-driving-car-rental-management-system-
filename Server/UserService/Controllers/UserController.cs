@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using UserService.Models;
 using UserService.Services;
+using UserService.Dtos;
 
 namespace UserService.Controllers
 {
@@ -9,10 +11,12 @@ namespace UserService.Controllers
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
+        private readonly IUserLocationService _userLocationService;
 
-        public UserController(IUserService userService)
+        public UserController(IUserService userService,IUserLocationService userLocationService)
         {
             _userService = userService;
+            _userLocationService = userLocationService;
         }
 
         public class PromoteUserDto
@@ -227,5 +231,27 @@ namespace UserService.Controllers
 
             return Ok(user);
         }
+
+        //GPS Update Location
+        [HttpPut("firebase/{firebaseUid}/location")]
+        public async Task<IActionResult> UpdateLocation(
+            string firebaseUid,
+            [FromBody] UpdateUserLocationDto dto
+        )
+        {
+            if (dto == null)
+                return BadRequest("Body is null");
+
+            await _userLocationService.UpdateAsync(firebaseUid, dto);
+
+            return Ok(new
+            {
+                message = "Location pushed to Kafka",
+                firebaseUid,
+                dto.Latitude,
+                dto.Longitude
+            });
+        }
+
     }
 }

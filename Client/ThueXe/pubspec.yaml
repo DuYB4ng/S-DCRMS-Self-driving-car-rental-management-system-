@@ -1,6 +1,6 @@
 name: thuexe
 description: "A new Flutter project."
-publish_to: 'none'
+publish_to: "none"
 version: 1.0.0+1
 
 environment:
@@ -19,6 +19,8 @@ dependencies:
   image_picker: ^1.2.1
   table_calendar: ^3.1.2
   mask_text_input_formatter: ^2.9.0
+  geolocator: ^10.1.0
+  shared_preferences: ^2.2.2
 
 dev_dependencies:
   flutter_test:
@@ -31,7 +33,6 @@ flutter_native_splash:
   image: assets/splash.png
   android: true
   ios: true
-
 
 flutter:
   assets:
