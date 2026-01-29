@@ -71,17 +71,17 @@ class HomeView extends StatelessWidget {
                         SizedBox(height: 8),
                         DropdownButtonFormField<String>(
                           decoration: _inputDecoration(),
-                          initialValue: vm.selectedCity,
+                          value: vm.selectedCity == "NEAR_ME" || ["Hồ Chí Minh", "Hà Nội", "Đà Nẵng"].contains(vm.selectedCity) 
+                              ? vm.selectedCity 
+                              : "Hồ Chí Minh", // Fallback
                           items: [
-                            "Hồ Chí Minh",
-                            "Hà Nội",
-                            "Đà Nẵng"
-                          ].map((value) {
-                            return DropdownMenuItem(
-                              value: value,
-                              child: Text(value),
-                            );
-                          }).toList(),
+                            DropdownMenuItem(value: "NEAR_ME", child: Row(
+                              children: [Icon(Icons.near_me, color: Colors.blue), SizedBox(width: 8), Text("Gần tôi")],
+                            )),
+                            DropdownMenuItem(value: "Hồ Chí Minh", child: Text("Hồ Chí Minh")),
+                            DropdownMenuItem(value: "Hà Nội", child: Text("Hà Nội")),
+                            DropdownMenuItem(value: "Đà Nẵng", child: Text("Đà Nẵng")),
+                          ],
                           onChanged: (value) {
                             vm.setCity(value!);
                           },

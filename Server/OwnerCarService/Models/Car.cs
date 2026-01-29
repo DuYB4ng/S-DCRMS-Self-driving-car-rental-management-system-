@@ -21,6 +21,8 @@
         public bool IsActive { get; set; } = true;
         public string Status { get; set; } = "Active"; // Active, UnderMaintenance, Disabled
         public string Location { get; set; } = string.Empty;
+        public double Latitude { get; set; }
+        public double Longitude { get; set; }
 
         // Ownership & registration
         public string OwnershipDocumentNumber { get; set; } = string.Empty;

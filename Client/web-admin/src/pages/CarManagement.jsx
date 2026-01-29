@@ -36,7 +36,7 @@ const CarManagement = () => {
 
     useEffect(() => {
         fetchData();
-        fetchOwners(); 
+        fetchOwners();
     }, [activeTab]);
 
     const fetchData = async () => {
@@ -102,12 +102,12 @@ const CarManagement = () => {
                 ownerCarID: parseInt(formData.ownerCarID), // Ensure integer
                 imageUrls: formData.imageUrl ? [formData.imageUrl] : []
             };
-            
+
             await createCar(payload);
             alert("Car created successfully!");
             setShowModal(false);
             setFormData(initialFormState);
-            fetchData(); 
+            fetchData();
         } catch (err) {
             console.error("Error creating car:", err);
             alert("Failed to create car: " + (err.response?.data?.message || err.message));
@@ -120,7 +120,7 @@ const CarManagement = () => {
             <main className="main-content">
                 <div className="dashboard-page">
                     <div className="header" style={{ marginBottom: "24px", borderRadius: "12px", boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}>
-                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
                             <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
                                 <h2 style={{ margin: 0, color: "#0f172a" }}>Quản lý Xe</h2>
                             </div>
@@ -135,13 +135,7 @@ const CarManagement = () => {
                             }} onClick={() => setShowModal(true)}>
                                 + Thêm Xe
                             </button>
-                         </div>
-                    </div>
-
-                    <div style={{ display: "flex", gap: "12px", marginBottom: "24px" }}>
-                        <button onClick={() => setActiveTab("all")} style={{ padding: "8px 16px", borderRadius: "20px", border: "none", backgroundColor: activeTab === "all" ? "#0f172a" : "#fff", color: activeTab === "all" ? "#fff" : "#64748b", fontWeight: "500", cursor: "pointer", transition: "all 0.2s" }}>Tất cả</button>
-                        <button onClick={() => setActiveTab("available")} style={{ padding: "8px 16px", borderRadius: "20px", border: "none", backgroundColor: activeTab === "available" ? "#10b981" : "#fff", color: activeTab === "available" ? "#fff" : "#64748b", fontWeight: "500", cursor: "pointer", transition: "all 0.2s" }}>Có sẵn</button>
-                        <button onClick={() => setActiveTab("maintenance")} style={{ padding: "8px 16px", borderRadius: "20px", border: "none", backgroundColor: activeTab === "maintenance" ? "#f59e0b" : "#fff", color: activeTab === "maintenance" ? "#fff" : "#64748b", fontWeight: "500", cursor: "pointer", transition: "all 0.2s" }}>Đang bảo trì</button>
+                        </div>
                     </div>
 
                     <div className="card">
@@ -171,7 +165,6 @@ const CarManagement = () => {
                                                         <th>Địa điểm</th>
                                                     </>
                                                 )}
-                                                <th>Thao tác</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -179,7 +172,7 @@ const CarManagement = () => {
                                                 const isMaintenance = activeTab === "maintenance";
                                                 const id = isMaintenance ? item.maintenanceID : item.carID;
                                                 return (
-                                                    <tr key={id}> 
+                                                    <tr key={id}>
                                                         <td>#{id}</td>
                                                         <td>{isMaintenance ? `Car #${item.carID}` : item.nameCar}</td>
                                                         <td>{isMaintenance ? "-" : item.licensePlate}</td>
@@ -200,12 +193,6 @@ const CarManagement = () => {
                                                                 <td>{item.location || "N/A"}</td>
                                                             </>
                                                         )}
-                                                        <td>
-                                                            <div style={{ display: "flex", gap: "8px" }}>
-                                                                <button style={{ color: "#3b82f6", background: "none", border: "none", cursor: "pointer", fontWeight: "500" }}>Edit</button>
-                                                                <button onClick={() => handleDelete(id)} style={{ color: "#ef4444", background: "none", border: "none", cursor: "pointer", fontWeight: "500" }}>Delete</button>
-                                                            </div>
-                                                        </td>
                                                     </tr>
                                                 );
                                             })}
@@ -213,7 +200,8 @@ const CarManagement = () => {
                                     </table>
                                 ) : (
                                     <div style={{ textAlign: "center", padding: "24px", color: "#64748b" }}>No data found.</div>
-                                )}
+                                )
+                                }
                             </div>
                         )}
                     </div>
@@ -246,7 +234,7 @@ const CarManagement = () => {
                                 <h3 style={{ margin: 0 }}>Thêm Xe Mới</h3>
                                 <button onClick={() => setShowModal(false)} style={{ border: "none", background: "none", fontSize: "16px", cursor: "pointer" }}>✕</button>
                             </div>
-                            
+
                             <form onSubmit={handleSubmit} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
                                 <div className="form-group">
                                     <label>Tên Xe</label>
@@ -323,7 +311,7 @@ const CarManagement = () => {
                                     <label>Mô tả</label>
                                     <textarea name="description" value={formData.description} onChange={handleInputChange} className="login-input" rows="3" />
                                 </div>
-                                
+
                                 <h4 style={{ gridColumn: "span 2", margin: "8px 0" }}>Documents (Dates)</h4>
                                 <div className="form-group">
                                     <label>Ngày Đăng Ký</label>

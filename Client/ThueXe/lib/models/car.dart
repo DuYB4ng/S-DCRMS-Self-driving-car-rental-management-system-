@@ -12,6 +12,8 @@ class Car {
   decimal? pricePerDay; // Using double/num for simplicity in Dart unless decimal package used
   decimal? deposit;
   String location;
+  double latitude;
+  double longitude;
   bool isActive;
   String description;
   List<String> imageUrls;
@@ -31,6 +33,8 @@ class Car {
     this.pricePerDay,
     this.deposit,
     required this.location,
+    this.latitude = 0.0,
+    this.longitude = 0.0,
     this.isActive = true,
     required this.description,
     this.imageUrls = const [],
@@ -52,6 +56,8 @@ class Car {
       pricePerDay: json['pricePerDay'] != null ? (json['pricePerDay'] as num).toDouble() : 0.0,
       deposit: json['deposit'] != null ? (json['deposit'] as num).toDouble() : 0.0,
       location: json['location'] ?? '',
+      latitude: (json['latitude'] ?? 0).toDouble(),
+      longitude: (json['longitude'] ?? 0).toDouble(),
       isActive: json['isActive'] ?? true,
       description: json['description'] ?? '',
       imageUrls: List<String>.from(json['imageUrls'] ?? []),
@@ -74,6 +80,8 @@ class Car {
       'pricePerDay': pricePerDay,
       'deposit': deposit,
       'location': location,
+      'latitude': latitude,
+      'longitude': longitude,
       'isActive': isActive,
       'description': description,
       'imageUrls': imageUrls,

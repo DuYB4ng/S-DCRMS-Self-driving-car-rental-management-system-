@@ -11,22 +11,29 @@ import 'package:dio/dio.dart';
 import '../../services/wallet_service.dart';
 import '../wallet_screen.dart';
 
-class OrderDetailView extends StatelessWidget {
+class OrderDetailView extends StatefulWidget {
   final String orderId;
   final bool isOwnerView;
 
   const OrderDetailView({super.key, required this.orderId, this.isOwnerView = false});
 
   @override
+  State<OrderDetailView> createState() => _OrderDetailViewState();
+}
+
+class _OrderDetailViewState extends State<OrderDetailView> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+       // Load data ONCE when init
+       Provider.of<OrderDetailViewModel>(context, listen: false).loadOrder(widget.orderId);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final vm = Provider.of<OrderDetailViewModel>(context);
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Force reload if data missing OR different ID
-      if (vm.orderData == null || vm.orderData!["bookingID"].toString() != orderId) {
-        vm.loadOrder(orderId);
-      }
-    });
 
     return Scaffold(
       appBar: AppBar(
@@ -167,7 +174,7 @@ class OrderDetailView extends StatelessWidget {
             // ===== ACTION BUTTONS SECTION =====
             if (car != null) ...[
                 // OWNER ACTIONS
-                if (isOwnerView) ...[
+                if (widget.isOwnerView) ...[
                    if (order["status"] == "ReturnRequested" || order["status"] == "InProgress")
                       SizedBox(
                         width: double.infinity,

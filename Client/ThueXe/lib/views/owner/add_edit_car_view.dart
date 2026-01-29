@@ -6,6 +6,8 @@ import '../../models/car.dart';
 import '../../viewmodels/owner_car_viewmodel.dart';
 import '../../services/api_service.dart'; // For BaseUrl helper if needed or just use relative path
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
 
 class AddEditCarView extends StatefulWidget {
   final Car? car;
@@ -28,7 +30,8 @@ class _AddEditCarViewState extends State<AddEditCarView> {
   late TextEditingController _nameController;
   late TextEditingController _licensePlateController;
   late TextEditingController _priceController;
-  late TextEditingController _locationController;
+  late TextEditingController _locationController; // Specific Address
+  late TextEditingController _areaController; // Area (City)
   late TextEditingController _descController;
   
   // New Controllers
@@ -61,7 +64,18 @@ class _AddEditCarViewState extends State<AddEditCarView> {
     _priceController = TextEditingController(text: car != null 
         ? "${(car.pricePerDay ?? 0).toInt().toString().replaceAll(RegExp(r'\B(?=(\d{3})+(?!\d))'), '.')}" 
         : "");
+        
     _locationController = TextEditingController(text: car?.location ?? "");
+    // Extract Area if editing (simple logic assumption or blank)
+    if (car != null && car.location.isNotEmpty) {
+       if (car.location.contains("Hồ Chí Minh")) _areaController = TextEditingController(text: "Hồ Chí Minh");
+       else if (car.location.contains("Hà Nội")) _areaController = TextEditingController(text: "Hà Nội");
+       else if (car.location.contains("Đà Nẵng")) _areaController = TextEditingController(text: "Đà Nẵng");
+       else _areaController = TextEditingController(text: "");
+    } else {
+       _areaController = TextEditingController();
+    }
+    
     _descController = TextEditingController(text: car?.description ?? "");
 
     _modelYearController = TextEditingController(text: car?.modelYear.toString() ?? DateTime.now().year.toString());
@@ -78,6 +92,71 @@ class _AddEditCarViewState extends State<AddEditCarView> {
       if (_typeCarOptions.contains(car.typeCar)) _typeCar = car.typeCar;
       if (_transmissionOptions.contains(car.transmission)) _transmission = car.transmission!;
       if (_fuelOptions.contains(car.fuelType)) _fuelType = car.fuelType!;
+      _latitude = car.latitude;
+      _longitude = car.longitude;
+    } else {
+      // Auto get location if new car
+      _getCurrentLocation();
+    }
+  }
+
+  double _latitude = 0.0;
+  double _longitude = 0.0;
+  bool _isGettingLocation = false;
+
+  Future<void> _getCurrentLocation() async {
+    setState(() => _isGettingLocation = true);
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        throw "GPS chưa bật";
+      }
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) throw "Không có quyền truy cập vị trí";
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        throw "Quyền vị trí bị từ chối vĩnh viễn";
+      }
+
+      Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      _latitude = position.latitude;
+      _longitude = position.longitude;
+
+      List<Placemark> placemarks = await placemarkFromCoordinates(_latitude, _longitude);
+      if (placemarks.isNotEmpty) {
+        Placemark place = placemarks.first;
+        String city = place.administrativeArea ?? ""; 
+        String district = place.subAdministrativeArea ?? "";
+        String street = place.street ?? "";
+        String address = "$street, $district, $city"; // Specific Address
+        
+        // Remove duplicate commas
+        address = address.replaceAll(RegExp(r'^, | , |,$'), '').trim();
+        
+        // Check valid city
+        bool isValid = city.contains("Hồ Chí Minh") || city.contains("Hà Nội") || city.contains("Đà Nẵng");
+        
+        if (!isValid) {
+          if (mounted) {
+             ScaffoldMessenger.of(context).showSnackBar(
+               SnackBar(content: Text("Rất tiếc, khu vực $city chưa được hỗ trợ."))
+             );
+          }
+           _locationController.text = address;
+           _areaController.text = "Khu vực không hỗ trợ ($city)";
+        } else {
+           _locationController.text = address;
+           _areaController.text = city; 
+        }
+      }
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Lỗi lấy vị trí: $e")));
+    } finally {
+      setState(() => _isGettingLocation = false);
     }
   }
 
@@ -87,6 +166,7 @@ class _AddEditCarViewState extends State<AddEditCarView> {
     _licensePlateController.dispose();
     _priceController.dispose();
     _locationController.dispose();
+    _areaController.dispose();
     _descController.dispose();
     _modelYearController.dispose();
     _seatController.dispose();
@@ -129,6 +209,8 @@ class _AddEditCarViewState extends State<AddEditCarView> {
         pricePerDay: double.tryParse(_priceController.text.replaceAll('.', '').replaceAll(',', '')) ?? 0.0,
         deposit: double.tryParse(_depositController.text.replaceAll('.', '').replaceAll(',', '')) ?? 0.0,
         location: _locationController.text,
+        latitude: _latitude,
+        longitude: _longitude,
         description: _descController.text,
         
         modelYear: int.tryParse(_modelYearController.text) ?? 2024,
@@ -235,8 +317,35 @@ class _AddEditCarViewState extends State<AddEditCarView> {
               ),
               TextFormField(
                 controller: _locationController,
-                decoration: const InputDecoration(labelText: "Địa điểm"),
-                validator: (val) => val!.isEmpty ? "Vui lòng nhập địa điểm" : null,
+                readOnly: true,
+                decoration: InputDecoration(
+                  labelText: "Địa chỉ cụ thể",
+                  suffixIcon: _isGettingLocation 
+                      ? const Padding(padding: EdgeInsets.all(10), child: CircularProgressIndicator(strokeWidth: 2)) 
+                      : IconButton(
+                          icon: const Icon(Icons.my_location),
+                          onPressed: _getCurrentLocation,
+                        ),
+                ),
+                validator: (val) {
+                  if (val == null || val.isEmpty) return "Vui lòng lấy vị trí";
+                  return null;
+                },
+              ),
+              const SizedBox(height: 10),
+              TextFormField(
+                controller: _areaController,
+                readOnly: true,
+                decoration: const InputDecoration(
+                  labelText: "Khu vực (Hệ thống tự nhận diện)",
+                  filled: true,
+                  fillColor: Colors.black12,
+                ),
+                validator: (val) {
+                  if (val != null && val.contains("không hỗ trợ")) return "Khu vực không hỗ trợ";
+                   if (val == null || val.isEmpty) return "Chưa xác định được khu vực";
+                  return null;
+                },
               ),
               
               const SizedBox(height: 16),

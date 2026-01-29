@@ -26,6 +26,8 @@ namespace OwnerCarService.Dtos.Car
 
         // Location
         public string Location { get; set; } = string.Empty;
+        public double Latitude { get; set; }
+        public double Longitude { get; set; }
 
         // Ownership & registration
         public string OwnershipType { get; set; } = "Personal";

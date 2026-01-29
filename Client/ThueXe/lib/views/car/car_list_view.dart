@@ -139,6 +139,15 @@ class _CarListViewState extends State<CarListView> {
               height: 180,
               width: double.infinity,
               fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  height: 180,
+                  color: Colors.grey[300],
+                  child: Center(
+                    child: Icon(Icons.image_not_supported, size: 50, color: Colors.grey),
+                  ),
+                );
+              },
             ),
           ),
 
@@ -167,20 +176,20 @@ class _CarListViewState extends State<CarListView> {
 
                 // Dòng thông tin 1
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _infoItem(Icons.people_alt, "${car["seat"]} chỗ"),
-                    _infoItem(Icons.settings, car["transmission"] ?? "N/A"),
+                    Expanded(child: _infoItem(Icons.people_alt, "${car["seat"]} chỗ")),
+                    SizedBox(width: 8),
+                    Expanded(child: _infoItem(Icons.settings, car["transmission"] ?? "N/A", alignRight: true)),
                   ],
                 ),
                 SizedBox(height: 8),
 
                 // Dòng thông tin 2
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _infoItem(Icons.car_rental, car["typeCar"] ?? "Loại xe"),
-                    _infoItem(Icons.location_on, car["location"] ?? "Không rõ"),
+                    Expanded(child: _infoItem(Icons.car_rental, car["typeCar"] ?? "Loại xe")),
+                    SizedBox(width: 8),
+                    Expanded(child: _infoItem(Icons.location_on, car["location"] ?? "Không rõ", alignRight: true)),
                   ],
                 ),
               ],
@@ -194,12 +203,20 @@ class _CarListViewState extends State<CarListView> {
   /// ===============================
   ///  WIDGET NHỎ: ICON + TEXT
   /// ===============================
-  Widget _infoItem(IconData icon, String text) {
+  Widget _infoItem(IconData icon, String text, {bool alignRight = false}) {
     return Row(
+      mainAxisAlignment: alignRight ? MainAxisAlignment.end : MainAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
         Icon(icon, size: 18, color: Colors.black54),
         SizedBox(width: 4),
-        Text(text, style: TextStyle(color: Colors.black87)),
+        Flexible(
+          child: Text(
+            text, 
+            style: TextStyle(color: Colors.black87),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
       ],
     );
   }

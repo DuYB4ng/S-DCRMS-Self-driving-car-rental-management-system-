@@ -4,9 +4,7 @@ import "./Admin.css";
 const Header = () => {
   return (
     <div className="header">
-      <div className="search-bar">
-        <input type="text" placeholder="Search..." />
-      </div>
+
 
       <div className="header-profile">
         <Bell size={20} color="#64748b" style={{ cursor: 'pointer' }} />

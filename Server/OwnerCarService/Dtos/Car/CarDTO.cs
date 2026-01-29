@@ -21,6 +21,8 @@ namespace OwnerCarService.Dtos.Car
         public bool IsAvailable { get; set; } = true;
         public string Status { get; set; } = "Active";
         public string Location { get; set; } = string.Empty;
+        public double Latitude { get; set; }
+        public double Longitude { get; set; }
 
         // Ownership & registration
         public string OwnershipType { get; set; } = "Personal";

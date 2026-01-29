@@ -8,17 +8,30 @@ public interface IKafkaProducer
 
 public class KafkaProducer : IKafkaProducer
 {
-    private readonly IProducer<string, string> _producer;
+    private  IProducer<string, string>? _producer;
+    private readonly ProducerConfig _conf;
 
     public KafkaProducer(IConfiguration config)
     {
-        var conf = new ProducerConfig
+        _conf = new ProducerConfig
         {
             BootstrapServers = config["Kafka:BootstrapServers"]
         };
-
-        _producer = new ProducerBuilder<string, string>(conf).Build();
     }
+
+    private IProducer<string, string> GetProducer()
+    {
+        if (_producer == null) {
+            try {
+                 _producer = new ProducerBuilder<string, string>(_conf).Build();
+            } catch(Exception ex) {
+                 Console.WriteLine($"[KafkaProducer] Init failed: {ex.Message}");
+                 throw;
+            }
+        }
+        return _producer;
+    }
+
 
     public async Task ProduceAsync<T>(string topic, string key, T message)
     {
@@ -26,7 +39,7 @@ public class KafkaProducer : IKafkaProducer
 
         try
         {
-            await _producer.ProduceAsync(topic, new Message<string, string>
+            await GetProducer().ProduceAsync(topic, new Message<string, string>
             {
                 Key = key,
                 Value = json

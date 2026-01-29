@@ -41,14 +41,14 @@ const UserManagement = () => {
             if (res.data) {
                 setUsers([res.data]);
             } else {
-                 setUsers([]);
+                setUsers([]);
             }
             setError(null);
         } catch (err) {
             console.error("Error searching user:", err);
             if (err.response && err.response.status === 404) {
-                 setUsers([]);
-                 setError("User not found.");
+                setUsers([]);
+                setError("User not found.");
             } else {
                 setError("Search failed.");
             }
@@ -76,12 +76,12 @@ const UserManagement = () => {
             <main className="main-content">
                 <div className="dashboard-page">
                     <div className="header" style={{ marginBottom: "24px", borderRadius: "12px", boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}>
-                         <div style={{ display: "flex", gap: "16px", alignItems: "center", width: "100%" }}>
+                        <div style={{ display: "flex", gap: "16px", alignItems: "center", width: "100%" }}>
                             <h2 style={{ margin: 0, color: "#0f172a" }}>User Management</h2>
-                         </div>
-                         <div className="header-profile">
+                        </div>
+                        <div className="header-profile">
                             <div className="avatar">A</div>
-                         </div>
+                        </div>
                     </div>
 
                     <div className="card">
@@ -110,7 +110,7 @@ const UserManagement = () => {
                                     fontWeight: "500"
                                 }}>Search</button>
                                 {searchEmail && (
-                                     <button type="button" onClick={() => { setSearchEmail(""); fetchUsers(); }} style={{
+                                    <button type="button" onClick={() => { setSearchEmail(""); fetchUsers(); }} style={{
                                         backgroundColor: "#94a3b8",
                                         color: "white",
                                         border: "none",
@@ -123,7 +123,7 @@ const UserManagement = () => {
                         </div>
 
                         {error && <div style={{ color: "red", marginBottom: "16px" }}>{error}</div>}
-                        
+
                         {loading ? (
                             <div style={{ textAlign: "center", padding: "24px" }}>Loading...</div>
                         ) : (
@@ -133,16 +133,15 @@ const UserManagement = () => {
                                         <thead>
                                             <tr>
                                                 <th>ID</th>
-                                                <th>Name</th>
+                                                <th>Full Name</th>
                                                 <th>Email</th>
-                                                <th>Phone</th>
                                                 <th>Role</th>
                                                 <th>Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {users.map((user) => (
-                                                <tr key={user.id || user.ID}> 
+                                                <tr key={user.id || user.ID}>
                                                     <td>#{user.id || user.ID}</td>
                                                     <td>
                                                         <div style={{ fontWeight: 500 }}>
@@ -153,7 +152,6 @@ const UserManagement = () => {
                                                         </div>
                                                     </td>
                                                     <td>{user.email}</td>
-                                                    <td>{user.phoneNumber || "N/A"}</td>
                                                     <td>
                                                         <span style={{
                                                             padding: "4px 8px",

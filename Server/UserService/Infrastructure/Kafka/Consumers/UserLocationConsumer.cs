@@ -22,8 +22,23 @@ public class UserLocationConsumer : BackgroundService
             EnableAutoCommit = true
         };
 
-        using var consumer = new ConsumerBuilder<string, string>(conf).Build();
-        consumer.Subscribe("user-location");
+        IConsumer<string, string> consumer = null;
+
+        // Retry loop for initialization
+        while (consumer == null && !stoppingToken.IsCancellationRequested)
+        {
+            try
+            {
+                consumer = new ConsumerBuilder<string, string>(conf).Build();
+                consumer.Subscribe("user-location");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Kafka init failed: {ex.Message}. Retrying in 5s...");
+                await Task.Delay(5000, stoppingToken);
+            }
+        }
+
 
         while (!stoppingToken.IsCancellationRequested)
         {

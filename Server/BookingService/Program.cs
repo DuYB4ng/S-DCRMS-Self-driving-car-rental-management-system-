@@ -27,7 +27,8 @@ builder.Services.AddRedisShared(builder.Configuration);
 
 //Đăng kí Repositores
 //builder.Services.AddScoped<IBookingRepository, BookingRepository>();
-builder.Services.AddProxiedService<IBookingRepository, BookingRepository>();
+//builder.Services.AddProxiedService<IBookingRepository, BookingRepository>();
+builder.Services.AddScoped<IBookingRepository, BookingRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
 
