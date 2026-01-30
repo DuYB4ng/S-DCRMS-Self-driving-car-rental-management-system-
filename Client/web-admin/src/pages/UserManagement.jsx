@@ -77,7 +77,7 @@ const UserManagement = () => {
                 <div className="dashboard-page">
                     <div className="header" style={{ marginBottom: "24px", borderRadius: "12px", boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}>
                         <div style={{ display: "flex", gap: "16px", alignItems: "center", width: "100%" }}>
-                            <h2 style={{ margin: 0, color: "#0f172a" }}>User Management</h2>
+                            <h2 style={{ margin: 0, color: "#0f172a" }}>Quản lý người dùng</h2>
                         </div>
                         <div className="header-profile">
                             <div className="avatar">A</div>
@@ -86,11 +86,11 @@ const UserManagement = () => {
 
                     <div className="card">
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
-                            <h3 className="card-title" style={{ margin: 0 }}>All Users</h3>
+                            <h3 className="card-title" style={{ margin: 0 }}>Tất cả người dùng</h3>
                             <form onSubmit={handleSearch} style={{ display: "flex", gap: "8px" }}>
                                 <input
                                     type="text"
-                                    placeholder="Search by email..."
+                                    placeholder="Tìm kiếm theo email..."
                                     value={searchEmail}
                                     onChange={(e) => setSearchEmail(e.target.value)}
                                     style={{
@@ -108,7 +108,7 @@ const UserManagement = () => {
                                     padding: "8px 16px",
                                     borderRadius: "6px",
                                     fontWeight: "500"
-                                }}>Search</button>
+                                }}>Tìm kiếm</button>
                                 {searchEmail && (
                                     <button type="button" onClick={() => { setSearchEmail(""); fetchUsers(); }} style={{
                                         backgroundColor: "#94a3b8",
@@ -133,10 +133,11 @@ const UserManagement = () => {
                                         <thead>
                                             <tr>
                                                 <th>ID</th>
-                                                <th>Full Name</th>
+                                                <th>Tên</th>
                                                 <th>Email</th>
-                                                <th>Role</th>
-                                                <th>Actions</th>
+                                                <th>Số dư (Ví)</th>
+                                                <th>Vai trò</th>
+                                                <th>Cập nhật</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -145,13 +146,16 @@ const UserManagement = () => {
                                                     <td>#{user.id || user.ID}</td>
                                                     <td>
                                                         <div style={{ fontWeight: 500 }}>
-                                                            {user.firstName} {user.lastName}
+                                                            {user.username || "Chưa cập nhật"}
                                                         </div>
                                                         <div style={{ fontSize: "12px", color: "#64748b" }}>
-                                                            {user.username}
+                                                            {user.email}
                                                         </div>
                                                     </td>
                                                     <td>{user.email}</td>
+                                                    <td style={{ fontWeight: "bold", color: (user.walletBalance || 0) < 0 ? "#ef4444" : "#10b981" }}>
+                                                        {(user.walletBalance || 0).toLocaleString('vi-VN')} đ
+                                                    </td>
                                                     <td>
                                                         <span style={{
                                                             padding: "4px 8px",
@@ -187,7 +191,7 @@ const UserManagement = () => {
                                         </tbody>
                                     </table>
                                 ) : (
-                                    <div style={{ textAlign: "center", padding: "24px", color: "#64748b" }}>No users found.</div>
+                                    <div style={{ textAlign: "center", padding: "24px", color: "#64748b" }}>Không tìm thấy người dùng.</div>
                                 )}
                             </div>
                         )}

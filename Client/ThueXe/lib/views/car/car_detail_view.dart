@@ -375,11 +375,11 @@ class CarDetailView extends StatelessWidget {
   /// ============ IMAGE SLIDER ============
   Widget _imageSlider(BuildContext context, List<dynamic>? images) {
     if (images == null || images.isEmpty) {
-      return Image.network(
-        "https://via.placeholder.com/350x200",
+      return Image.asset(
+        "assets/images/logo.png",
         width: double.infinity,
         height: 220,
-        fit: BoxFit.cover,
+        fit: BoxFit.contain, // Use contain to show full logo
       );
     }
 
@@ -398,6 +398,21 @@ class CarDetailView extends StatelessWidget {
             width: double.infinity,
             height: 220,
             fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+               return Container(
+                 width: double.infinity,
+                 height: 220,
+                 color: Colors.grey[200],
+                 child: Column(
+                   mainAxisAlignment: MainAxisAlignment.center,
+                   children: [
+                     const Icon(Icons.image_not_supported, size: 50, color: Colors.grey),
+                     const SizedBox(height: 8),
+                     const Text("Lỗi tải ảnh", style: TextStyle(color: Colors.grey)),
+                   ],
+                 ),
+               );
+            },
           );
         },
       ),

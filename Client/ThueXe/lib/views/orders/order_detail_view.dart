@@ -658,9 +658,11 @@ class _OrderDetailViewState extends State<OrderDetailView> {
          
          // Reload Layout
          if (context.mounted) {
-             await Future.delayed(const Duration(milliseconds: 500));
+             await Future.delayed(const Duration(milliseconds: 1000));
              if (context.mounted) {
-                Provider.of<OrderDetailViewModel>(context, listen: false).loadOrder(bookingId.toString());
+                // Force reload
+                final vm = Provider.of<OrderDetailViewModel>(context, listen: false);
+                vm.loadOrder(bookingId.toString());
              }
          }
   }

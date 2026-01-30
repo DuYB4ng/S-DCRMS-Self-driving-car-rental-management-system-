@@ -251,5 +251,13 @@ namespace UserService.Controllers
             var users = await _userRepo.GetUsersWithNegativeBalanceAsync(threshold);
             return Ok(users);
         }
+        [HttpGet("transactions")]
+        public async Task<IActionResult> GetAllTransactions()
+        {
+            var transactions = await _context.WalletTransactions
+                .OrderByDescending(t => t.CreatedAt)
+                .ToListAsync();
+            return Ok(transactions);
+        }
     }
 }

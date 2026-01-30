@@ -11,7 +11,10 @@ namespace OwnerCarService.Data
 
             if (!context.Cars.Any())
             {
-                Console.WriteLine("🌱 Seeding initial cars data...");
+                // Console.WriteLine("🌱 Seeding initial cars data...");
+                return; // Disable default seeding
+                
+                /*
                 
                 // Create a mock OwnerCar
                 var testOwner = new OwnerCar
@@ -88,6 +91,7 @@ namespace OwnerCarService.Data
                 };
                 context.Cars.AddRange(cars);
                 context.SaveChanges();
+                */
                 Console.WriteLine("✅ Seeding completed.");
             }
         }

@@ -6,11 +6,10 @@ const Sidebar = () => {
   const navigate = useNavigate();
 
   const menuItems = [
-    { icon: LayoutDashboard, label: "Dashboard", path: "/admin" },
-    { icon: Users, label: "Users", path: "/admin/users" },
-    { icon: Calendar, label: "Bookings", path: "/admin/bookings" }, 
-    { icon: Car, label: "Cars", path: "/admin/cars" },
-    { icon: Settings, label: "Settings", path: "/admin/settings" },
+    { icon: LayoutDashboard, label: "Tổng quan", path: "/admin" },
+    { icon: Users, label: "Người dùng", path: "/admin/users" },
+    { icon: Calendar, label: "Đơn hàng", path: "/admin/bookings" },
+    { icon: Car, label: "Xe", path: "/admin/cars" },
   ];
 
   const handleLogout = () => {
@@ -33,7 +32,7 @@ const Sidebar = () => {
           {menuItems.map((item) => {
             const isActive = location.pathname === item.path;
             const Icon = item.icon;
-            
+
             return (
               <Link
                 key={item.path}

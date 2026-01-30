@@ -11,3 +11,7 @@ export const promoteUser = async (id, role) => {
 export const getUserByEmail = async (email) => {
   return await axiosClient.get(`/users/email/${email}`);
 };
+
+export const getAllTransactions = async () => {
+  return await axiosClient.get("/wallet/transactions");
+};

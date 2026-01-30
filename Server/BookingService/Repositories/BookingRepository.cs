@@ -28,7 +28,7 @@ namespace BookingService.Repositories
 		}
 		public Task<Booking?> getByIdAsync(int id)
 		{
-			return _context.Bookings.AsNoTracking().FirstOrDefaultAsync(u => u.BookingID == id);
+			return _context.Bookings.AsNoTracking().Include(b => b.Payments).FirstOrDefaultAsync(u => u.BookingID == id);
 		}
 		public async Task<Booking> createAsync(CreateBookingDto bookingDto, int customerId)
 		{

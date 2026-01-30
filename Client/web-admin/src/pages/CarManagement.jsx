@@ -43,14 +43,7 @@ const CarManagement = () => {
         setLoading(true);
         setError(null);
         try {
-            let res;
-            if (activeTab === "all") {
-                res = await getAllCars();
-            } else if (activeTab === "available") {
-                res = await getAvailableCars();
-            } else if (activeTab === "maintenance") {
-                res = await getAllMaintenances();
-            }
+            const res = await getAllCars();
             setCars(res.data);
         } catch (err) {
             console.error("Error fetching data:", err);
@@ -120,91 +113,65 @@ const CarManagement = () => {
             <main className="main-content">
                 <div className="dashboard-page">
                     <div className="header" style={{ marginBottom: "24px", borderRadius: "12px", boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
-                            <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
-                                <h2 style={{ margin: 0, color: "#0f172a" }}>Quản lý Xe</h2>
-                            </div>
-                            <button style={{
-                                backgroundColor: "#60a5fa",
-                                color: "white",
-                                border: "none",
-                                padding: "8px 16px",
-                                borderRadius: "6px",
-                                fontWeight: "600",
-                                cursor: "pointer"
-                            }} onClick={() => setShowModal(true)}>
-                                + Thêm Xe
-                            </button>
+                        <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
+                            <h2 style={{ margin: 0, color: "#0f172a" }}>Quản lý Xe</h2>
                         </div>
+                        <button style={{
+                            backgroundColor: "#60a5fa",
+                            color: "white",
+                            border: "none",
+                            padding: "8px 16px",
+                            borderRadius: "6px",
+                            fontWeight: "600",
+                            cursor: "pointer"
+                        }} onClick={() => setShowModal(true)}>
+                            + Thêm Xe
+                        </button>
                     </div>
+                </div>
 
-                    <div className="card">
-                        {loading ? (
-                            <div style={{ textAlign: "center", padding: "24px" }}>Loading...</div>
-                        ) : error ? (
-                            <div style={{ color: "red", padding: "12px" }}>{error}</div>
-                        ) : (
-                            <div className="table-container">
-                                {cars.length > 0 ? (
-                                    <table>
-                                        <thead>
-                                            <tr>
-                                                <th>ID</th>
-                                                <th>Tên</th>
-                                                <th>Biển số</th>
-                                                {activeTab === "maintenance" ? (
-                                                    <>
-                                                        <th>Mô tả</th>
-                                                        <th>Chi phí</th>
-                                                        <th>Ngày</th>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <th>Giá thuê mỗi ngày ($)</th>
-                                                        <th>Trạng thái</th>
-                                                        <th>Địa điểm</th>
-                                                    </>
-                                                )}
+                <div className="card">
+                    {loading ? (
+                        <div style={{ textAlign: "center", padding: "24px" }}>Loading...</div>
+                    ) : error ? (
+                        <div style={{ color: "red", padding: "12px" }}>{error}</div>
+                    ) : (
+                        <div className="table-container">
+                            {cars.length > 0 ? (
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Tên</th>
+                                            <th>Biển số</th>
+                                            <th>Giá thuê mỗi ngày ($)</th>
+                                            <th>Trạng thái</th>
+                                            <th>Địa điểm</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {cars.map((item) => (
+                                            <tr key={item.carID}>
+                                                <td>#{item.carID}</td>
+                                                <td>{item.nameCar}</td>
+                                                <td>{item.licensePlate}</td>
+                                                <td>${item.pricePerDay}</td>
+                                                <td>
+                                                    <span style={{ padding: "4px 8px", borderRadius: "12px", fontSize: "12px", fontWeight: "500", backgroundColor: item.isAvailable ? "#d1fae5" : "#fee2e2", color: item.isAvailable ? "#065f46" : "#991b1b" }}>
+                                                        {item.isAvailable ? "Available" : "Unavailable"}
+                                                    </span>
+                                                </td>
+                                                <td>{item.location || "N/A"}</td>
                                             </tr>
-                                        </thead>
-                                        <tbody>
-                                            {cars.map((item) => {
-                                                const isMaintenance = activeTab === "maintenance";
-                                                const id = isMaintenance ? item.maintenanceID : item.carID;
-                                                return (
-                                                    <tr key={id}>
-                                                        <td>#{id}</td>
-                                                        <td>{isMaintenance ? `Car #${item.carID}` : item.nameCar}</td>
-                                                        <td>{isMaintenance ? "-" : item.licensePlate}</td>
-                                                        {isMaintenance ? (
-                                                            <>
-                                                                <td>{item.description}</td>
-                                                                <td>${item.cost}</td>
-                                                                <td>{new Date(item.maintenanceDate).toLocaleDateString()}</td>
-                                                            </>
-                                                        ) : (
-                                                            <>
-                                                                <td>${item.pricePerDay}</td>
-                                                                <td>
-                                                                    <span style={{ padding: "4px 8px", borderRadius: "12px", fontSize: "12px", fontWeight: "500", backgroundColor: item.isAvailable ? "#d1fae5" : "#fee2e2", color: item.isAvailable ? "#065f46" : "#991b1b" }}>
-                                                                        {item.isAvailable ? "Available" : "Unavailable"}
-                                                                    </span>
-                                                                </td>
-                                                                <td>{item.location || "N/A"}</td>
-                                                            </>
-                                                        )}
-                                                    </tr>
-                                                );
-                                            })}
-                                        </tbody>
-                                    </table>
-                                ) : (
-                                    <div style={{ textAlign: "center", padding: "24px", color: "#64748b" }}>No data found.</div>
-                                )
-                                }
-                            </div>
-                        )}
-                    </div>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            ) : (
+                                <div style={{ textAlign: "center", padding: "24px", color: "#64748b" }}>No data found.</div>
+                            )
+                            }
+                        </div>
+                    )}
                 </div>
 
                 {showModal && (

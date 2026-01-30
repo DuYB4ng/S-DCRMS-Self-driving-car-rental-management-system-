@@ -11,6 +11,8 @@ function AdminDashboard() {
     revenue: 0,
     orders: 0,
     avgRevenue: 0,
+    deposits: 0,
+    withdrawals: 0
   });
   const [chartData, setChartData] = useState([]);
   const [recentOrders, setRecentOrders] = useState([]);
@@ -28,7 +30,14 @@ function AdminDashboard() {
       const bookings = res.data;
 
       // 1. Calculate Stats
-      const totalRevenue = bookings.reduce((sum, b) => sum + (b.totalAmount || 0), 0);
+      // 1. Calculate Stats
+      const COMMISSION_RATE = 0.1; // 10% commission
+      const validBookings = bookings.filter(b => b.status !== 'Cancelled');
+
+      const totalBookingValue = validBookings.reduce((sum, b) => sum + (b.totalPrice || b.totalAmount || 0), 0);
+      // Revenue is 10% of total booking value (commission)
+      const totalRevenue = totalBookingValue * COMMISSION_RATE;
+
       const totalOrders = bookings.length;
       const avgRevenue = totalOrders > 0 ? (totalRevenue / totalOrders).toFixed(0) : 0;
 
@@ -38,11 +47,36 @@ function AdminDashboard() {
         avgRevenue: avgRevenue,
       });
 
-      // 2. Prepare Chart Data (Group by Date)
-      const groupedByDate = bookings.reduce((acc, b) => {
-        const date = new Date(b.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+      // 3. Transactions Stats
+      let totalDeposits = 0;
+      let totalWithdrawals = 0;
+      try {
+        const transRes = await axiosClient.get("/wallet/transactions");
+        const transactions = transRes.data;
+        totalDeposits = transactions
+          .filter(t => t.transactionType === "TopUp" && t.status === "Completed")
+          .reduce((sum, t) => sum + t.amount, 0);
+
+        totalWithdrawals = transactions
+          .filter(t => t.transactionType === "Withdraw" && t.status === "Completed")
+          .reduce((sum, t) => sum + t.amount, 0);
+      } catch (err) {
+        console.error("Error fetching transactions:", err);
+      }
+
+      setStats({
+        revenue: totalRevenue,
+        orders: totalOrders,
+        avgRevenue: avgRevenue,
+        deposits: totalDeposits,
+        withdrawals: totalWithdrawals
+      });
+
+      // 4. Prepare Chart Data (Group by Date)
+      const groupedByDate = validBookings.reduce((acc, b) => {
+        const date = new Date(b.createdAt).toLocaleDateString("vi-VN", { month: "numeric", day: "numeric" });
         if (!acc[date]) acc[date] = 0;
-        acc[date] += (b.totalAmount || 0);
+        acc[date] += ((b.totalPrice || b.totalAmount || 0) * COMMISSION_RATE);
         return acc;
       }, {});
 
@@ -53,7 +87,7 @@ function AdminDashboard() {
 
       setChartData(chart);
 
-      // 3. Recent Orders
+      // 5. Recent Orders
       setRecentOrders(bookings.slice(0, 5)); // Taking first 5 (assuming API returns descending)
     } catch (error) {
       console.error("Failed to fetch dashboard data:", error);
@@ -69,109 +103,110 @@ function AdminDashboard() {
       <Sidebar />
       <div className="main-content">
         <Header />
-        
+
         <div className="dashboard-page">
-          <div className="dashboard-grid">
-            <StatCard 
-              title="Total Revenue" 
-              value={stats.revenue.toLocaleString()} 
-              prefix="$" 
-              change={12.5} 
-              isPositive={true} 
+          <div className="dashboard-grid" style={{ gridTemplateColumns: "repeat(5, 1fr)" }}>
+            <StatCard
+              title="Doanh thu hệ thống"
+              value={stats.revenue.toLocaleString('vi-VN')}
+              prefix="₫"
+              isPositive={true}
             />
-            <StatCard 
-              title="Total Orders" 
-              value={stats.orders} 
-              change={5.2} 
-              isPositive={true} 
+            <StatCard
+              title="Tổng đơn hàng"
+              value={stats.orders}
+              isPositive={true}
             />
-            <StatCard 
-              title="Avg. Revenue Per User" 
-              value={stats.avgRevenue.toLocaleString()} 
-              prefix="$" 
-              change={-2.4} 
-              isPositive={false} 
+            <StatCard
+              title="Doanh thu TB / Đơn"
+              value={stats.avgRevenue.toLocaleString('vi-VN')}
+              prefix="₫"
+              isPositive={false}
             />
-            <StatCard 
-              title="Refunds" 
-              value="0.00" 
-              change={0} 
-              isPositive={true} 
+            <StatCard
+              title="Tổng nạp tiền"
+              value={stats.deposits.toLocaleString('vi-VN')}
+              prefix="₫"
+              isPositive={true}
+            />
+            <StatCard
+              title="Tổng rút tiền"
+              value={stats.withdrawals.toLocaleString('vi-VN')}
+              prefix="₫"
+              isPositive={false}
             />
           </div>
 
           <div className="charts-grid">
             {/* Revenue Chart */}
             <div className="card">
-              <h3 className="card-title">Revenue Overview</h3>
+              <h3 className="card-title">Tổng quan doanh thu</h3>
               <div style={{ width: "100%", height: 300 }}>
                 <ResponsiveContainer>
                   <AreaChart data={chartData}>
                     <defs>
                       <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/>
-                        <stop offset="95%" stopColor="#8884d8" stopOpacity={0}/>
+                        <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8} />
+                        <stop offset="95%" stopColor="#8884d8" stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} />
-                    <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} />
-                    <Tooltip />
-                    <Area 
-                      type="monotone" 
-                      dataKey="revenue" 
-                      stroke="#8884d8" 
-                      fillOpacity={1} 
-                      fill="url(#colorRevenue)" 
+                    {/* <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" /> */}
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} />
+                    <Tooltip formatter={(value) => [value.toLocaleString('vi-VN') + ' đ', 'Doanh thu']} />
+                    <Area
+                      type="monotone"
+                      dataKey="revenue"
+                      stroke="#8884d8"
+                      fillOpacity={1}
+                      fill="url(#colorRevenue)"
                     />
                   </AreaChart>
                 </ResponsiveContainer>
-              </div>
-            </div>
-
-            {/* Customer Acquisition (Mock or secondary chart) */}
-             <div className="card">
-              <h3 className="card-title">Customer Acquisition</h3>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 300, color: '#94a3b8' }}>
-                Chart Placeholder
               </div>
             </div>
           </div>
 
           {/* Recent Orders Table */}
           <div className="card">
-            <h3 className="card-title">Recent Orders</h3>
+            <h3 className="card-title">Đơn hàng mới</h3>
             <div className="table-container">
               <table>
                 <thead>
                   <tr>
-                    <th>Booking ID</th>
-                    <th>Date</th>
-                    <th>Car ID</th>
-                    <th>Amount</th>
-                    <th>Status</th>
+                    <th>Mã đơn</th>
+                    <th>Ngày tạo</th>
+                    <th>Mã xe</th>
+                    <th>Tổng tiền</th>
+                    <th>Trạng thái</th>
                   </tr>
                 </thead>
                 <tbody>
                   {recentOrders.map((order) => (
                     <tr key={order.bookingID}>
                       <td>#{order.bookingID}</td>
-                      <td>{new Date(order.createdAt).toLocaleDateString()}</td>
+                      <td>{new Date(order.createdAt).toLocaleDateString('vi-VN')}</td>
                       <td>{order.carId}</td>
-                      <td>${(order.totalAmount || 0).toLocaleString()}</td>
+                      <td>{(order.totalPrice || order.totalAmount || 0).toLocaleString('vi-VN')} đ</td>
                       <td>
-                        <span className={`status-badge ${
-                          order.status === 'Completed' ? 'status-completed' : 
+                        <span className={`status-badge ${order.status === 'Completed' ? 'status-completed' :
                           order.status === 'Cancelled' ? 'status-canceled' : 'status-pending'
-                        }`}>
-                          {order.status}
+                          }`}>
+                          {order.status === 'Completed' ? 'Hoàn thành' :
+                            order.status === 'Cancelled' ? 'Đã hủy' :
+                              order.status === 'Pending' ? 'Chờ duyệt' :
+                                order.status === 'Paid' ? 'Đã thanh toán' :
+                                  order.status === 'Approved' ? 'Đã duyệt' :
+                                    order.status === 'InProgress' ? 'Đang thuê' :
+                                      order.status === 'ReturnRequested' ? 'Yêu cầu trả xe' :
+                                        order.status}
                         </span>
                       </td>
                     </tr>
                   ))}
                   {recentOrders.length === 0 && (
                     <tr>
-                      <td colSpan="5" style={{textAlign: 'center', padding: 20}}>No orders found</td>
+                      <td colSpan="5" style={{ textAlign: 'center', padding: 20 }}>Không có đơn hàng nào</td>
                     </tr>
                   )}
                 </tbody>

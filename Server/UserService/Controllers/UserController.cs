@@ -82,6 +82,26 @@ namespace UserService.Controllers
             if (dto == null)
                 return BadRequest("Body is null");
 
+            // Check if user already exists
+            var existingUser = await _userService.GetByEmailAsync(dto.Email);
+            if (existingUser == null && !string.IsNullOrEmpty(dto.FirebaseUid))
+            {
+                existingUser = await _userService.GetByFirebaseUidAsync(dto.FirebaseUid);
+            }
+
+            if (existingUser != null)
+            {
+                // Update existing user info if needed, or just return it
+                existingUser.FirebaseUid = dto.FirebaseUid;
+                // Optional: Update other fields if you want to sync latest data
+                if (!string.IsNullOrEmpty(dto.Username)) existingUser.Username = dto.Username;
+                if (!string.IsNullOrEmpty(dto.Role)) existingUser.Role = dto.Role;
+                
+                await _userService.UpdateUserAsync(existingUser);
+                
+                return Ok(existingUser);
+            }
+
             var user = new User
             {
                 FirebaseUid = dto.FirebaseUid,

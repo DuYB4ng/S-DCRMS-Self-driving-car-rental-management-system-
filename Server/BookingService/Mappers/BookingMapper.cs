@@ -20,6 +20,8 @@ namespace BookingService.Mappers
                 CarId = booking.CarId,
                 CreatedAt  = booking.CreatedAt,
                 TotalAmount = booking.Payments?.Sum(p => p.Amount) ?? 0,
+                TotalPrice = booking.TotalPrice,
+                DepositAmount = booking.DepositAmount,
                 RefundAmount = booking.RefundAmount,
                 CancellationFee = booking.CancellationFee,
             };
