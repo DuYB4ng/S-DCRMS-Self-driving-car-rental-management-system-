@@ -11,7 +11,7 @@ RUN dotnet restore BookingService/BookingService.csproj
 
 # 3) Copy toàn bộ source (folder Server) vào container
 COPY . .
-RUN ls -la /src/BookingService/Models
+RUN ls -la /src/BookingService/Controllers
 
 # 4) Publish
 WORKDIR /src/BookingService
